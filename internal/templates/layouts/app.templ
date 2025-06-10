@@ -1,0 +1,9 @@
+package layouts
+
+templ AppLayout(title, description string) {
+    @BaseLayout(title, description) {
+        <main>
+            { children... }
+        </main>
+    }
+}
