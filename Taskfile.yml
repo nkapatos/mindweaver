@@ -16,7 +16,7 @@ tasks:
   live:templ:
     desc: Live reload the templates
     cmds:
-      - go tool templ generate --watch --proxy="http://{{.HOST}}:{{.PORT}}"
+      - go tool templ generate -path {{.TEMPL_DIR}} -watch -lazy -w 4 -proxy "http://{{.HOST}}:{{.PORT}}"
 
   live:tailwindcss:
     desc: Live reload the tailwindcss styles
@@ -39,3 +39,8 @@ tasks:
   #   desc: Build the assets
   #   cmds:
   #     - go build -o ./tmp/assets.go -dir ${ASSETS_DIR}
+
+  format:templ:
+    desc: Format all templ files
+    cmds:
+      - templ fmt {{.TEMPL_DIR}}
