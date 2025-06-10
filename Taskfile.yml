@@ -18,6 +18,17 @@ tasks:
     cmds:
       - go tool templ generate --watch --proxy="http://{{.HOST}}:{{.PORT}}"
 
+  live:tailwindcss:
+    desc: Live reload the tailwindcss styles
+    cmds:
+      - pnpm tailwindcss -i ./assets/css/input.css -o ./assets/css/main.css --watch
+
+  live:
+    desc: Live reload the go code, templates, and tailwindcss styles
+    deps:
+      - live:go
+      - live:templ
+      - live:tailwindcss
 
   # build/templates:
   #   desc: Build the templates
