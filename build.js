@@ -19,8 +19,8 @@ function postCSSPlugin() {
 async function build() {
   const ctx = await esbuild.context({
     entryPoints: {
-      'main': 'assets/src/ts/index.ts',
-      'main': 'assets/src/css/input.css'
+      'main': 'assets/ts/main.ts',
+      'index': 'assets/css/index.css',
     },
     bundle: true,
     outdir: 'dist',
