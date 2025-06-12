@@ -16,20 +16,20 @@ tasks:
   live:templ:
     desc: Live reload the templates
     cmds:
-      - go tool templ generate -path {{.TEMPL_DIR}} -watch -lazy -w 4 -proxy "http://{{.HOST}}:{{.PORT}}"
+      - go tool templ generate -path {{.TEMPL_DIR}} -watch -lazy -w 4
 
-  live:tailwindcss:
-    desc: Live reload the tailwindcss styles
+  live:esbuild:
+    desc: Bundle and watch JS/TS files
     cmds:
-      - pnpm tailwindcss -i ./assets/css/input.css -o ./assets/css/main.css --watch
+      - node build.js
 
   live:
-    desc: Live reload the go code, templates, and tailwindcss styles
+    desc: Live reload the go code, templates, and assets
     deps:
       - live:go
       - live:templ
-      - live:tailwindcss
-
+      - live:esbuild
+      #
   # build/templates:
   #   desc: Build the templates
   #   cmds:
