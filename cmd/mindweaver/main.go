@@ -13,7 +13,7 @@ func main() {
 
 	http.Handle("/", templ.Handler(component))
 
-	fs := http.FileServer(http.Dir("assets/dist"))
+	fs := http.FileServer(http.Dir("dist"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
 
 	fmt.Println("Listening on :8080")
