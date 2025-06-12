@@ -21,6 +21,9 @@ importers:
         specifier: ^4.1.8
         version: 4.1.8
     devDependencies:
+      daisyui:
+        specifier: ^5.0.43
+        version: 5.0.43
       esbuild:
         specifier: ^0.25.5
         version: 0.25.5
@@ -388,6 +391,9 @@ packages:
   chownr@3.0.0:
     resolution: {integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==}
     engines: {node: '>=18'}
+
+  daisyui@5.0.43:
+    resolution: {integrity: sha512-2pshHJ73vetSpsbAyaOncGnNYL0mwvgseS1EWy1I9Qpw8D11OuBoDNIWrPIME4UFcq2xuff3A9x+eXbuFR9fUQ==}
 
   detect-libc@1.0.3:
     resolution: {integrity: sha512-pGjwhsmsp4kL2RTz08wcOlGN83otlqHeD/Z5T8GXZB+/YcpQ/dgo+lbU8ZsGxV0HIvqqxo9l7mqYwyYMD9bKDg==}
@@ -812,6 +818,8 @@ snapshots:
       fill-range: 7.1.1
 
   chownr@3.0.0: {}
+
+  daisyui@5.0.43: {}
 
   detect-libc@1.0.3: {}
 
