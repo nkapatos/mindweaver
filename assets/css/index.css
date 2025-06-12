@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+@source "./../../internal/templates/**/*.{templ}";
+@plugin "daisyui";
 
 body {
     background-color: white;
