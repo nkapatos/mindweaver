@@ -1,0 +1,23 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/bin/main ./cmd/mindweaver"
+  bin = "./tmp/bin/main"
+  exclude_dir = ["node_modules", "assets", "tmp", "vendor"]
+  include_ext = ["go", "css", "js"]
+  exclude_ext = ["templ"]
+
+[color]
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[misc]
+  clean_on_exit = true
+
+[proxy]
+    enabled = true
+    proxy_port = 8081
+    app_port = 8080

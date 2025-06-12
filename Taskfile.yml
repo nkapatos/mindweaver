@@ -1,0 +1,46 @@
+version: 3
+
+vars:
+  HOST: localhost
+  PORT: 8080
+  TEMPL_DIR: ./internal/templates
+  STATIC_DIR: ./static
+  ASSETS_DIR: ./assets
+
+tasks:
+  live:go:
+    desc: Live reload the go code
+    cmds:
+      - go run github.com/air-verse/air@latest
+
+  live:templ:
+    desc: Live reload the templates
+    cmds:
+      - go tool templ generate -path {{.TEMPL_DIR}} -watch -lazy -w 4
+
+  live:esbuild:
+    desc: Bundle and watch JS/TS files
+    cmds:
+      - node build.js
+
+  live:
+    desc: Live reload the go code, templates, and assets
+    deps:
+      - live:go
+      - live:templ
+      - live:esbuild
+      #
+  # build/templates:
+  #   desc: Build the templates
+  #   cmds:
+  #     - templ build -o ./tmp/templates.go -dir ${TEMPL_DIR}
+  
+  # build/assets:
+  #   desc: Build the assets
+  #   cmds:
+  #     - go build -o ./tmp/assets.go -dir ${ASSETS_DIR}
+
+  format:templ:
+    desc: Format all templ files
+    cmds:
+      - templ fmt {{.TEMPL_DIR}}
