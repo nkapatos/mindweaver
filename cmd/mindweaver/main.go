@@ -3,15 +3,15 @@ package main
 import (
 	"database/sql"
 	"log/slog"
-	"net/http"
 	"os"
 
-	"github.com/a-h/templ"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nkapatos/mindweaver/internal/handlers/api"
+	"github.com/nkapatos/mindweaver/internal/handlers/web"
 	"github.com/nkapatos/mindweaver/internal/services"
 	"github.com/nkapatos/mindweaver/internal/store"
-	"github.com/nkapatos/mindweaver/internal/templates/views"
 )
 
 var db *sql.DB
@@ -53,22 +53,45 @@ func main() {
 	promptService := services.NewPromptService(querier)
 	userHandler := api.NewUserHandler(userService)
 	promptHandler := api.NewPromptHandler(promptService)
+	homeHandler := web.NewHomeHandler()
+	notFoundHandler := web.NewNotFoundHandler()
 
 	logger.Info("Application dependencies initialized")
 
-	// Setup routes
-	http.Handle("/", templ.Handler(views.Home()))
+	// Create Echo instance
+	e := echo.New()
+
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	// Routes
+	e.GET("/", homeHandler.Home)
 
 	// API routes
-	http.HandleFunc("/api/users", userHandler.CreateUser)
-	http.HandleFunc("/api/prompts", promptHandler.CreatePrompt)
+	e.POST("/api/users", func(c echo.Context) error {
+		userHandler.CreateUser(c.Response().Writer, c.Request())
+		return nil
+	})
+	e.POST("/api/prompts", func(c echo.Context) error {
+		promptHandler.CreatePrompt(c.Response().Writer, c.Request())
+		return nil
+	})
 
 	// Static assets
-	fs := http.FileServer(http.Dir("dist"))
-	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
+	e.Static("/assets", "dist")
 
-	logger.Info("Starting HTTP server", "port", "8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	// 404 handler
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		if he, ok := err.(*echo.HTTPError); ok && he.Code == 404 {
+			notFoundHandler.NotFound(c)
+			return
+		}
+		e.DefaultHTTPErrorHandler(err, c)
+	}
+
+	logger.Info("Starting Echo server", "port", "8080")
+	if err := e.Start(":8080"); err != nil {
 		logger.Error("Server failed to start", "error", err)
 		os.Exit(1)
 	}
