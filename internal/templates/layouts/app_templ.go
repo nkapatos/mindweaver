@@ -43,7 +43,7 @@ func AppLayout(title, description string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"drawer lg:drawer-open\"><input id=\"main-drawer\" type=\"checkbox\" class=\"drawer-toggle\"><!-- Main content area --><div class=\"drawer-content flex flex-col\"><!-- Header -->")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"drawer lg:drawer-open h-screen\"><input id=\"main-drawer\" type=\"checkbox\" class=\"drawer-toggle\"><!-- Main content area --><div class=\"drawer-content flex flex-col h-full\"><!-- Header - locked at top -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -51,7 +51,7 @@ func AppLayout(title, description string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<!-- Main content --><main class=\"flex-1 p-4 bg-base-200\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<!-- Main content - fills remaining space and scrolls --><main class=\"flex-1 p-4 bg-base-200 overflow-auto\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -59,7 +59,7 @@ func AppLayout(title, description string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main><!-- Footer -->")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main><!-- Footer - locked at bottom -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

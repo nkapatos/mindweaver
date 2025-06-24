@@ -15,7 +15,7 @@ templ PromptsPage() {
 					<div class="card-body">
 						<h2 class="card-title text-xl mb-4">Create New Prompt</h2>
 						<form action="/api/prompts" method="POST" class="space-y-4">
-							<div class="form-control">
+							<div>
 								<label class="label" for="title">
 									<span class="label-text font-medium">Title</span>
 								</label>
@@ -29,7 +29,7 @@ templ PromptsPage() {
 								/>
 							</div>
 
-							<div class="form-control">
+							<div>
 								<label class="label" for="content">
 									<span class="label-text font-medium">Content</span>
 								</label>
@@ -42,29 +42,25 @@ templ PromptsPage() {
 								></textarea>
 							</div>
 
-							<div class="form-control">
-								<label class="label cursor-pointer">
-									<span class="label-text font-medium">System Prompt</span>
-									<input 
-										type="checkbox" 
-										id="is_system" 
-										name="is_system" 
-										class="checkbox checkbox-primary" 
-										value="1"
-									/>
-								</label>
-								<label class="label">
-									<span class="label-text-alt text-base-content/60">
-										System prompts are used as default templates
-									</span>
-								</label>
-							</div>
+							<label class="label cursor-pointer">
+								<span class="label-text font-medium">System Prompt</span>
+								<input 
+									type="checkbox" 
+									id="is_system" 
+									name="is_system" 
+									class="checkbox checkbox-primary" 
+									value="1"
+								/>
+							</label>
+							<label class="label">
+								<span class="label-text-alt text-base-content/60">
+									System prompts are used as default templates
+								</span>
+							</label>
 
-							<div class="form-control mt-6">
-								<button type="submit" class="btn btn-primary w-full">
-									Create Prompt
-								</button>
-							</div>
+							<button type="submit" class="btn btn-primary w-full">
+								Create Prompt
+							</button>
 						</form>
 					</div>
 				</div>
