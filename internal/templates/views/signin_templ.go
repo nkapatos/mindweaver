@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/nkapatos/mindweaver/internal/templates/layouts"
 
-func PromptsPage() templ.Component {
+func SignIn() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -43,13 +43,13 @@ func PromptsPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"container mx-auto px-4 py-8\"><div class=\"mb-8\"><h1 class=\"text-3xl font-bold text-base-content mb-2\">Prompts</h1><p class=\"text-base-content/70\">Create and manage your prompts for better knowledge management.</p></div><div class=\"max-w-2xl\"><div class=\"card bg-base-100 shadow-lg\"><div class=\"card-body\"><h2 class=\"card-title text-xl mb-4\">Create New Prompt</h2><form action=\"/api/prompts\" method=\"POST\" class=\"space-y-4\"><div><label class=\"label\" for=\"title\"><span class=\"label-text font-medium\">Title</span></label> <input type=\"text\" id=\"title\" name=\"title\" class=\"input input-bordered w-full\" placeholder=\"Enter prompt title\" required></div><div><label class=\"label\" for=\"content\"><span class=\"label-text font-medium\">Content</span></label> <textarea id=\"content\" name=\"content\" class=\"textarea textarea-bordered w-full h-32\" placeholder=\"Enter prompt content\" required></textarea></div><label class=\"label cursor-pointer\"><span class=\"label-text font-medium\">System Prompt</span> <input type=\"checkbox\" id=\"is_system\" name=\"is_system\" class=\"checkbox checkbox-primary\" value=\"1\"></label> <label class=\"label\"><span class=\"label-text-alt text-base-content/60\">System prompts are used as default templates</span></label> <button type=\"submit\" class=\"btn btn-primary w-full\">Create Prompt</button></form></div></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-base-200 flex items-center justify-center p-4\"><div class=\"card w-full max-w-md bg-base-100 shadow-xl\"><div class=\"card-body\"><div class=\"text-center mb-6\"><h1 class=\"text-3xl font-bold text-base-content\">Welcome Back</h1><p class=\"text-base-content/70 mt-2\">Sign in to your MindWeaver account</p></div><form action=\"/auth/signin\" method=\"POST\" class=\"space-y-4\"><div><label class=\"label\" for=\"email\"><span class=\"label-text\">Email</span></label> <input type=\"email\" id=\"email\" name=\"email\" placeholder=\"Enter your email\" class=\"input input-bordered w-full\" required></div><div><label class=\"label\" for=\"password\"><span class=\"label-text\">Password</span></label> <input type=\"password\" id=\"password\" name=\"password\" placeholder=\"Enter your password\" class=\"input input-bordered w-full\" required> <label class=\"label\"><a href=\"/auth/forgot-password\" class=\"label-text-alt link link-primary\">Forgot password?</a></label></div><label class=\"label cursor-pointer\"><span class=\"label-text\">Remember me</span> <input type=\"checkbox\" name=\"remember\" class=\"checkbox checkbox-primary\"></label> <button type=\"submit\" class=\"btn btn-primary w-full\">Sign In</button></form><div class=\"text-center mt-6\"><p class=\"text-base-content/70\">Don't have an account?  <a href=\"/auth/signup\" class=\"link link-primary font-medium\">Sign up</a></p></div></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layouts.AppLayout("Mindweaver - Prompts", "Manage your prompts").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.BaseLayout("Sign In - MindWeaver", "Sign in to your MindWeaver account").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

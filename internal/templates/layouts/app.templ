@@ -4,20 +4,20 @@ import "github.com/nkapatos/mindweaver/internal/templates/components"
 
 templ AppLayout(title, description string) {
 	@BaseLayout(title, description) {
-		<div class="drawer lg:drawer-open">
+		<div class="drawer lg:drawer-open h-screen">
 			<input id="main-drawer" type="checkbox" class="drawer-toggle" />
 			
 			<!-- Main content area -->
-			<div class="drawer-content flex flex-col">
-				<!-- Header -->
+			<div class="drawer-content flex flex-col h-full">
+				<!-- Header - locked at top -->
 				@components.Header()
 				
-				<!-- Main content -->
-				<main class="flex-1 p-4 bg-base-200">
+				<!-- Main content - fills remaining space and scrolls -->
+				<main class="flex-1 p-4 bg-base-200 overflow-auto">
 					{ children... }
 				</main>
 				
-				<!-- Footer -->
+				<!-- Footer - locked at bottom -->
 				@components.Footer()
 			</div>
 			
