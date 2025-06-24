@@ -11,7 +11,7 @@ import (
 	"github.com/nkapatos/mindweaver/internal/handlers/api"
 	"github.com/nkapatos/mindweaver/internal/services"
 	"github.com/nkapatos/mindweaver/internal/store"
-	"github.com/nkapatos/mindweaver/internal/templates/pages"
+	"github.com/nkapatos/mindweaver/internal/templates/views"
 )
 
 var db *sql.DB
@@ -57,7 +57,7 @@ func main() {
 	logger.Info("Application dependencies initialized")
 
 	// Setup routes
-	http.Handle("/", templ.Handler(pages.Home()))
+	http.Handle("/", templ.Handler(views.Home()))
 
 	// API routes
 	http.HandleFunc("/api/users", userHandler.CreateUser)
