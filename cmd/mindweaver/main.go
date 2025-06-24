@@ -55,6 +55,7 @@ func main() {
 	promptHandler := api.NewPromptHandler(promptService)
 	homeHandler := web.NewHomeHandler()
 	notFoundHandler := web.NewNotFoundHandler()
+	promptsHandler := web.NewPromptsHandler()
 
 	logger.Info("Application dependencies initialized")
 
@@ -67,6 +68,7 @@ func main() {
 
 	// Routes
 	e.GET("/", homeHandler.Home)
+	e.GET("/prompts", promptsHandler.Prompts)
 
 	// API routes
 	e.POST("/api/users", func(c echo.Context) error {

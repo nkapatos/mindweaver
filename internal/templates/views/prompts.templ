@@ -1,0 +1,74 @@
+package views
+
+import "github.com/nkapatos/mindweaver/internal/templates/layouts"
+
+templ PromptsPage() {
+	@layouts.AppLayout("Mindweaver - Prompts", "Manage your prompts") {
+		<div class="container mx-auto px-4 py-8">
+			<div class="mb-8">
+				<h1 class="text-3xl font-bold text-base-content mb-2">Prompts</h1>
+				<p class="text-base-content/70">Create and manage your prompts for better knowledge management.</p>
+			</div>
+
+			<div class="max-w-2xl">
+				<div class="card bg-base-100 shadow-lg">
+					<div class="card-body">
+						<h2 class="card-title text-xl mb-4">Create New Prompt</h2>
+						<form action="/api/prompts" method="POST" class="space-y-4">
+							<div class="form-control">
+								<label class="label" for="title">
+									<span class="label-text font-medium">Title</span>
+								</label>
+								<input 
+									type="text" 
+									id="title" 
+									name="title" 
+									class="input input-bordered w-full" 
+									placeholder="Enter prompt title"
+									required
+								/>
+							</div>
+
+							<div class="form-control">
+								<label class="label" for="content">
+									<span class="label-text font-medium">Content</span>
+								</label>
+								<textarea 
+									id="content" 
+									name="content" 
+									class="textarea textarea-bordered w-full h-32" 
+									placeholder="Enter prompt content"
+									required
+								></textarea>
+							</div>
+
+							<div class="form-control">
+								<label class="label cursor-pointer">
+									<span class="label-text font-medium">System Prompt</span>
+									<input 
+										type="checkbox" 
+										id="is_system" 
+										name="is_system" 
+										class="checkbox checkbox-primary" 
+										value="1"
+									/>
+								</label>
+								<label class="label">
+									<span class="label-text-alt text-base-content/60">
+										System prompts are used as default templates
+									</span>
+								</label>
+							</div>
+
+							<div class="form-control mt-6">
+								<button type="submit" class="btn btn-primary w-full">
+									Create Prompt
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+} 
