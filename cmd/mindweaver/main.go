@@ -25,7 +25,7 @@ func init() {
 	slog.SetDefault(logger)
 
 	var err error
-	db, err = sql.Open("sqlite3", "file:mindweaver.db?cache=shared&mode=rwc")
+	db, err = sql.Open("sqlite3", "file:mw.db?cache=shared&mode=rwc")
 	if err != nil {
 		logger.Error("Failed to open database", "error", err)
 		os.Exit(1)
