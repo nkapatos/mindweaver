@@ -1,0 +1,20 @@
+package elements
+
+type TextareaProps struct {
+	ID          string
+	Name        string
+	Class       string
+	Placeholder string
+	Required    bool
+	Content     string
+}
+
+templ Textarea(props TextareaProps) {
+	<textarea 
+		id={props.ID}
+		name={props.Name}
+		class={props.Class}
+		placeholder={props.Placeholder}
+		required={props.Required}
+	>{props.Content}</textarea>
+} 

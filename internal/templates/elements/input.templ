@@ -1,0 +1,23 @@
+package elements
+
+type InputProps struct {
+	Type        string
+	ID          string
+	Name        string
+	Class       string
+	Placeholder string
+	Required    bool
+	Value       string
+}
+
+templ Input(props InputProps) {
+	<input 
+		type={props.Type}
+		id={props.ID}
+		name={props.Name}
+		class={props.Class}
+		placeholder={props.Placeholder}
+		required={props.Required}
+		value={props.Value}
+	/>
+} 
