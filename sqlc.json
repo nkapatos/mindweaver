@@ -3,8 +3,8 @@
   "sql": [
     {
       "engine": "sqlite",
-      "queries": "internal/sql/",
-      "schema": "internal/migrations/",
+      "queries": "sql/",
+      "schema": "migrations/",
       "gen": {
         "go": {
           "package": "store",
