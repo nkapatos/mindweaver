@@ -5,11 +5,10 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nkapatos/mindweaver/internal/handlers/api"
 	"github.com/nkapatos/mindweaver/internal/handlers/web"
+	"github.com/nkapatos/mindweaver/internal/router"
 	"github.com/nkapatos/mindweaver/internal/services"
 	"github.com/nkapatos/mindweaver/internal/store"
 )
@@ -60,42 +59,21 @@ func main() {
 
 	logger.Info("Application dependencies initialized")
 
-	// Create Echo instance
-	e := echo.New()
+	// Initialize router
+	router := router.New()
 
-	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-
-	// Routes
-	e.GET("/", homeHandler.Home)
-	e.GET("/prompts", promptsHandler.Prompts)
-	e.GET("/settings", settingsHandler.Settings)
-
-	// API routes
-	e.POST("/api/users", func(c echo.Context) error {
-		userHandler.CreateUser(c.Response().Writer, c.Request())
-		return nil
-	})
-	e.POST("/api/prompts", func(c echo.Context) error {
-		promptHandler.CreatePrompt(c.Response().Writer, c.Request())
-		return nil
-	})
-
-	// Static assets
-	e.Static("/assets", "dist")
-
-	// 404 handler
-	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		if he, ok := err.(*echo.HTTPError); ok && he.Code == 404 {
-			notFoundHandler.NotFound(c)
-			return
-		}
-		e.DefaultHTTPErrorHandler(err, c)
-	}
+	// Setup all routes
+	router.SetupRoutes(
+		userHandler,
+		promptHandler,
+		homeHandler,
+		promptsHandler,
+		settingsHandler,
+		notFoundHandler,
+	)
 
 	logger.Info("Starting Echo server", "port", "8080")
-	if err := e.Start(":8080"); err != nil {
+	if err := router.Echo().Start(":8080"); err != nil {
 		logger.Error("Server failed to start", "error", err)
 		os.Exit(1)
 	}

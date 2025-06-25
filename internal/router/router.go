@@ -1,0 +1,52 @@
+package router
+
+import (
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/nkapatos/mindweaver/internal/handlers/api"
+	"github.com/nkapatos/mindweaver/internal/handlers/web"
+	"github.com/nkapatos/mindweaver/internal/router/routes"
+)
+
+type Router struct {
+	echo *echo.Echo
+}
+
+func New() *Router {
+	e := echo.New()
+
+	// Global middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	return &Router{echo: e}
+}
+
+func (r *Router) SetupRoutes(
+	userHandler *api.UserHandler,
+	promptHandler *api.PromptHandler,
+	homeHandler *web.HomeHandler,
+	promptsHandler *web.PromptsHandler,
+	settingsHandler *web.SettingsHandler,
+	notFoundHandler *web.NotFoundHandler,
+) {
+	routes.SetupWebRoutes(r.echo, homeHandler, promptsHandler, settingsHandler)
+	routes.SetupAPIRoutes(r.echo, userHandler, promptHandler)
+	routes.SetupStaticRoutes(r.echo)
+	r.setupErrorHandling(notFoundHandler)
+}
+
+func (r *Router) setupErrorHandling(notFoundHandler *web.NotFoundHandler) {
+	// 404 handler
+	r.echo.HTTPErrorHandler = func(err error, c echo.Context) {
+		if he, ok := err.(*echo.HTTPError); ok && he.Code == 404 {
+			notFoundHandler.NotFound(c)
+			return
+		}
+		r.echo.DefaultHTTPErrorHandler(err, c)
+	}
+}
+
+func (r *Router) Echo() *echo.Echo {
+	return r.echo
+}
