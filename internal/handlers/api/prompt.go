@@ -27,7 +27,7 @@ func (h *PromptHandler) CreatePrompt(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		UserID   *int64 `json:"user_id,omitempty"`
+		ActorID  *int64 `json:"actor_id,omitempty"`
 		Title    string `json:"title"`
 		Content  string `json:"content"`
 		IsSystem bool   `json:"is_system"`
@@ -43,7 +43,7 @@ func (h *PromptHandler) CreatePrompt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.promptService.CreatePrompt(r.Context(), req.UserID, req.Title, req.Content, req.IsSystem); err != nil {
+	if err := h.promptService.CreatePrompt(r.Context(), req.ActorID, req.Title, req.Content, req.IsSystem); err != nil {
 		http.Error(w, "Failed to create prompt", http.StatusInternalServerError)
 		return
 	}
@@ -97,26 +97,26 @@ func (h *PromptHandler) GetAllPrompts(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(prompts)
 }
 
-// GetPromptsByUserID handles GET /api/prompts/by-user?user_id={id}
-func (h *PromptHandler) GetPromptsByUserID(w http.ResponseWriter, r *http.Request) {
+// GetPromptsByActorID handles GET /api/prompts/by-actor?actor_id={id}
+func (h *PromptHandler) GetPromptsByActorID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userIDStr := r.URL.Query().Get("user_id")
-	if userIDStr == "" {
-		http.Error(w, "User ID is required", http.StatusBadRequest)
+	actorIDStr := r.URL.Query().Get("actor_id")
+	if actorIDStr == "" {
+		http.Error(w, "Actor ID is required", http.StatusBadRequest)
 		return
 	}
 
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
+	actorID, err := strconv.ParseInt(actorIDStr, 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		http.Error(w, "Invalid actor ID", http.StatusBadRequest)
 		return
 	}
 
-	prompts, err := h.promptService.GetPromptsByUserID(r.Context(), userID)
+	prompts, err := h.promptService.GetPromptsByActorID(r.Context(), actorID)
 	if err != nil {
 		http.Error(w, "Failed to fetch prompts", http.StatusInternalServerError)
 		return

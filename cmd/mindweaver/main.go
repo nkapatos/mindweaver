@@ -48,10 +48,10 @@ func main() {
 
 	// Initialize dependencies
 	querier := store.New(db)
-	userService := services.NewUserService(querier)
+	actorService := services.NewActorService(querier)
 	promptService := services.NewPromptService(querier)
 	providerService := services.NewProviderService(querier)
-	userHandler := api.NewUserHandler(userService)
+	actorHandler := api.NewActorHandler(actorService)
 	promptHandler := api.NewPromptHandler(promptService)
 	homeHandler := web.NewHomeHandler()
 	notFoundHandler := web.NewNotFoundHandler()
@@ -67,7 +67,7 @@ func main() {
 
 	// Setup all routes
 	router.SetupRoutes(
-		userHandler,
+		actorHandler,
 		promptHandler,
 		homeHandler,
 		promptsHandler,

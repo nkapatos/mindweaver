@@ -44,25 +44,15 @@ const getAllPrompts = `-- name: GetAllPrompts :many
 SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts
 `
 
-type GetAllPromptsRow struct {
-	ID        int64          `json:"id"`
-	ActorID   sql.NullInt64  `json:"actor_id"`
-	Title     string         `json:"title"`
-	Content   string         `json:"content"`
-	IsSystem  sql.NullInt64  `json:"is_system"`
-	CreatedAt sql.NullString `json:"created_at"`
-	UpdatedAt sql.NullString `json:"updated_at"`
-}
-
-func (q *Queries) GetAllPrompts(ctx context.Context) ([]GetAllPromptsRow, error) {
+func (q *Queries) GetAllPrompts(ctx context.Context) ([]Prompt, error) {
 	rows, err := q.db.QueryContext(ctx, getAllPrompts)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetAllPromptsRow
+	var items []Prompt
 	for rows.Next() {
-		var i GetAllPromptsRow
+		var i Prompt
 		if err := rows.Scan(
 			&i.ID,
 			&i.ActorID,
@@ -89,19 +79,9 @@ const getPromptById = `-- name: GetPromptById :one
 SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts WHERE id = ? LIMIT 1
 `
 
-type GetPromptByIdRow struct {
-	ID        int64          `json:"id"`
-	ActorID   sql.NullInt64  `json:"actor_id"`
-	Title     string         `json:"title"`
-	Content   string         `json:"content"`
-	IsSystem  sql.NullInt64  `json:"is_system"`
-	CreatedAt sql.NullString `json:"created_at"`
-	UpdatedAt sql.NullString `json:"updated_at"`
-}
-
-func (q *Queries) GetPromptById(ctx context.Context, id int64) (GetPromptByIdRow, error) {
+func (q *Queries) GetPromptById(ctx context.Context, id int64) (Prompt, error) {
 	row := q.db.QueryRowContext(ctx, getPromptById, id)
-	var i GetPromptByIdRow
+	var i Prompt
 	err := row.Scan(
 		&i.ID,
 		&i.ActorID,
@@ -118,25 +98,15 @@ const getPromptsByActorID = `-- name: GetPromptsByActorID :many
 SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts WHERE actor_id = ?
 `
 
-type GetPromptsByActorIDRow struct {
-	ID        int64          `json:"id"`
-	ActorID   sql.NullInt64  `json:"actor_id"`
-	Title     string         `json:"title"`
-	Content   string         `json:"content"`
-	IsSystem  sql.NullInt64  `json:"is_system"`
-	CreatedAt sql.NullString `json:"created_at"`
-	UpdatedAt sql.NullString `json:"updated_at"`
-}
-
-func (q *Queries) GetPromptsByActorID(ctx context.Context, actorID sql.NullInt64) ([]GetPromptsByActorIDRow, error) {
+func (q *Queries) GetPromptsByActorID(ctx context.Context, actorID sql.NullInt64) ([]Prompt, error) {
 	rows, err := q.db.QueryContext(ctx, getPromptsByActorID, actorID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetPromptsByActorIDRow
+	var items []Prompt
 	for rows.Next() {
-		var i GetPromptsByActorIDRow
+		var i Prompt
 		if err := rows.Scan(
 			&i.ID,
 			&i.ActorID,
@@ -163,25 +133,15 @@ const getSystemPrompts = `-- name: GetSystemPrompts :many
 SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts WHERE is_system = 1
 `
 
-type GetSystemPromptsRow struct {
-	ID        int64          `json:"id"`
-	ActorID   sql.NullInt64  `json:"actor_id"`
-	Title     string         `json:"title"`
-	Content   string         `json:"content"`
-	IsSystem  sql.NullInt64  `json:"is_system"`
-	CreatedAt sql.NullString `json:"created_at"`
-	UpdatedAt sql.NullString `json:"updated_at"`
-}
-
-func (q *Queries) GetSystemPrompts(ctx context.Context) ([]GetSystemPromptsRow, error) {
+func (q *Queries) GetSystemPrompts(ctx context.Context) ([]Prompt, error) {
 	rows, err := q.db.QueryContext(ctx, getSystemPrompts)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetSystemPromptsRow
+	var items []Prompt
 	for rows.Next() {
-		var i GetSystemPromptsRow
+		var i Prompt
 		if err := rows.Scan(
 			&i.ID,
 			&i.ActorID,

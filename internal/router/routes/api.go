@@ -6,10 +6,10 @@ import (
 )
 
 // SetupAPIRoutes configures all API routes
-func SetupAPIRoutes(e *echo.Echo, userHandler *api.UserHandler, promptHandler *api.PromptHandler) {
+func SetupAPIRoutes(e *echo.Echo, actorHandler *api.ActorHandler, promptHandler *api.PromptHandler) {
 	// API routes
-	e.POST("/api/users", func(c echo.Context) error {
-		userHandler.CreateUser(c.Response().Writer, c.Request())
+	e.POST("/api/actors", func(c echo.Context) error {
+		actorHandler.CreateActor(c.Response().Writer, c.Request())
 		return nil
 	})
 	e.POST("/api/prompts", func(c echo.Context) error {
