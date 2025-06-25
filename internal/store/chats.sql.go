@@ -52,44 +52,6 @@ func (q *Queries) CreateChat(ctx context.Context, arg CreateChatParams) (Chat, e
 	return i, err
 }
 
-const createChatMessage = `-- name: CreateChatMessage :one
-INSERT INTO chat_messages (uuid, chat_id, actor_id, role, content, tokens_used) 
-VALUES (?, ?, ?, ?, ?, ?) 
-RETURNING id, uuid, chat_id, actor_id, role, content, tokens_used, created_at
-`
-
-type CreateChatMessageParams struct {
-	Uuid       string        `json:"uuid"`
-	ChatID     int64         `json:"chat_id"`
-	ActorID    int64         `json:"actor_id"`
-	Role       string        `json:"role"`
-	Content    string        `json:"content"`
-	TokensUsed sql.NullInt64 `json:"tokens_used"`
-}
-
-func (q *Queries) CreateChatMessage(ctx context.Context, arg CreateChatMessageParams) (ChatMessage, error) {
-	row := q.db.QueryRowContext(ctx, createChatMessage,
-		arg.Uuid,
-		arg.ChatID,
-		arg.ActorID,
-		arg.Role,
-		arg.Content,
-		arg.TokensUsed,
-	)
-	var i ChatMessage
-	err := row.Scan(
-		&i.ID,
-		&i.Uuid,
-		&i.ChatID,
-		&i.ActorID,
-		&i.Role,
-		&i.Content,
-		&i.TokensUsed,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
 const deleteChat = `-- name: DeleteChat :exec
 DELETE FROM chats WHERE id = ?
 `
@@ -147,68 +109,6 @@ func (q *Queries) GetChatByUUID(ctx context.Context, uuid string) (Chat, error) 
 		&i.UpdatedAt,
 	)
 	return i, err
-}
-
-const getChatMessageByUUID = `-- name: GetChatMessageByUUID :one
-SELECT id, uuid, chat_id, actor_id, role, content, tokens_used, created_at 
-FROM chat_messages 
-WHERE uuid = ? 
-LIMIT 1
-`
-
-func (q *Queries) GetChatMessageByUUID(ctx context.Context, uuid string) (ChatMessage, error) {
-	row := q.db.QueryRowContext(ctx, getChatMessageByUUID, uuid)
-	var i ChatMessage
-	err := row.Scan(
-		&i.ID,
-		&i.Uuid,
-		&i.ChatID,
-		&i.ActorID,
-		&i.Role,
-		&i.Content,
-		&i.TokensUsed,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const getChatMessages = `-- name: GetChatMessages :many
-SELECT id, uuid, chat_id, actor_id, role, content, tokens_used, created_at 
-FROM chat_messages 
-WHERE chat_id = ? 
-ORDER BY created_at ASC
-`
-
-func (q *Queries) GetChatMessages(ctx context.Context, chatID int64) ([]ChatMessage, error) {
-	rows, err := q.db.QueryContext(ctx, getChatMessages, chatID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []ChatMessage
-	for rows.Next() {
-		var i ChatMessage
-		if err := rows.Scan(
-			&i.ID,
-			&i.Uuid,
-			&i.ChatID,
-			&i.ActorID,
-			&i.Role,
-			&i.Content,
-			&i.TokensUsed,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const getChatsByActorID = `-- name: GetChatsByActorID :many
