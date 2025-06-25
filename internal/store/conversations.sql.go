@@ -11,13 +11,12 @@ import (
 )
 
 const createConversation = `-- name: CreateConversation :one
-INSERT INTO conversations (uuid, actor_id, title, description, metadata, is_active) 
-VALUES (?, ?, ?, ?, ?, ?) 
-RETURNING id, uuid, actor_id, title, description, metadata, is_active, created_at, updated_at
+INSERT INTO conversations (actor_id, title, description, metadata, is_active) 
+VALUES (?, ?, ?, ?, ?) 
+RETURNING id, actor_id, title, description, metadata, is_active, created_at, updated_at
 `
 
 type CreateConversationParams struct {
-	Uuid        string         `json:"uuid"`
 	ActorID     int64          `json:"actor_id"`
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
@@ -27,7 +26,6 @@ type CreateConversationParams struct {
 
 func (q *Queries) CreateConversation(ctx context.Context, arg CreateConversationParams) (Conversation, error) {
 	row := q.db.QueryRowContext(ctx, createConversation,
-		arg.Uuid,
 		arg.ActorID,
 		arg.Title,
 		arg.Description,
@@ -37,7 +35,6 @@ func (q *Queries) CreateConversation(ctx context.Context, arg CreateConversation
 	var i Conversation
 	err := row.Scan(
 		&i.ID,
-		&i.Uuid,
 		&i.ActorID,
 		&i.Title,
 		&i.Description,
@@ -59,7 +56,7 @@ func (q *Queries) DeleteConversation(ctx context.Context, id int64) error {
 }
 
 const getConversationByID = `-- name: GetConversationByID :one
-SELECT id, uuid, actor_id, title, description, metadata, is_active, created_at, updated_at 
+SELECT id, actor_id, title, description, metadata, is_active, created_at, updated_at 
 FROM conversations 
 WHERE id = ? 
 LIMIT 1
@@ -70,31 +67,6 @@ func (q *Queries) GetConversationByID(ctx context.Context, id int64) (Conversati
 	var i Conversation
 	err := row.Scan(
 		&i.ID,
-		&i.Uuid,
-		&i.ActorID,
-		&i.Title,
-		&i.Description,
-		&i.Metadata,
-		&i.IsActive,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const getConversationByUUID = `-- name: GetConversationByUUID :one
-SELECT id, uuid, actor_id, title, description, metadata, is_active, created_at, updated_at 
-FROM conversations 
-WHERE uuid = ? 
-LIMIT 1
-`
-
-func (q *Queries) GetConversationByUUID(ctx context.Context, uuid string) (Conversation, error) {
-	row := q.db.QueryRowContext(ctx, getConversationByUUID, uuid)
-	var i Conversation
-	err := row.Scan(
-		&i.ID,
-		&i.Uuid,
 		&i.ActorID,
 		&i.Title,
 		&i.Description,
@@ -107,7 +79,7 @@ func (q *Queries) GetConversationByUUID(ctx context.Context, uuid string) (Conve
 }
 
 const getConversationsByActorID = `-- name: GetConversationsByActorID :many
-SELECT id, uuid, actor_id, title, description, metadata, is_active, created_at, updated_at 
+SELECT id, actor_id, title, description, metadata, is_active, created_at, updated_at 
 FROM conversations 
 WHERE actor_id = ? AND is_active = true 
 ORDER BY created_at DESC
@@ -124,7 +96,6 @@ func (q *Queries) GetConversationsByActorID(ctx context.Context, actorID int64) 
 		var i Conversation
 		if err := rows.Scan(
 			&i.ID,
-			&i.Uuid,
 			&i.ActorID,
 			&i.Title,
 			&i.Description,

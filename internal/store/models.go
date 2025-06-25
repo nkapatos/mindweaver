@@ -10,7 +10,6 @@ import (
 
 type Actor struct {
 	ID          int64          `json:"id"`
-	Uuid        string         `json:"uuid"`
 	Type        string         `json:"type"`
 	Name        string         `json:"name"`
 	DisplayName sql.NullString `json:"display_name"`
@@ -34,20 +33,8 @@ type Chat struct {
 	UpdatedAt      sql.NullTime   `json:"updated_at"`
 }
 
-type ChatMessage struct {
-	ID         int64         `json:"id"`
-	Uuid       string        `json:"uuid"`
-	ChatID     int64         `json:"chat_id"`
-	ActorID    int64         `json:"actor_id"`
-	Role       string        `json:"role"`
-	Content    string        `json:"content"`
-	TokensUsed sql.NullInt64 `json:"tokens_used"`
-	CreatedAt  sql.NullTime  `json:"created_at"`
-}
-
 type Conversation struct {
 	ID          int64          `json:"id"`
-	Uuid        string         `json:"uuid"`
 	ActorID     int64          `json:"actor_id"`
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
@@ -69,12 +56,13 @@ type Model struct {
 
 type Prompt struct {
 	ID        int64          `json:"id"`
-	ActorID   sql.NullInt64  `json:"actor_id"`
+	UserID    sql.NullInt64  `json:"user_id"`
 	Title     string         `json:"title"`
 	Content   string         `json:"content"`
 	IsSystem  sql.NullInt64  `json:"is_system"`
 	CreatedAt sql.NullString `json:"created_at"`
 	UpdatedAt sql.NullString `json:"updated_at"`
+	ActorID   sql.NullInt64  `json:"actor_id"`
 }
 
 type Provider struct {

@@ -21,17 +21,17 @@ func NewPromptService(promptStore store.Querier) *PromptService {
 }
 
 // CreatePrompt creates a new prompt
-func (s *PromptService) CreatePrompt(ctx context.Context, userID *int64, title, content string, isSystem bool) error {
+func (s *PromptService) CreatePrompt(ctx context.Context, actorID *int64, title, content string, isSystem bool) error {
 	s.logger.Info("Creating new prompt",
 		"title", title,
-		"user_id", userID,
+		"actor_id", actorID,
 		"is_system", isSystem,
 		"content_length", len(content))
 
-	var userIDNull sql.NullInt64
-	if userID != nil {
-		userIDNull.Int64 = *userID
-		userIDNull.Valid = true
+	var actorIDNull sql.NullInt64
+	if actorID != nil {
+		actorIDNull.Int64 = *actorID
+		actorIDNull.Valid = true
 	}
 
 	var isSystemNull sql.NullInt64
@@ -41,7 +41,7 @@ func (s *PromptService) CreatePrompt(ctx context.Context, userID *int64, title, 
 	}
 
 	params := store.CreatePromptParams{
-		UserID:   userIDNull,
+		ActorID:  actorIDNull,
 		Title:    title,
 		Content:  content,
 		IsSystem: isSystemNull,
@@ -50,24 +50,24 @@ func (s *PromptService) CreatePrompt(ctx context.Context, userID *int64, title, 
 	if err := s.promptStore.CreatePrompt(ctx, params); err != nil {
 		s.logger.Error("Failed to create prompt",
 			"title", title,
-			"user_id", userID,
+			"actor_id", actorID,
 			"is_system", isSystem,
 			"error", err)
 		return err
 	}
 
-	s.logger.Info("Prompt created successfully", "title", title, "user_id", userID, "is_system", isSystem)
+	s.logger.Info("Prompt created successfully", "title", title, "actor_id", actorID, "is_system", isSystem)
 	return nil
 }
 
 // GetPromptByID retrieves a prompt by its ID
-func (s *PromptService) GetPromptByID(ctx context.Context, id int64) (store.Prompt, error) {
+func (s *PromptService) GetPromptByID(ctx context.Context, id int64) (store.GetPromptByIdRow, error) {
 	s.logger.Debug("Getting prompt by ID", "id", id)
 
 	prompt, err := s.promptStore.GetPromptById(ctx, id)
 	if err != nil {
 		s.logger.Error("Failed to get prompt by ID", "id", id, "error", err)
-		return store.Prompt{}, err
+		return store.GetPromptByIdRow{}, err
 	}
 
 	s.logger.Debug("Prompt retrieved successfully", "id", id, "title", prompt.Title)
@@ -75,7 +75,7 @@ func (s *PromptService) GetPromptByID(ctx context.Context, id int64) (store.Prom
 }
 
 // GetAllPrompts retrieves all prompts
-func (s *PromptService) GetAllPrompts(ctx context.Context) ([]store.Prompt, error) {
+func (s *PromptService) GetAllPrompts(ctx context.Context) ([]store.GetAllPromptsRow, error) {
 	s.logger.Debug("Getting all prompts")
 
 	prompts, err := s.promptStore.GetAllPrompts(ctx)
@@ -88,23 +88,23 @@ func (s *PromptService) GetAllPrompts(ctx context.Context) ([]store.Prompt, erro
 	return prompts, nil
 }
 
-// GetPromptsByUserID retrieves all prompts for a specific user
-func (s *PromptService) GetPromptsByUserID(ctx context.Context, userID int64) ([]store.Prompt, error) {
-	s.logger.Debug("Getting prompts by user ID", "user_id", userID)
+// GetPromptsByActorID retrieves all prompts for a specific actor
+func (s *PromptService) GetPromptsByActorID(ctx context.Context, actorID int64) ([]store.GetPromptsByActorIDRow, error) {
+	s.logger.Debug("Getting prompts by actor ID", "actor_id", actorID)
 
-	userIDNull := sql.NullInt64{Int64: userID, Valid: true}
-	prompts, err := s.promptStore.GetPromptsByUserId(ctx, userIDNull)
+	actorIDNull := sql.NullInt64{Int64: actorID, Valid: true}
+	prompts, err := s.promptStore.GetPromptsByActorID(ctx, actorIDNull)
 	if err != nil {
-		s.logger.Error("Failed to get prompts by user ID", "user_id", userID, "error", err)
+		s.logger.Error("Failed to get prompts by actor ID", "actor_id", actorID, "error", err)
 		return nil, err
 	}
 
-	s.logger.Debug("Prompts retrieved successfully", "user_id", userID, "count", len(prompts))
+	s.logger.Debug("Prompts retrieved successfully", "actor_id", actorID, "count", len(prompts))
 	return prompts, nil
 }
 
 // GetSystemPrompts retrieves all system prompts
-func (s *PromptService) GetSystemPrompts(ctx context.Context) ([]store.Prompt, error) {
+func (s *PromptService) GetSystemPrompts(ctx context.Context) ([]store.GetSystemPromptsRow, error) {
 	s.logger.Debug("Getting system prompts")
 
 	prompts, err := s.promptStore.GetSystemPrompts(ctx)

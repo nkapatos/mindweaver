@@ -11,13 +11,12 @@ import (
 )
 
 const createActor = `-- name: CreateActor :one
-INSERT INTO actors (uuid, type, name, display_name, avatar_url, metadata, is_active) 
-VALUES (?, ?, ?, ?, ?, ?, ?) 
-RETURNING id, uuid, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at
+INSERT INTO actors (type, name, display_name, avatar_url, metadata, is_active) 
+VALUES (?, ?, ?, ?, ?, ?) 
+RETURNING id, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at
 `
 
 type CreateActorParams struct {
-	Uuid        string         `json:"uuid"`
 	Type        string         `json:"type"`
 	Name        string         `json:"name"`
 	DisplayName sql.NullString `json:"display_name"`
@@ -28,7 +27,6 @@ type CreateActorParams struct {
 
 func (q *Queries) CreateActor(ctx context.Context, arg CreateActorParams) (Actor, error) {
 	row := q.db.QueryRowContext(ctx, createActor,
-		arg.Uuid,
 		arg.Type,
 		arg.Name,
 		arg.DisplayName,
@@ -39,7 +37,6 @@ func (q *Queries) CreateActor(ctx context.Context, arg CreateActorParams) (Actor
 	var i Actor
 	err := row.Scan(
 		&i.ID,
-		&i.Uuid,
 		&i.Type,
 		&i.Name,
 		&i.DisplayName,
@@ -62,7 +59,7 @@ func (q *Queries) DeleteActor(ctx context.Context, id int64) error {
 }
 
 const getActorByID = `-- name: GetActorByID :one
-SELECT id, uuid, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at 
+SELECT id, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at 
 FROM actors 
 WHERE id = ? 
 LIMIT 1
@@ -73,7 +70,6 @@ func (q *Queries) GetActorByID(ctx context.Context, id int64) (Actor, error) {
 	var i Actor
 	err := row.Scan(
 		&i.ID,
-		&i.Uuid,
 		&i.Type,
 		&i.Name,
 		&i.DisplayName,
@@ -87,7 +83,7 @@ func (q *Queries) GetActorByID(ctx context.Context, id int64) (Actor, error) {
 }
 
 const getActorByName = `-- name: GetActorByName :one
-SELECT id, uuid, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at 
+SELECT id, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at 
 FROM actors 
 WHERE name = ? AND type = ? 
 LIMIT 1
@@ -103,32 +99,6 @@ func (q *Queries) GetActorByName(ctx context.Context, arg GetActorByNameParams) 
 	var i Actor
 	err := row.Scan(
 		&i.ID,
-		&i.Uuid,
-		&i.Type,
-		&i.Name,
-		&i.DisplayName,
-		&i.AvatarUrl,
-		&i.Metadata,
-		&i.IsActive,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const getActorByUUID = `-- name: GetActorByUUID :one
-SELECT id, uuid, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at 
-FROM actors 
-WHERE uuid = ? 
-LIMIT 1
-`
-
-func (q *Queries) GetActorByUUID(ctx context.Context, uuid string) (Actor, error) {
-	row := q.db.QueryRowContext(ctx, getActorByUUID, uuid)
-	var i Actor
-	err := row.Scan(
-		&i.ID,
-		&i.Uuid,
 		&i.Type,
 		&i.Name,
 		&i.DisplayName,
@@ -142,7 +112,7 @@ func (q *Queries) GetActorByUUID(ctx context.Context, uuid string) (Actor, error
 }
 
 const getActorsByType = `-- name: GetActorsByType :many
-SELECT id, uuid, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at 
+SELECT id, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at 
 FROM actors 
 WHERE type = ? AND is_active = true 
 ORDER BY name
@@ -159,7 +129,6 @@ func (q *Queries) GetActorsByType(ctx context.Context, type_ string) ([]Actor, e
 		var i Actor
 		if err := rows.Scan(
 			&i.ID,
-			&i.Uuid,
 			&i.Type,
 			&i.Name,
 			&i.DisplayName,
