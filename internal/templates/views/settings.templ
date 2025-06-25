@@ -1,0 +1,21 @@
+package views
+
+import "github.com/nkapatos/mindweaver/internal/templates/layouts"
+
+templ SettingsPage() {
+	@layouts.AppLayout("Mindweaver - Settings", "Application settings") {
+		<div class="container mx-auto px-4 py-8">
+			<div class="mb-8">
+				<h1 class="text-3xl font-bold text-base-content mb-2">Settings</h1>
+				<p class="text-base-content/70">Configure your application settings.</p>
+			</div>
+			
+			<div class="card bg-base-100 shadow-lg">
+				<div class="card-body">
+					<h2 class="text-xl">Settings</h2>
+					<p>Settings page content will go here.</p>
+				</div>
+			</div>
+		</div>
+	}
+} 
