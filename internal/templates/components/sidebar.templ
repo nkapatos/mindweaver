@@ -9,8 +9,8 @@ templ Sidebar() {
 			<div class="p-4">
 				<!-- Toggle button -->
 				<div class="flex justify-end mb-4">
-					<button 
-						id="sidebar-toggle" 
+					<button
+						id="sidebar-toggle"
 						class="btn btn-sm btn-ghost btn-square"
 						onclick="toggleSidebar()"
 						title="Toggle compact mode"
@@ -18,13 +18,11 @@ templ Sidebar() {
 						@elements.Icon("chevron-left")
 					</button>
 				</div>
-				
 				<h2 class="text-xl font-bold mb-4 sidebar-title">Navigation</h2>
 				@NavigationMenu()
 			</div>
 		</aside>
 	</div>
-	
 	// TODO: Move to a css module
 	<style>
 		#sidebar {
@@ -56,7 +54,6 @@ templ Sidebar() {
 			transform: rotate(180deg);
 		}
 	</style>
-	
 	<script>
 		function toggleSidebar() {
 			const sidebar = document.getElementById('sidebar');
@@ -74,4 +71,4 @@ templ Sidebar() {
 			}
 		});
 	</script>
-} 
+}
