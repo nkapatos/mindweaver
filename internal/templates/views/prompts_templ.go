@@ -60,7 +60,7 @@ func PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt) templ.Comp
 				var templ_7745c5c3_Var3 templ.SafeURL
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/prompts/edit/" + strconv.FormatInt(editingPrompt.ID, 10)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 29, Col: 94}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 28, Col: 95}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -73,7 +73,7 @@ func PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt) templ.Comp
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(editingPrompt.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 40, Col: 36}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 39, Col: 37}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -86,7 +86,7 @@ func PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt) templ.Comp
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(editingPrompt.Content)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 55, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 53, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -134,7 +134,7 @@ func PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt) templ.Comp
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(prompt.Title)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 153, Col: 58}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 145, Col: 59}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -157,7 +157,7 @@ func PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt) templ.Comp
 					var templ_7745c5c3_Var7 string
 					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(prompt.Content)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 158, Col: 83}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 150, Col: 84}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
@@ -170,7 +170,7 @@ func PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt) templ.Comp
 					var templ_7745c5c3_Var8 string
 					templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(prompt.ID, 10))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 160, Col: 54}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 152, Col: 55}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 					if templ_7745c5c3_Err != nil {
@@ -188,7 +188,7 @@ func PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt) templ.Comp
 						var templ_7745c5c3_Var9 string
 						templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(prompt.CreatedAt.String)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 162, Col: 51}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 154, Col: 52}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 						if templ_7745c5c3_Err != nil {
@@ -206,7 +206,7 @@ func PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt) templ.Comp
 					var templ_7745c5c3_Var10 templ.SafeURL
 					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/prompts/edit/" + strconv.FormatInt(prompt.ID, 10)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 166, Col: 86}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 158, Col: 87}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 					if templ_7745c5c3_Err != nil {
@@ -219,7 +219,7 @@ func PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt) templ.Comp
 					var templ_7745c5c3_Var11 string
 					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(prompt.ID, 10))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 170, Col: 82}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 162, Col: 83}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 					if templ_7745c5c3_Err != nil {

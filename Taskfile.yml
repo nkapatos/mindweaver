@@ -52,7 +52,7 @@ tasks:
     env:
       PRODUCTION: true
     cmds:
-      - go build -o mindweaver ./cmd/mindweaver/main.go
+      - go build -o bin/mindweaver ./cmd/mindweaver/main.go
 
   live:
     desc: Live reload the go code, templates, and assets
@@ -70,6 +70,7 @@ tasks:
     desc: Build the go code, templates, and assets
     deps:
       - build:esbuild
+      - format:templ
       - build:templ
       - build:go
 
