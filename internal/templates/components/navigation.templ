@@ -1,32 +1,40 @@
 package components
 
-import "github.com/nkapatos/mindweaver/internal/templates/elements"
+import (
+	"github.com/nkapatos/mindweaver/internal/config"
+	"github.com/nkapatos/mindweaver/internal/templates/elements"
+	"strings"
+)
 
-templ NavigationMenu() {
-	<ul class="menu menu-lg">
-		<li>
-			<a href="/" class="active">
-				@elements.Icon("house")
-				<span class="nav-text">Home</span>
-			</a>
-		</li>
-		<li>
-			<a href="/prompts">
-				@elements.Icon("terminal")
-				<span class="nav-text">Prompts</span>
-			</a>
-		</li>
-		<li>
-			<a href="/providers">
-				@elements.Icon("server")
-				<span class="nav-text">Providers</span>
-			</a>
-		</li>
-		<li>
-			<a href="/settings">
-				@elements.Icon("settings")
-				<span class="nav-text">Settings</span>
-			</a>
-		</li>
+templ NavigationMenu(activePath string) {
+	<ul class="menu">
+		for _, route := range config.WebRoutes {
+			<li>
+				<a href={ route.Href } class={ templ.KV("menu-active", isActiveRoute(activePath, route.Href)) }>
+					@elements.Icon(route.Icon)
+					{ route.Text }
+				</a>
+			</li>
+		}
 	</ul>
+}
+
+// Helper function to determine if a route is active
+func isActiveRoute(currentPath, routePath string) bool {
+	// Handle exact matches
+	if currentPath == routePath {
+		return true
+	}
+
+	// Handle root path special case
+	if routePath == "/" && currentPath == "/" {
+		return true
+	}
+
+	// Handle sub-paths (e.g., /prompts/edit/123 should highlight /prompts)
+	if routePath != "/" && strings.HasPrefix(currentPath, routePath) {
+		return true
+	}
+
+	return false
 }

@@ -7,8 +7,8 @@ import (
 	"github.com/nkapatos/mindweaver/internal/templates/layouts"
 )
 
-templ ProvidersPage(providers []store.Provider, editingProvider *store.Provider, providerModels []store.Model) {
-	@layouts.AppLayout("Mindweaver - Providers", "Manage your AI providers") {
+templ ProvidersPage(providers []store.Provider, editingProvider *store.Provider, providerModels []store.Model, activePath string) {
+	@layouts.AppLayout("Mindweaver - Providers", "Manage your AI providers", activePath) {
 		<div class="container mx-auto px-4 py-8">
 			<div class="mb-8">
 				<h1 class="text-3xl font-bold text-base-content mb-2">Providers</h1>
@@ -45,15 +45,24 @@ templ ProvidersPage(providers []store.Provider, editingProvider *store.Provider,
 										<span class="label-text font-medium">Provider Type</span>
 									</label>
 									<select id="type" name="type" class="select select-bordered w-full" required>
-										<option value="llm" if editingProvider.Type == "llm" {
-	selected
-}>LLM</option>
-										<option value="embedding" if editingProvider.Type == "embedding" {
-	selected
-}>Embedding</option>
-										<option value="image" if editingProvider.Type == "image" {
-	selected
-}>Image Generation</option>
+										<option
+											value="llm"
+											if editingProvider.Type == "llm" {
+												selected
+											}
+										>LLM</option>
+										<option
+											value="embedding"
+											if editingProvider.Type == "embedding" {
+												selected
+											}
+										>Embedding</option>
+										<option
+											value="image"
+											if editingProvider.Type == "image" {
+												selected
+											}
+										>Image Generation</option>
 									</select>
 								</div>
 								<label class="label cursor-pointer">

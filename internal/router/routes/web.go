@@ -5,8 +5,20 @@ import (
 	"github.com/nkapatos/mindweaver/internal/handlers/web"
 )
 
+var (
+	RouteHome            = "/"
+	RoutePrompts         = "/prompts"
+	RoutePromptsEdit     = "/prompts/edit/:id"
+	RoutePromptsDelete   = "/prompts/delete"
+	RouteProviders       = "/providers"
+	RouteProvidersEdit   = "/providers/edit/:id"
+	RouteProvidersDelete = "/providers/delete"
+	RouteSettings        = "/settings"
+	RouteChats           = "/chats"
+)
+
 // SetupWebRoutes configures all web routes
-func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, settingsHandler *web.SettingsHandler) {
+func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, settingsHandler *web.SettingsHandler, chatsHandler *web.ChatsHandler) {
 	e.GET("/", homeHandler.Home)
 
 	// Prompts
@@ -25,4 +37,7 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 
 	// Settings
 	e.GET("/settings", settingsHandler.Settings)
+
+	// Chats
+	e.GET("/chats", chatsHandler.Chats)
 }

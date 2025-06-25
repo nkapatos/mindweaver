@@ -12,5 +12,6 @@ func NewHomeHandler() *HomeHandler {
 }
 
 func (h *HomeHandler) Home(c echo.Context) error {
-	return views.Home().Render(c.Request().Context(), c.Response().Writer)
+	currentPath := c.Path()
+	return views.Home(currentPath).Render(c.Request().Context(), c.Response().Writer)
 }

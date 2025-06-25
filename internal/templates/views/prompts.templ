@@ -7,8 +7,8 @@ import (
 	"github.com/nkapatos/mindweaver/internal/templates/layouts"
 )
 
-templ PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt) {
-	@layouts.AppLayout("Mindweaver - Prompts", "Manage your prompts") {
+templ PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt, activePath string) {
+	@layouts.AppLayout("Mindweaver - Prompts", "Manage your prompts", activePath) {
 		<div class="container mx-auto px-4 py-8">
 			<div class="mb-8">
 				<h1 class="text-3xl font-bold text-base-content mb-2">Prompts</h1>

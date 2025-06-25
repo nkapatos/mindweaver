@@ -22,6 +22,7 @@ func NewProvidersHandler(providerService *services.ProviderService) *ProvidersHa
 
 // Providers handles GET /providers - displays the providers page with form and list
 func (h *ProvidersHandler) Providers(c echo.Context) error {
+	currentPath := c.Path()
 	// Get all providers to display in the list
 	providers, err := h.providerService.GetAllProviders(c.Request().Context())
 	if err != nil {
@@ -34,7 +35,7 @@ func (h *ProvidersHandler) Providers(c echo.Context) error {
 	// This can be enhanced later when we implement model management
 	providerModels := []store.Model{}
 
-	return views.ProvidersPage(providers, nil, providerModels).Render(c.Request().Context(), c.Response().Writer)
+	return views.ProvidersPage(providers, nil, providerModels, currentPath).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // CreateProvider handles POST /providers - processes form submission
@@ -97,6 +98,7 @@ func (h *ProvidersHandler) DeleteProvider(c echo.Context) error {
 
 // EditProvider handles GET /providers/edit/{id} - shows edit form
 func (h *ProvidersHandler) EditProvider(c echo.Context) error {
+	currentPath := c.Path()
 	idStr := c.Param("id")
 	if idStr == "" {
 		return c.Redirect(http.StatusSeeOther, "/providers?error=Provider ID is required")
@@ -122,7 +124,7 @@ func (h *ProvidersHandler) EditProvider(c echo.Context) error {
 	// For now, we'll pass an empty slice for models
 	providerModels := []store.Model{}
 
-	return views.ProvidersPage(providers, &provider, providerModels).Render(c.Request().Context(), c.Response().Writer)
+	return views.ProvidersPage(providers, &provider, providerModels, currentPath).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // UpdateProvider handles POST /providers/edit/{id} - processes edit form submission

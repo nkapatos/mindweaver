@@ -15,7 +15,7 @@ import (
 	"github.com/nkapatos/mindweaver/internal/templates/layouts"
 )
 
-func ProvidersPage(providers []store.Provider, editingProvider *store.Provider, providerModels []store.Model) templ.Component {
+func ProvidersPage(providers []store.Provider, editingProvider *store.Provider, providerModels []store.Model, activePath string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -151,7 +151,7 @@ func ProvidersPage(providers []store.Provider, editingProvider *store.Provider, 
 					var templ_7745c5c3_Var5 string
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(provider.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 150, Col: 61}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 159, Col: 61}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
@@ -164,7 +164,7 @@ func ProvidersPage(providers []store.Provider, editingProvider *store.Provider, 
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(provider.Type)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 151, Col: 72}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 160, Col: 72}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -192,7 +192,7 @@ func ProvidersPage(providers []store.Provider, editingProvider *store.Provider, 
 					var templ_7745c5c3_Var7 string
 					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(provider.ID, 10))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 160, Col: 57}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 169, Col: 57}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
@@ -210,7 +210,7 @@ func ProvidersPage(providers []store.Provider, editingProvider *store.Provider, 
 						var templ_7745c5c3_Var8 string
 						templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(provider.CreatedAt.Time.Format("2006-01-02 15:04:05"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 162, Col: 82}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 171, Col: 82}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 						if templ_7745c5c3_Err != nil {
@@ -228,7 +228,7 @@ func ProvidersPage(providers []store.Provider, editingProvider *store.Provider, 
 					var templ_7745c5c3_Var9 templ.SafeURL
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/providers/edit/" + strconv.FormatInt(provider.ID, 10)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 166, Col: 91}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 175, Col: 91}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
@@ -241,7 +241,7 @@ func ProvidersPage(providers []store.Provider, editingProvider *store.Provider, 
 					var templ_7745c5c3_Var10 templ.SafeURL
 					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/providers/" + strconv.FormatInt(provider.ID, 10) + "/settings"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 169, Col: 100}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 178, Col: 100}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 					if templ_7745c5c3_Err != nil {
@@ -254,7 +254,7 @@ func ProvidersPage(providers []store.Provider, editingProvider *store.Provider, 
 					var templ_7745c5c3_Var11 templ.SafeURL
 					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/providers/" + strconv.FormatInt(provider.ID, 10) + "/models"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 172, Col: 98}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 181, Col: 98}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 					if templ_7745c5c3_Err != nil {
@@ -267,7 +267,7 @@ func ProvidersPage(providers []store.Provider, editingProvider *store.Provider, 
 					var templ_7745c5c3_Var12 string
 					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(provider.ID, 10))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 176, Col: 85}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 185, Col: 85}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 					if templ_7745c5c3_Err != nil {
@@ -289,7 +289,7 @@ func ProvidersPage(providers []store.Provider, editingProvider *store.Provider, 
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layouts.AppLayout("Mindweaver - Providers", "Manage your AI providers").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.AppLayout("Mindweaver - Providers", "Manage your AI providers", activePath).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
