@@ -54,7 +54,7 @@ func main() {
 	promptHandler := api.NewPromptHandler(promptService)
 	homeHandler := web.NewHomeHandler()
 	notFoundHandler := web.NewNotFoundHandler()
-	promptsHandler := web.NewPromptsHandler()
+	promptsHandler := web.NewPromptsHandler(promptService)
 	settingsHandler := web.NewSettingsHandler()
 
 	logger.Info("Application dependencies initialized")
