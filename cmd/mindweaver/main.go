@@ -50,11 +50,13 @@ func main() {
 	querier := store.New(db)
 	userService := services.NewUserService(querier)
 	promptService := services.NewPromptService(querier)
+	providerService := services.NewProviderService(querier)
 	userHandler := api.NewUserHandler(userService)
 	promptHandler := api.NewPromptHandler(promptService)
 	homeHandler := web.NewHomeHandler()
 	notFoundHandler := web.NewNotFoundHandler()
 	promptsHandler := web.NewPromptsHandler(promptService)
+	providersHandler := web.NewProvidersHandler(providerService)
 	settingsHandler := web.NewSettingsHandler()
 
 	logger.Info("Application dependencies initialized")
@@ -68,6 +70,7 @@ func main() {
 		promptHandler,
 		homeHandler,
 		promptsHandler,
+		providersHandler,
 		settingsHandler,
 		notFoundHandler,
 	)
