@@ -56,13 +56,12 @@ type Model struct {
 
 type Prompt struct {
 	ID        int64          `json:"id"`
-	UserID    sql.NullInt64  `json:"user_id"`
+	ActorID   sql.NullInt64  `json:"actor_id"`
 	Title     string         `json:"title"`
 	Content   string         `json:"content"`
 	IsSystem  sql.NullInt64  `json:"is_system"`
 	CreatedAt sql.NullString `json:"created_at"`
 	UpdatedAt sql.NullString `json:"updated_at"`
-	ActorID   sql.NullInt64  `json:"actor_id"`
 }
 
 type Provider struct {

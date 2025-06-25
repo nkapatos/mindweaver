@@ -61,13 +61,13 @@ func (s *PromptService) CreatePrompt(ctx context.Context, actorID *int64, title,
 }
 
 // GetPromptByID retrieves a prompt by its ID
-func (s *PromptService) GetPromptByID(ctx context.Context, id int64) (store.GetPromptByIdRow, error) {
+func (s *PromptService) GetPromptByID(ctx context.Context, id int64) (store.Prompt, error) {
 	s.logger.Debug("Getting prompt by ID", "id", id)
 
 	prompt, err := s.promptStore.GetPromptById(ctx, id)
 	if err != nil {
 		s.logger.Error("Failed to get prompt by ID", "id", id, "error", err)
-		return store.GetPromptByIdRow{}, err
+		return store.Prompt{}, err
 	}
 
 	s.logger.Debug("Prompt retrieved successfully", "id", id, "title", prompt.Title)
@@ -75,7 +75,7 @@ func (s *PromptService) GetPromptByID(ctx context.Context, id int64) (store.GetP
 }
 
 // GetAllPrompts retrieves all prompts
-func (s *PromptService) GetAllPrompts(ctx context.Context) ([]store.GetAllPromptsRow, error) {
+func (s *PromptService) GetAllPrompts(ctx context.Context) ([]store.Prompt, error) {
 	s.logger.Debug("Getting all prompts")
 
 	prompts, err := s.promptStore.GetAllPrompts(ctx)
@@ -89,7 +89,7 @@ func (s *PromptService) GetAllPrompts(ctx context.Context) ([]store.GetAllPrompt
 }
 
 // GetPromptsByActorID retrieves all prompts for a specific actor
-func (s *PromptService) GetPromptsByActorID(ctx context.Context, actorID int64) ([]store.GetPromptsByActorIDRow, error) {
+func (s *PromptService) GetPromptsByActorID(ctx context.Context, actorID int64) ([]store.Prompt, error) {
 	s.logger.Debug("Getting prompts by actor ID", "actor_id", actorID)
 
 	actorIDNull := sql.NullInt64{Int64: actorID, Valid: true}
@@ -104,7 +104,7 @@ func (s *PromptService) GetPromptsByActorID(ctx context.Context, actorID int64) 
 }
 
 // GetSystemPrompts retrieves all system prompts
-func (s *PromptService) GetSystemPrompts(ctx context.Context) ([]store.GetSystemPromptsRow, error) {
+func (s *PromptService) GetSystemPrompts(ctx context.Context) ([]store.Prompt, error) {
 	s.logger.Debug("Getting system prompts")
 
 	prompts, err := s.promptStore.GetSystemPrompts(ctx)

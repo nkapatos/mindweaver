@@ -24,7 +24,7 @@ type Querier interface {
 	GetActorByID(ctx context.Context, id int64) (Actor, error)
 	GetActorByName(ctx context.Context, arg GetActorByNameParams) (Actor, error)
 	GetActorsByType(ctx context.Context, type_ string) ([]Actor, error)
-	GetAllPrompts(ctx context.Context) ([]GetAllPromptsRow, error)
+	GetAllPrompts(ctx context.Context) ([]Prompt, error)
 	GetAllProviders(ctx context.Context) ([]Provider, error)
 	GetChatByID(ctx context.Context, id int64) (Chat, error)
 	GetChatByUUID(ctx context.Context, uuid string) (Chat, error)
@@ -34,12 +34,12 @@ type Querier interface {
 	GetConversationsByActorID(ctx context.Context, actorID int64) ([]Conversation, error)
 	GetModelByName(ctx context.Context, arg GetModelByNameParams) (Model, error)
 	GetModelsByProvider(ctx context.Context, providerID sql.NullInt64) ([]Model, error)
-	GetPromptById(ctx context.Context, id int64) (GetPromptByIdRow, error)
-	GetPromptsByActorID(ctx context.Context, actorID sql.NullInt64) ([]GetPromptsByActorIDRow, error)
+	GetPromptById(ctx context.Context, id int64) (Prompt, error)
+	GetPromptsByActorID(ctx context.Context, actorID sql.NullInt64) ([]Prompt, error)
 	GetProviderByID(ctx context.Context, id int64) (Provider, error)
 	GetProviderByName(ctx context.Context, name string) (Provider, error)
 	GetProviderSettings(ctx context.Context, providerID sql.NullInt64) ([]GetProviderSettingsRow, error)
-	GetSystemPrompts(ctx context.Context) ([]GetSystemPromptsRow, error)
+	GetSystemPrompts(ctx context.Context) ([]Prompt, error)
 	UpdateActor(ctx context.Context, arg UpdateActorParams) error
 	UpdateChatTitle(ctx context.Context, arg UpdateChatTitleParams) error
 	UpdateConversation(ctx context.Context, arg UpdateConversationParams) error

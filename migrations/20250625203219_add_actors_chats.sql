@@ -1,8 +1,5 @@
 -- +goose Up
 -- +goose StatementBegin
--- Drop existing users table (empty, so safe)
-DROP TABLE IF EXISTS users;
-
 -- Create actors table
 CREATE TABLE actors (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,9 +33,21 @@ CREATE TABLE conversations (
 CREATE INDEX idx_conversations_actor_id ON conversations(actor_id);
 CREATE INDEX idx_conversations_created_at ON conversations(created_at);
 
--- Alter prompts table to use actor_id instead of user_id
-ALTER TABLE prompts ADD COLUMN actor_id INTEGER REFERENCES actors(id) ON DELETE CASCADE;
+-- Create prompts table
+CREATE TABLE prompts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor_id INTEGER,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    is_system INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (actor_id) REFERENCES actors(id) ON DELETE CASCADE
+);
+
+-- Create indexes for prompts
 CREATE INDEX idx_prompts_actor_id ON prompts(actor_id);
+CREATE INDEX idx_prompts_is_system ON prompts(is_system);
 
 -- Create chats table (now linked to conversations)
 CREATE TABLE chats (
@@ -68,18 +77,13 @@ DROP INDEX IF EXISTS idx_chats_actor_id;
 DROP INDEX IF EXISTS idx_chats_conversation_id;
 DROP INDEX IF EXISTS idx_chats_uuid;
 DROP TABLE IF EXISTS chats;
+DROP INDEX IF EXISTS idx_prompts_is_system;
 DROP INDEX IF EXISTS idx_prompts_actor_id;
-ALTER TABLE prompts DROP COLUMN actor_id;
+DROP TABLE IF EXISTS prompts;
 DROP INDEX IF EXISTS idx_conversations_created_at;
 DROP INDEX IF EXISTS idx_conversations_actor_id;
 DROP TABLE IF EXISTS conversations;
 DROP INDEX IF EXISTS idx_actors_active;
 DROP INDEX IF EXISTS idx_actors_type;
 DROP TABLE IF EXISTS actors;
--- Recreate original users table
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    created_at TEXT DEFAULT (datetime('now'))
-);
 -- +goose StatementEnd
