@@ -18,6 +18,10 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 
 	// Providers
 	e.GET("/providers", providersHandler.Providers)
+	e.POST("/providers", providersHandler.CreateProvider)
+	e.GET("/providers/edit/:id", providersHandler.EditProvider)
+	e.POST("/providers/edit/:id", providersHandler.UpdateProvider)
+	e.POST("/providers/delete", providersHandler.DeleteProvider)
 
 	// Settings
 	e.GET("/settings", settingsHandler.Settings)
