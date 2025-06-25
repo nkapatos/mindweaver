@@ -6,7 +6,7 @@ import (
 )
 
 // SetupWebRoutes configures all web routes
-func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, settingsHandler *web.SettingsHandler) {
+func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, settingsHandler *web.SettingsHandler) {
 	e.GET("/", homeHandler.Home)
 
 	// Prompts
@@ -15,6 +15,9 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	e.GET("/prompts/edit/:id", promptsHandler.EditPrompt)
 	e.POST("/prompts/edit/:id", promptsHandler.UpdatePrompt)
 	e.POST("/prompts/delete", promptsHandler.DeletePrompt)
+
+	// Providers
+	e.GET("/providers", providersHandler.Providers)
 
 	// Settings
 	e.GET("/settings", settingsHandler.Settings)
