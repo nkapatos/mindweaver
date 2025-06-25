@@ -8,6 +8,55 @@ import (
 	"database/sql"
 )
 
+type Actor struct {
+	ID          int64          `json:"id"`
+	Uuid        string         `json:"uuid"`
+	Type        string         `json:"type"`
+	Name        string         `json:"name"`
+	DisplayName sql.NullString `json:"display_name"`
+	AvatarUrl   sql.NullString `json:"avatar_url"`
+	Metadata    sql.NullString `json:"metadata"`
+	IsActive    sql.NullBool   `json:"is_active"`
+	CreatedAt   sql.NullTime   `json:"created_at"`
+	UpdatedAt   sql.NullTime   `json:"updated_at"`
+}
+
+type Chat struct {
+	ID             int64          `json:"id"`
+	Uuid           string         `json:"uuid"`
+	ConversationID int64          `json:"conversation_id"`
+	ActorID        int64          `json:"actor_id"`
+	Title          string         `json:"title"`
+	ProviderID     sql.NullInt64  `json:"provider_id"`
+	ModelName      sql.NullString `json:"model_name"`
+	SystemPromptID sql.NullInt64  `json:"system_prompt_id"`
+	CreatedAt      sql.NullTime   `json:"created_at"`
+	UpdatedAt      sql.NullTime   `json:"updated_at"`
+}
+
+type ChatMessage struct {
+	ID         int64         `json:"id"`
+	Uuid       string        `json:"uuid"`
+	ChatID     int64         `json:"chat_id"`
+	ActorID    int64         `json:"actor_id"`
+	Role       string        `json:"role"`
+	Content    string        `json:"content"`
+	TokensUsed sql.NullInt64 `json:"tokens_used"`
+	CreatedAt  sql.NullTime  `json:"created_at"`
+}
+
+type Conversation struct {
+	ID          int64          `json:"id"`
+	Uuid        string         `json:"uuid"`
+	ActorID     int64          `json:"actor_id"`
+	Title       string         `json:"title"`
+	Description sql.NullString `json:"description"`
+	Metadata    sql.NullString `json:"metadata"`
+	IsActive    sql.NullBool   `json:"is_active"`
+	CreatedAt   sql.NullTime   `json:"created_at"`
+	UpdatedAt   sql.NullTime   `json:"updated_at"`
+}
+
 type Model struct {
 	ID            int64          `json:"id"`
 	ProviderID    sql.NullInt64  `json:"provider_id"`
@@ -20,7 +69,7 @@ type Model struct {
 
 type Prompt struct {
 	ID        int64          `json:"id"`
-	UserID    sql.NullInt64  `json:"user_id"`
+	ActorID   sql.NullInt64  `json:"actor_id"`
 	Title     string         `json:"title"`
 	Content   string         `json:"content"`
 	IsSystem  sql.NullInt64  `json:"is_system"`
@@ -43,10 +92,4 @@ type ProviderSetting struct {
 	SettingValue string        `json:"setting_value"`
 	IsSecret     sql.NullBool  `json:"is_secret"`
 	CreatedAt    sql.NullTime  `json:"created_at"`
-}
-
-type User struct {
-	ID        int64          `json:"id"`
-	Name      string         `json:"name"`
-	CreatedAt sql.NullString `json:"created_at"`
 }

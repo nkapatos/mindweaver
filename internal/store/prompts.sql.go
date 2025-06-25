@@ -11,11 +11,11 @@ import (
 )
 
 const createPrompt = `-- name: CreatePrompt :exec
-INSERT INTO prompts (user_id, title, content, is_system) VALUES (?, ?, ?, ?)
+INSERT INTO prompts (actor_id, title, content, is_system) VALUES (?, ?, ?, ?)
 `
 
 type CreatePromptParams struct {
-	UserID   sql.NullInt64 `json:"user_id"`
+	ActorID  sql.NullInt64 `json:"actor_id"`
 	Title    string        `json:"title"`
 	Content  string        `json:"content"`
 	IsSystem sql.NullInt64 `json:"is_system"`
@@ -23,7 +23,7 @@ type CreatePromptParams struct {
 
 func (q *Queries) CreatePrompt(ctx context.Context, arg CreatePromptParams) error {
 	_, err := q.db.ExecContext(ctx, createPrompt,
-		arg.UserID,
+		arg.ActorID,
 		arg.Title,
 		arg.Content,
 		arg.IsSystem,
@@ -41,7 +41,7 @@ func (q *Queries) DeletePrompt(ctx context.Context, id int64) error {
 }
 
 const getAllPrompts = `-- name: GetAllPrompts :many
-SELECT id, user_id, title, content, is_system, created_at, updated_at FROM prompts
+SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts
 `
 
 func (q *Queries) GetAllPrompts(ctx context.Context) ([]Prompt, error) {
@@ -55,7 +55,7 @@ func (q *Queries) GetAllPrompts(ctx context.Context) ([]Prompt, error) {
 		var i Prompt
 		if err := rows.Scan(
 			&i.ID,
-			&i.UserID,
+			&i.ActorID,
 			&i.Title,
 			&i.Content,
 			&i.IsSystem,
@@ -76,7 +76,7 @@ func (q *Queries) GetAllPrompts(ctx context.Context) ([]Prompt, error) {
 }
 
 const getPromptById = `-- name: GetPromptById :one
-SELECT id, user_id, title, content, is_system, created_at, updated_at FROM prompts WHERE id = ? LIMIT 1
+SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetPromptById(ctx context.Context, id int64) (Prompt, error) {
@@ -84,7 +84,7 @@ func (q *Queries) GetPromptById(ctx context.Context, id int64) (Prompt, error) {
 	var i Prompt
 	err := row.Scan(
 		&i.ID,
-		&i.UserID,
+		&i.ActorID,
 		&i.Title,
 		&i.Content,
 		&i.IsSystem,
@@ -94,12 +94,12 @@ func (q *Queries) GetPromptById(ctx context.Context, id int64) (Prompt, error) {
 	return i, err
 }
 
-const getPromptsByUserId = `-- name: GetPromptsByUserId :many
-SELECT id, user_id, title, content, is_system, created_at, updated_at FROM prompts WHERE user_id = ?
+const getPromptsByActorID = `-- name: GetPromptsByActorID :many
+SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts WHERE actor_id = ?
 `
 
-func (q *Queries) GetPromptsByUserId(ctx context.Context, userID sql.NullInt64) ([]Prompt, error) {
-	rows, err := q.db.QueryContext(ctx, getPromptsByUserId, userID)
+func (q *Queries) GetPromptsByActorID(ctx context.Context, actorID sql.NullInt64) ([]Prompt, error) {
+	rows, err := q.db.QueryContext(ctx, getPromptsByActorID, actorID)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (q *Queries) GetPromptsByUserId(ctx context.Context, userID sql.NullInt64) 
 		var i Prompt
 		if err := rows.Scan(
 			&i.ID,
-			&i.UserID,
+			&i.ActorID,
 			&i.Title,
 			&i.Content,
 			&i.IsSystem,
@@ -130,7 +130,7 @@ func (q *Queries) GetPromptsByUserId(ctx context.Context, userID sql.NullInt64) 
 }
 
 const getSystemPrompts = `-- name: GetSystemPrompts :many
-SELECT id, user_id, title, content, is_system, created_at, updated_at FROM prompts WHERE is_system = 1
+SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts WHERE is_system = 1
 `
 
 func (q *Queries) GetSystemPrompts(ctx context.Context) ([]Prompt, error) {
@@ -144,7 +144,7 @@ func (q *Queries) GetSystemPrompts(ctx context.Context) ([]Prompt, error) {
 		var i Prompt
 		if err := rows.Scan(
 			&i.ID,
-			&i.UserID,
+			&i.ActorID,
 			&i.Title,
 			&i.Content,
 			&i.IsSystem,

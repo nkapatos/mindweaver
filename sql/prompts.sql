@@ -1,17 +1,17 @@
 -- name: CreatePrompt :exec
-INSERT INTO prompts (user_id, title, content, is_system) VALUES (?, ?, ?, ?);
+INSERT INTO prompts (actor_id, title, content, is_system) VALUES (?, ?, ?, ?);
 
 -- name: GetPromptById :one
-SELECT * FROM prompts WHERE id = ? LIMIT 1;
+SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts WHERE id = ? LIMIT 1;
 
 -- name: GetAllPrompts :many
-SELECT * FROM prompts;
+SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts;
 
--- name: GetPromptsByUserId :many
-SELECT * FROM prompts WHERE user_id = ?;
+-- name: GetPromptsByActorID :many
+SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts WHERE actor_id = ?;
 
 -- name: GetSystemPrompts :many
-SELECT * FROM prompts WHERE is_system = 1;
+SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts WHERE is_system = 1;
 
 -- name: UpdatePrompt :exec
 UPDATE prompts SET title = ?, content = ?, is_system = ?, updated_at = (datetime('now')) WHERE id = ?;
