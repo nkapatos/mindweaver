@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/nkapatos/mindweaver/internal/templates/layouts"
 
-func Home(activePath string) templ.Component {
+func Chat(activePath string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -43,13 +43,13 @@ func Home(activePath string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div><h1>Welcome to Mindweaver</h1></div><button class=\"btn\">Default</button><div class=\"card bg-base-100 w-96 shadow-sm\"><figure><img src=\"https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp\" alt=\"Shoes\"></figure><div class=\"card-body\"><h2 class=\"card-title\">Card Title</h2><p>A card component has a figure, a body part, and inside body there are title and actions parts</p><div class=\"card-actions justify-end\"><button class=\"btn btn-primary\">Buy Now</button></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"container mx-auto p-4\"><h1 class=\"text-3xl font-bold mb-6 text-center\">Chats</h1><div class=\"chat chat-start bg-base-200 rounded-lg shadow-md p-4 mb-4\"><div class=\"chat-image avatar\"><div class=\"w-10 rounded-full\"><img src=\"https://placeimg.com/192/192/people\" alt=\"User Avatar\"></div></div><div class=\"chat-header flex items-center gap-2\"><span class=\"font-semibold text-lg\">Alice</span> <time class=\"text-xs opacity-50\">12:45 PM</time></div><div class=\"chat-bubble\">Hi! How are you?</div></div><div class=\"chat chat-end bg-base-200 rounded-lg shadow-md p-4 mb-4\"><div class=\"chat-header flex items-center gap-2 justify-end\"><time class=\"text-xs opacity-50\">12:46 PM</time> <span class=\"font-semibold text-lg\">You</span></div><div class=\"chat-bubble\">Hello Alice! I'm good, thanks. How about you?</div><div class=\"chat-image avatar\"><div class=\"w-10 rounded-full\"><img src=\"https://placeimg.com/192/192/people?2\" alt=\"Your Avatar\"></div></div></div><form class=\"mt-6 flex gap-2\" onsubmit=\"event.preventDefault(); /* handle submit here */\"><input type=\"text\" placeholder=\"Type your message here...\" class=\"input input-bordered flex-grow\" autocomplete=\"off\" required> <button type=\"submit\" class=\"btn btn-primary\">Send</button></form></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layouts.AppLayout("Mindweaver - Home", "Your knowledge management solution", activePath).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.AppLayout("Chats", "chat stuff here", activePath).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

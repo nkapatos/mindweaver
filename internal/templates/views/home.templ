@@ -2,8 +2,8 @@ package views
 
 import "github.com/nkapatos/mindweaver/internal/templates/layouts"
 
-templ Home() {
-	@layouts.AppLayout("Mindweaver - Home", "Your knowledge management solution") {
+templ Home(activePath string) {
+	@layouts.AppLayout("Mindweaver - Home", "Your knowledge management solution", activePath) {
 		<div>
 			<h1>Welcome to Mindweaver</h1>
 		</div>

@@ -58,6 +58,7 @@ func main() {
 	promptsHandler := web.NewPromptsHandler(promptService)
 	providersHandler := web.NewProvidersHandler(providerService)
 	settingsHandler := web.NewSettingsHandler()
+	chatsHandler := web.NewChatsHandler()
 
 	logger.Info("Application dependencies initialized")
 
@@ -72,6 +73,7 @@ func main() {
 		promptsHandler,
 		providersHandler,
 		settingsHandler,
+		chatsHandler,
 		notFoundHandler,
 	)
 

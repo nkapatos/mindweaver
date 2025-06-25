@@ -2,7 +2,7 @@ package components
 
 import "github.com/nkapatos/mindweaver/internal/templates/elements"
 
-templ Sidebar() {
+templ Sidebar(activePath string) {
 	<div class="drawer-side">
 		<label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 		<aside class="min-h-full bg-base-100 border-r border-base-300 transition-all duration-300" id="sidebar">
@@ -19,7 +19,7 @@ templ Sidebar() {
 					</button>
 				</div>
 				<h2 class="text-xl font-bold mb-4 sidebar-title">Navigation</h2>
-				@NavigationMenu()
+				@NavigationMenu(activePath)
 			</div>
 		</aside>
 	</div>

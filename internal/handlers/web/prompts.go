@@ -22,6 +22,7 @@ func NewPromptsHandler(promptService *services.PromptService) *PromptsHandler {
 
 // Prompts handles GET /prompts - displays the prompts page with form and list
 func (h *PromptsHandler) Prompts(c echo.Context) error {
+	currentPath := c.Path()
 	// Get all prompts to display in the list
 	prompts, err := h.promptService.GetAllPrompts(c.Request().Context())
 	if err != nil {
@@ -30,7 +31,7 @@ func (h *PromptsHandler) Prompts(c echo.Context) error {
 		prompts = []store.Prompt{}
 	}
 
-	return views.PromptsPage(prompts, nil).Render(c.Request().Context(), c.Response().Writer)
+	return views.PromptsPage(prompts, nil, currentPath).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // CreatePrompt handles POST /prompts - processes form submission
@@ -93,6 +94,7 @@ func (h *PromptsHandler) DeletePrompt(c echo.Context) error {
 
 // EditPrompt handles GET /prompts/edit/{id} - shows edit form
 func (h *PromptsHandler) EditPrompt(c echo.Context) error {
+	currentPath := c.Path()
 	idStr := c.Param("id")
 	if idStr == "" {
 		return c.Redirect(http.StatusSeeOther, "/prompts?error=Prompt ID is required")
@@ -115,7 +117,7 @@ func (h *PromptsHandler) EditPrompt(c echo.Context) error {
 		prompts = []store.Prompt{}
 	}
 
-	return views.PromptsPage(prompts, &prompt).Render(c.Request().Context(), c.Response().Writer)
+	return views.PromptsPage(prompts, &prompt, currentPath).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // UpdatePrompt handles POST /prompts/edit/{id} - processes edit form submission

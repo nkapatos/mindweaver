@@ -2,7 +2,7 @@ package layouts
 
 import "github.com/nkapatos/mindweaver/internal/templates/components"
 
-templ AppLayout(title, description string) {
+templ AppLayout(title, description, activePath string) {
 	@BaseLayout(title, description) {
 		<div class="drawer lg:drawer-open h-screen">
 			<input id="main-drawer" type="checkbox" class="drawer-toggle"/>
@@ -18,7 +18,7 @@ templ AppLayout(title, description string) {
 				@components.Footer()
 			</div>
 			<!-- Sidebar -->
-			@components.Sidebar()
+			@components.Sidebar(activePath)
 		</div>
 	}
 }
