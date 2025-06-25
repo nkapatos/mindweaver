@@ -47,6 +47,13 @@ tasks:
     cmds:
       - go tool templ generate --cmd="{{.APP_CMD}}"
 
+  build:go:
+    desc: Build the Go binary
+    env:
+      PRODUCTION: true
+    cmds:
+      - go build -o mindweaver ./cmd/mindweaver/main.go
+
   live:
     desc: Live reload the go code, templates, and assets
     deps:
@@ -64,6 +71,7 @@ tasks:
     deps:
       - build:esbuild
       - build:templ
+      - build:go
 
   format:templ:
     desc: Format all templ files

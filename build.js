@@ -39,8 +39,8 @@ function onEndPlugin(host, port) {
   };
 }
 
-function getBuildConfig(host, port) {
-  return {
+function getBuildConfig(host, port, isProduction = false) {
+  const baseConfig = {
     entryPoints: {
       'main': 'assets/ts/main.ts',
       'index': 'assets/css/index.css',
@@ -48,15 +48,28 @@ function getBuildConfig(host, port) {
     bundle: true,
     outdir: 'dist',
     loader: { '.css': 'css' },
-    sourcemap: true,
-    plugins: [postCSSPlugin(), onEndPlugin(host, port)],
+    sourcemap: !isProduction,
   };
+
+  if (isProduction) {
+    return {
+      ...baseConfig,
+      minify: true,
+      target: ['es2020'],
+      plugins: [postCSSPlugin()],
+    };
+  } else {
+    return {
+      ...baseConfig,
+      plugins: [postCSSPlugin(), onEndPlugin(host, port)],
+    };
+  }
 }
 
 async function dev() {
   const host = process.env.APP_HOST || 'localhost';
-    const port = process.env.PROXY_PORT || '8081';
-  const config = getBuildConfig(host, port);
+  const port = process.env.PROXY_PORT || '8081';
+  const config = getBuildConfig(host, port, false);
   const ctx = await esbuild.context(config);
   
   await ctx.watch({});
@@ -65,7 +78,7 @@ async function dev() {
 }
 
 async function build() {
-  const config = getBuildConfig();
+  const config = getBuildConfig(null, null, true);
   
   try {
     const result = await esbuild.build(config);
