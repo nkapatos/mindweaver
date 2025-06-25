@@ -1,21 +1,14 @@
 package components
 
+import "github.com/nkapatos/mindweaver/internal/templates/elements"
+
 templ Header() {
 	<div class="navbar bg-base-100 border-b border-base-300">
 		<div class="navbar-start">
 			<label for="main-drawer" class="btn btn-square btn-ghost lg:hidden">
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-6 h-6 stroke-current">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-				</svg>
+				@elements.Icon("menu")
 			</label>
 			<a class="btn btn-ghost text-xl">MindWeaver</a>
-		</div>
-		<div class="navbar-center hidden lg:flex">
-			<ul class="menu menu-horizontal px-1">
-				<li><a class="link link-hover">Dashboard</a></li>
-				<li><a class="link link-hover">Prompts</a></li>
-				<li><a class="link link-hover">Settings</a></li>
-			</ul>
 		</div>
 		<div class="navbar-end">
 			@UserDropdown()
