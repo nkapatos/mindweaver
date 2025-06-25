@@ -15,7 +15,7 @@ import (
 	"github.com/nkapatos/mindweaver/internal/templates/layouts"
 )
 
-func PromptsPage(prompts []store.Prompt) templ.Component {
+func PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -48,117 +48,194 @@ func PromptsPage(prompts []store.Prompt) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"container mx-auto px-4 py-8\"><div class=\"mb-8\"><h1 class=\"text-3xl font-bold text-base-content mb-2\">Prompts</h1><p class=\"text-base-content/70\">Create and manage your prompts for better knowledge management.</p></div><div class=\"grid grid-cols-1 lg:grid-cols-2 gap-8\"><!-- Create New Prompt Form --><div class=\"card bg-base-100 shadow-lg\"><div class=\"card-body\"><h2 class=\"card-title text-xl mb-4\">Create New Prompt</h2><form action=\"/prompts\" method=\"POST\" class=\"space-y-4\"><div><label class=\"label\" for=\"title\"><span class=\"label-text font-medium\">Title</span></label> <input type=\"text\" id=\"title\" name=\"title\" class=\"input input-bordered w-full\" placeholder=\"Enter prompt title\" required></div><div><label class=\"label\" for=\"content\"><span class=\"label-text font-medium\">Content</span></label> <textarea id=\"content\" name=\"content\" class=\"textarea textarea-bordered w-full h-32\" placeholder=\"Enter prompt content\" required></textarea></div><label class=\"label cursor-pointer\"><span class=\"label-text font-medium\">System Prompt</span> <input type=\"checkbox\" id=\"is_system\" name=\"is_system\" class=\"checkbox checkbox-primary\" value=\"1\"></label> <label class=\"label\"><span class=\"label-text-alt text-base-content/60\">System prompts are used as default templates</span></label> <button type=\"submit\" class=\"btn btn-primary w-full\">Create Prompt</button></form></div></div><!-- Existing Prompts List --><div class=\"card bg-base-100 shadow-lg\"><div class=\"card-body\"><h2 class=\"card-title text-xl mb-4\">Your Prompts</h2>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"container mx-auto px-4 py-8\"><div class=\"mb-8\"><h1 class=\"text-3xl font-bold text-base-content mb-2\">Prompts</h1><p class=\"text-base-content/70\">Create and manage your prompts for better knowledge management.</p></div><div class=\"grid grid-cols-1 lg:grid-cols-2 gap-8\"><!-- Create/Edit Prompt Form --><div class=\"card bg-base-100 shadow-lg\"><div class=\"card-body\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if len(prompts) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"text-center py-8\"><p class=\"text-base-content/60\">No prompts created yet. Create your first prompt using the form.</p></div>")
+			if editingPrompt != nil {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"flex items-center gap-4 mb-4\"><h2 class=\"card-title text-xl\">Edit Prompt</h2><a href=\"/prompts\" class=\"btn btn-ghost btn-sm\">← Back to Create</a></div><form action=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var3 templ.SafeURL
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/prompts/edit/" + strconv.FormatInt(editingPrompt.ID, 10)))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 29, Col: 94}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" method=\"POST\" class=\"space-y-4\"><div><label class=\"label\" for=\"title\"><span class=\"label-text font-medium\">Title</span></label> <input type=\"text\" id=\"title\" name=\"title\" class=\"input input-bordered w-full\" placeholder=\"Enter prompt title\" value=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var4 string
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(editingPrompt.Title)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 40, Col: 36}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" required></div><div><label class=\"label\" for=\"content\"><span class=\"label-text font-medium\">Content</span></label> <textarea id=\"content\" name=\"content\" class=\"textarea textarea-bordered w-full h-32\" placeholder=\"Enter prompt content\" required>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var5 string
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(editingPrompt.Content)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 55, Col: 32}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</textarea></div><label class=\"label cursor-pointer\"><span class=\"label-text font-medium\">System Prompt</span> <input type=\"checkbox\" id=\"is_system\" name=\"is_system\" class=\"checkbox checkbox-primary\" value=\"1\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				if editingPrompt.IsSystem.Valid && editingPrompt.IsSystem.Int64 == 1 {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, " checked")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "></label> <label class=\"label\"><span class=\"label-text-alt text-base-content/60\">System prompts are used as default templates</span></label><div class=\"flex gap-3\"><a href=\"/prompts\" class=\"btn btn-outline flex-1\">Cancel</a> <button type=\"submit\" class=\"btn btn-primary flex-1\">Update Prompt</button></div></form>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"space-y-4\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<h2 class=\"card-title text-xl mb-4\">Create New Prompt</h2><form action=\"/prompts\" method=\"POST\" class=\"space-y-4\"><div><label class=\"label\" for=\"title\"><span class=\"label-text font-medium\">Title</span></label> <input type=\"text\" id=\"title\" name=\"title\" class=\"input input-bordered w-full\" placeholder=\"Enter prompt title\" required></div><div><label class=\"label\" for=\"content\"><span class=\"label-text font-medium\">Content</span></label> <textarea id=\"content\" name=\"content\" class=\"textarea textarea-bordered w-full h-32\" placeholder=\"Enter prompt content\" required></textarea></div><label class=\"label cursor-pointer\"><span class=\"label-text font-medium\">System Prompt</span> <input type=\"checkbox\" id=\"is_system\" name=\"is_system\" class=\"checkbox checkbox-primary\" value=\"1\"></label> <label class=\"label\"><span class=\"label-text-alt text-base-content/60\">System prompts are used as default templates</span></label> <button type=\"submit\" class=\"btn btn-primary w-full\">Create Prompt</button></form>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></div><!-- Existing Prompts List --><div class=\"card bg-base-100 shadow-lg\"><div class=\"card-body\"><h2 class=\"card-title text-xl mb-4\">Your Prompts</h2>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if len(prompts) == 0 {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"text-center py-8\"><p class=\"text-base-content/60\">No prompts created yet. Create your first prompt using the form.</p></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<div class=\"space-y-4\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, prompt := range prompts {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"border border-base-300 rounded-lg p-4\"><div class=\"flex justify-between items-start mb-2\"><h3 class=\"font-semibold text-lg\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"border border-base-300 rounded-lg p-4\"><div class=\"flex justify-between items-start mb-2\"><h3 class=\"font-semibold text-lg\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var3 string
-					templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(prompt.Title)
+					var templ_7745c5c3_Var6 string
+					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(prompt.Title)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 87, Col: 58}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 153, Col: 58}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</h3>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</h3>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					if prompt.IsSystem.Valid && prompt.IsSystem.Int64 == 1 {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<span class=\"badge badge-primary badge-sm\">System</span>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<span class=\"badge badge-primary badge-sm\">System</span>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><p class=\"text-base-content/70 text-sm mb-3 line-clamp-3\">")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var4 string
-					templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(prompt.Content)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 92, Col: 83}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</p><div class=\"flex justify-between items-center text-xs text-base-content/50\"><span>ID: ")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var5 string
-					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(prompt.ID, 10))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 94, Col: 54}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</span> ")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					if prompt.CreatedAt.Valid {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<span>Created: ")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var6 string
-						templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(prompt.CreatedAt.String)
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 96, Col: 51}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span>")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div><div class=\"mt-3 flex gap-2\"><button class=\"btn btn-sm btn-outline\" onclick=\"editPrompt({prompt.ID})\">Edit</button><form action=\"/prompts/delete\" method=\"POST\" class=\"inline\" onsubmit=\"return confirm('Are you sure you want to delete this prompt?')\"><input type=\"hidden\" name=\"id\" value=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div><p class=\"text-base-content/70 text-sm mb-3 line-clamp-3\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var7 string
-					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(prompt.ID, 10))
+					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(prompt.Content)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 104, Col: 82}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 158, Col: 83}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\"> <button type=\"submit\" class=\"btn btn-sm btn-error\">Delete</button></form></div></div>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</p><div class=\"flex justify-between items-center text-xs text-base-content/50\"><span>ID: ")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var8 string
+					templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(prompt.ID, 10))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 160, Col: 54}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</span> ")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					if prompt.CreatedAt.Valid {
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<span>Created: ")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var9 string
+						templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(prompt.CreatedAt.String)
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 162, Col: 51}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</span>")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div><div class=\"mt-3 flex gap-2\"><a href=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var10 templ.SafeURL
+					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/prompts/edit/" + strconv.FormatInt(prompt.ID, 10)))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 166, Col: 86}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" class=\"btn btn-sm btn-outline\">Edit</a><form action=\"/prompts/delete\" method=\"POST\" class=\"inline\" onsubmit=\"return confirm('Are you sure you want to delete this prompt?')\"><input type=\"hidden\" name=\"id\" value=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var11 string
+					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(prompt.ID, 10))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 170, Col: 82}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\"> <button type=\"submit\" class=\"btn btn-sm btn-error\">Delete</button></form></div></div>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div></div></div></div><script>\n\t\t\tfunction editPrompt(id) {\n\t\t\t\t// TODO: Implement edit functionality\n\t\t\t\talert('Edit functionality coming soon!');\n\t\t\t}\n\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</div></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
