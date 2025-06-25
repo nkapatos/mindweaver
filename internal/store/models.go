@@ -8,6 +8,16 @@ import (
 	"database/sql"
 )
 
+type Model struct {
+	ID            int64          `json:"id"`
+	ProviderID    sql.NullInt64  `json:"provider_id"`
+	Name          string         `json:"name"`
+	Capabilities  sql.NullString `json:"capabilities"`
+	DefaultParams sql.NullString `json:"default_params"`
+	IsActive      sql.NullBool   `json:"is_active"`
+	CreatedAt     sql.NullTime   `json:"created_at"`
+}
+
 type Prompt struct {
 	ID        int64          `json:"id"`
 	UserID    sql.NullInt64  `json:"user_id"`
@@ -16,6 +26,23 @@ type Prompt struct {
 	IsSystem  sql.NullInt64  `json:"is_system"`
 	CreatedAt sql.NullString `json:"created_at"`
 	UpdatedAt sql.NullString `json:"updated_at"`
+}
+
+type Provider struct {
+	ID        int64        `json:"id"`
+	Name      string       `json:"name"`
+	Type      string       `json:"type"`
+	IsActive  sql.NullBool `json:"is_active"`
+	CreatedAt sql.NullTime `json:"created_at"`
+}
+
+type ProviderSetting struct {
+	ID           int64         `json:"id"`
+	ProviderID   sql.NullInt64 `json:"provider_id"`
+	SettingKey   string        `json:"setting_key"`
+	SettingValue string        `json:"setting_value"`
+	IsSecret     sql.NullBool  `json:"is_secret"`
+	CreatedAt    sql.NullTime  `json:"created_at"`
 }
 
 type User struct {
