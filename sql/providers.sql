@@ -4,11 +4,30 @@ FROM providers
 WHERE name = ? AND is_active = true
 LIMIT 1;
 
+-- name: GetProviderByID :one
+SELECT id, name, type, is_active, created_at 
+FROM providers 
+WHERE id = ?;
+
 -- name: GetAllProviders :many
 SELECT id, name, type, is_active, created_at 
 FROM providers 
 WHERE is_active = true
 ORDER BY name;
+
+-- name: CreateProvider :one
+INSERT INTO providers (name, type, is_active) 
+VALUES (?, ?, ?) 
+RETURNING id, name, type, is_active, created_at;
+
+-- name: UpdateProvider :exec
+UPDATE providers 
+SET name = ?, type = ?, is_active = ? 
+WHERE id = ?;
+
+-- name: DeleteProvider :exec
+DELETE FROM providers 
+WHERE id = ?;
 
 -- name: GetProviderSettings :many
 SELECT setting_key, setting_value, is_secret 

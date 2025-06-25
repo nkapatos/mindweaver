@@ -10,6 +10,31 @@ import (
 	"database/sql"
 )
 
+const createProvider = `-- name: CreateProvider :one
+INSERT INTO providers (name, type, is_active) 
+VALUES (?, ?, ?) 
+RETURNING id, name, type, is_active, created_at
+`
+
+type CreateProviderParams struct {
+	Name     string       `json:"name"`
+	Type     string       `json:"type"`
+	IsActive sql.NullBool `json:"is_active"`
+}
+
+func (q *Queries) CreateProvider(ctx context.Context, arg CreateProviderParams) (Provider, error) {
+	row := q.db.QueryRowContext(ctx, createProvider, arg.Name, arg.Type, arg.IsActive)
+	var i Provider
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Type,
+		&i.IsActive,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createProviderSetting = `-- name: CreateProviderSetting :exec
 INSERT INTO provider_settings (provider_id, setting_key, setting_value, is_secret) 
 VALUES (?, ?, ?, ?)
@@ -29,6 +54,16 @@ func (q *Queries) CreateProviderSetting(ctx context.Context, arg CreateProviderS
 		arg.SettingValue,
 		arg.IsSecret,
 	)
+	return err
+}
+
+const deleteProvider = `-- name: DeleteProvider :exec
+DELETE FROM providers 
+WHERE id = ?
+`
+
+func (q *Queries) DeleteProvider(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteProvider, id)
 	return err
 }
 
@@ -133,6 +168,25 @@ func (q *Queries) GetModelsByProvider(ctx context.Context, providerID sql.NullIn
 	return items, nil
 }
 
+const getProviderByID = `-- name: GetProviderByID :one
+SELECT id, name, type, is_active, created_at 
+FROM providers 
+WHERE id = ?
+`
+
+func (q *Queries) GetProviderByID(ctx context.Context, id int64) (Provider, error) {
+	row := q.db.QueryRowContext(ctx, getProviderByID, id)
+	var i Provider
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Type,
+		&i.IsActive,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getProviderByName = `-- name: GetProviderByName :one
 SELECT id, name, type, is_active, created_at 
 FROM providers 
@@ -186,6 +240,29 @@ func (q *Queries) GetProviderSettings(ctx context.Context, providerID sql.NullIn
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateProvider = `-- name: UpdateProvider :exec
+UPDATE providers 
+SET name = ?, type = ?, is_active = ? 
+WHERE id = ?
+`
+
+type UpdateProviderParams struct {
+	Name     string       `json:"name"`
+	Type     string       `json:"type"`
+	IsActive sql.NullBool `json:"is_active"`
+	ID       int64        `json:"id"`
+}
+
+func (q *Queries) UpdateProvider(ctx context.Context, arg UpdateProviderParams) error {
+	_, err := q.db.ExecContext(ctx, updateProvider,
+		arg.Name,
+		arg.Type,
+		arg.IsActive,
+		arg.ID,
+	)
+	return err
 }
 
 const updateProviderSetting = `-- name: UpdateProviderSetting :exec
