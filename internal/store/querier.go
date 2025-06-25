@@ -11,17 +11,24 @@ import (
 
 type Querier interface {
 	CreatePrompt(ctx context.Context, arg CreatePromptParams) error
+	CreateProviderSetting(ctx context.Context, arg CreateProviderSettingParams) error
 	CreateUser(ctx context.Context, name string) error
 	DeletePrompt(ctx context.Context, id int64) error
 	DeleteUser(ctx context.Context, id int64) error
 	GetAllPrompts(ctx context.Context) ([]Prompt, error)
+	GetAllProviders(ctx context.Context) ([]Provider, error)
 	GetAllUsers(ctx context.Context) ([]User, error)
+	GetModelByName(ctx context.Context, arg GetModelByNameParams) (Model, error)
+	GetModelsByProvider(ctx context.Context, providerID sql.NullInt64) ([]Model, error)
 	GetPromptById(ctx context.Context, id int64) (Prompt, error)
 	GetPromptsByUserId(ctx context.Context, userID sql.NullInt64) ([]Prompt, error)
+	GetProviderByName(ctx context.Context, name string) (Provider, error)
+	GetProviderSettings(ctx context.Context, providerID sql.NullInt64) ([]GetProviderSettingsRow, error)
 	GetSystemPrompts(ctx context.Context) ([]Prompt, error)
 	GetUserById(ctx context.Context, id int64) (User, error)
 	GetUserByName(ctx context.Context, name string) (User, error)
 	UpdatePrompt(ctx context.Context, arg UpdatePromptParams) error
+	UpdateProviderSetting(ctx context.Context, arg UpdateProviderSettingParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 }
 
