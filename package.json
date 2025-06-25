@@ -1,7 +1,7 @@
 {
 	"dependencies": {
-		"@tailwindcss/cli": "^4.1.8",
 		"@tailwindcss/postcss": "^4.1.8",
+		"lucide-static": "^0.523.0",
 		"postcss": "^8.5.4",
 		"tailwindcss": "^4.1.8"
 	},

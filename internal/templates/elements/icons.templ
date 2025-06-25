@@ -1,0 +1,18 @@
+package elements
+
+import (
+	"fmt"
+	"os"
+)
+
+func readIconFromStatic(name string) string {
+	icon, err := os.ReadFile(fmt.Sprintf("node_modules/lucide-static/icons/%s.svg", name))
+	if err != nil {
+		panic(err)
+	}
+	return string(icon)
+}
+
+templ Icon(name string) {
+	@templ.Raw(readIconFromStatic(name))
+}
