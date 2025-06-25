@@ -30,7 +30,7 @@ func (h *PromptsHandler) Prompts(c echo.Context) error {
 		prompts = []store.Prompt{}
 	}
 
-	return views.PromptsPage(prompts).Render(c.Request().Context(), c.Response().Writer)
+	return views.PromptsPage(prompts, nil).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // CreatePrompt handles POST /prompts - processes form submission
@@ -89,4 +89,70 @@ func (h *PromptsHandler) DeletePrompt(c echo.Context) error {
 
 	// Redirect back to prompts page with success message
 	return c.Redirect(http.StatusSeeOther, "/prompts?success=Prompt deleted successfully")
+}
+
+// EditPrompt handles GET /prompts/edit/{id} - shows edit form
+func (h *PromptsHandler) EditPrompt(c echo.Context) error {
+	idStr := c.Param("id")
+	if idStr == "" {
+		return c.Redirect(http.StatusSeeOther, "/prompts?error=Prompt ID is required")
+	}
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return c.Redirect(http.StatusSeeOther, "/prompts?error=Invalid prompt ID")
+	}
+
+	// Get the prompt to edit
+	prompt, err := h.promptService.GetPromptByID(c.Request().Context(), id)
+	if err != nil {
+		return c.Redirect(http.StatusSeeOther, "/prompts?error=Prompt not found")
+	}
+
+	// Get all prompts to display in the list
+	prompts, err := h.promptService.GetAllPrompts(c.Request().Context())
+	if err != nil {
+		prompts = []store.Prompt{}
+	}
+
+	return views.PromptsPage(prompts, &prompt).Render(c.Request().Context(), c.Response().Writer)
+}
+
+// UpdatePrompt handles POST /prompts/edit/{id} - processes edit form submission
+func (h *PromptsHandler) UpdatePrompt(c echo.Context) error {
+	idStr := c.Param("id")
+	if idStr == "" {
+		return c.Redirect(http.StatusSeeOther, "/prompts?error=Prompt ID is required")
+	}
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return c.Redirect(http.StatusSeeOther, "/prompts?error=Invalid prompt ID")
+	}
+
+	// Parse form data
+	if err := c.Request().ParseForm(); err != nil {
+		return c.String(http.StatusBadRequest, "Invalid form data")
+	}
+
+	// Extract form values
+	title := c.FormValue("title")
+	content := c.FormValue("content")
+	isSystemStr := c.FormValue("is_system")
+
+	// Validate required fields
+	if title == "" || content == "" {
+		return c.Redirect(http.StatusSeeOther, "/prompts/edit/"+idStr+"?error=Title and content are required")
+	}
+
+	// Convert is_system checkbox to boolean
+	isSystem := isSystemStr == "1"
+
+	// Update the prompt
+	if err := h.promptService.UpdatePrompt(c.Request().Context(), id, title, content, isSystem); err != nil {
+		return c.Redirect(http.StatusSeeOther, "/prompts/edit/"+idStr+"?error=Failed to update prompt")
+	}
+
+	// Redirect back to prompts page with success message
+	return c.Redirect(http.StatusSeeOther, "/prompts?success=Prompt updated successfully")
 }

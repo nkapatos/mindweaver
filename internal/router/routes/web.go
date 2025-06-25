@@ -12,6 +12,8 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	// Prompts
 	e.GET("/prompts", promptsHandler.Prompts)
 	e.POST("/prompts", promptsHandler.CreatePrompt)
+	e.GET("/prompts/edit/:id", promptsHandler.EditPrompt)
+	e.POST("/prompts/edit/:id", promptsHandler.UpdatePrompt)
 	e.POST("/prompts/delete", promptsHandler.DeletePrompt)
 
 	// Settings
