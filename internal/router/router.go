@@ -25,6 +25,7 @@ func New() *Router {
 func (r *Router) SetupRoutes(
 	actorHandler *api.ActorHandler,
 	promptHandler *api.PromptHandler,
+	llmHandler *api.LLMHandler,
 	homeHandler *web.HomeHandler,
 	promptsHandler *web.PromptsHandler,
 	providersHandler *web.ProvidersHandler,
@@ -33,7 +34,7 @@ func (r *Router) SetupRoutes(
 	notFoundHandler *web.NotFoundHandler,
 ) {
 	routes.SetupWebRoutes(r.echo, homeHandler, promptsHandler, providersHandler, settingsHandler, chatsHandler)
-	routes.SetupAPIRoutes(r.echo, actorHandler, promptHandler)
+	routes.SetupAPIRoutes(r.echo, actorHandler, promptHandler, llmHandler)
 	routes.SetupStaticRoutes(r.echo)
 	r.setupErrorHandling(notFoundHandler)
 }

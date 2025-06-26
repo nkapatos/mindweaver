@@ -6,7 +6,12 @@ import (
 )
 
 // SetupAPIRoutes configures all API routes
-func SetupAPIRoutes(e *echo.Echo, actorHandler *api.ActorHandler, promptHandler *api.PromptHandler) {
+func SetupAPIRoutes(
+	e *echo.Echo,
+	actorHandler *api.ActorHandler,
+	promptHandler *api.PromptHandler,
+	llmHandler *api.LLMHandler,
+) {
 	// API routes
 	e.POST("/api/actors", func(c echo.Context) error {
 		actorHandler.CreateActor(c.Response().Writer, c.Request())
@@ -16,4 +21,8 @@ func SetupAPIRoutes(e *echo.Echo, actorHandler *api.ActorHandler, promptHandler 
 		promptHandler.CreatePrompt(c.Response().Writer, c.Request())
 		return nil
 	})
+
+	// LLM routes
+	e.POST("/api/generate", llmHandler.Generate)
+	// e.POST("/api/chat", llmHandler.Chat)
 }

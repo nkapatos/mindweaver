@@ -51,8 +51,10 @@ func main() {
 	actorService := services.NewActorService(querier)
 	promptService := services.NewPromptService(querier)
 	providerService := services.NewProviderService(querier)
+	llmService := services.NewLLMService(querier)
 	actorHandler := api.NewActorHandler(actorService)
 	promptHandler := api.NewPromptHandler(promptService)
+	llmHandler := api.NewLLMHandler(llmService)
 	homeHandler := web.NewHomeHandler()
 	notFoundHandler := web.NewNotFoundHandler()
 	promptsHandler := web.NewPromptsHandler(promptService)
@@ -69,6 +71,7 @@ func main() {
 	router.SetupRoutes(
 		actorHandler,
 		promptHandler,
+		llmHandler,
 		homeHandler,
 		promptsHandler,
 		providersHandler,
