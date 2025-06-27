@@ -90,20 +90,21 @@ func (s *ActorService) GetActorsByType(ctx context.Context, actorType string) ([
 }
 
 // UpdateActor updates an actor's information by their ID
-func (s *ActorService) UpdateActor(ctx context.Context, id int64, name, displayName, avatarURL, metadata string, isActive bool) error {
-	s.logger.Info("Updating actor", "id", id, "name", name)
+func (s *ActorService) UpdateActor(ctx context.Context, id int64, actorType, name, displayName, avatarURL, metadata string, isActive bool) error {
+	s.logger.Info("Updating actor", "id", id, "type", actorType, "name", name)
 
 	params := store.UpdateActorParams{
-		ID:          id,
+		Type:        actorType,
 		Name:        name,
 		DisplayName: sql.NullString{String: displayName, Valid: displayName != ""},
 		AvatarUrl:   sql.NullString{String: avatarURL, Valid: avatarURL != ""},
 		Metadata:    sql.NullString{String: metadata, Valid: metadata != ""},
 		IsActive:    sql.NullBool{Bool: isActive, Valid: true},
+		ID:          id,
 	}
 
 	if err := s.actorStore.UpdateActor(ctx, params); err != nil {
-		s.logger.Error("Failed to update actor", "id", id, "name", name, "error", err)
+		s.logger.Error("Failed to update actor", "id", id, "type", actorType, "name", name, "error", err)
 		return err
 	}
 

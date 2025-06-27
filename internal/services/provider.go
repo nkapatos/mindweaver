@@ -8,6 +8,20 @@ import (
 	"github.com/nkapatos/mindweaver/internal/store"
 )
 
+// ProviderService handles provider operations
+//
+// ARCHITECTURE NOTE: This service layer follows a simple query + relationship pattern:
+// - Basic CRUD operations use direct SQL queries via the store layer
+// - Relationship methods load related entities through separate queries
+// - This approach prioritizes maintainability and flexibility over raw performance
+//
+// FUTURE OPTIMIZATION STRATEGY:
+// If performance becomes a bottleneck, consider these approaches in order of complexity:
+// 1. SQL JOINs: Single queries with JOINs for frequently accessed relationships
+// 2. Stored procedures: Complex business logic in database for heavy operations
+// 3. Caching: Redis/memory caching for frequently accessed data
+// 4. Batch loading: Load multiple entities with relations in one operation
+// 5. Database indexing: Ensure proper indexes on foreign keys and frequently queried fields
 type ProviderService struct {
 	providerStore store.Querier
 	logger        *slog.Logger
@@ -113,6 +127,69 @@ func (s *ProviderService) GetProvidersByLLMService(ctx context.Context, llmServi
 	return providers, nil
 }
 
+// GetProvidersBySystemPrompt retrieves all providers that use a specific system prompt
+func (s *ProviderService) GetProvidersBySystemPrompt(ctx context.Context, systemPromptID int64) ([]store.Provider, error) {
+	s.logger.Debug("Getting providers by system prompt", "system_prompt_id", systemPromptID)
+
+	// Get all providers and filter by system prompt ID
+	allProviders, err := s.providerStore.GetAllProviders(ctx)
+	if err != nil {
+		s.logger.Error("Failed to get all providers for system prompt filtering", "system_prompt_id", systemPromptID, "error", err)
+		return nil, err
+	}
+
+	// Filter providers that use the specified system prompt
+	var filteredProviders []store.Provider
+	for _, provider := range allProviders {
+		if provider.SystemPromptID.Valid && provider.SystemPromptID.Int64 == systemPromptID {
+			filteredProviders = append(filteredProviders, provider)
+		}
+	}
+
+	s.logger.Debug("Providers retrieved successfully", "system_prompt_id", systemPromptID, "count", len(filteredProviders))
+	return filteredProviders, nil
+}
+
+// GetProviderWithRelations retrieves a provider along with its related LLM service and system prompt
+//
+// FUTURE OPTIMIZATION: If this becomes a performance bottleneck, consider:
+// 1. SQL JOIN approach: Single query with LEFT JOINs to llm_services and prompts
+// 2. Stored procedure: Complex business logic in database for frequently accessed data
+// 3. Caching: Cache provider relationships if they're accessed frequently
+// 4. Batch loading: Load multiple providers with relations in one operation
+func (s *ProviderService) GetProviderWithRelations(ctx context.Context, providerID int64) (*store.Provider, *store.LlmService, *store.Prompt, error) {
+	s.logger.Debug("Getting provider with relations", "provider_id", providerID)
+
+	// Get the provider
+	provider, err := s.providerStore.GetProviderByID(ctx, providerID)
+	if err != nil {
+		s.logger.Error("Failed to get provider", "provider_id", providerID, "error", err)
+		return nil, nil, nil, err
+	}
+
+	// Get the related LLM service
+	llmService, err := s.providerStore.GetLLMServiceByID(ctx, provider.LlmServiceID)
+	if err != nil {
+		s.logger.Error("Failed to get LLM service for provider", "provider_id", providerID, "llm_service_id", provider.LlmServiceID, "error", err)
+		return &provider, nil, nil, err
+	}
+
+	// Get the related system prompt (if any)
+	var systemPrompt *store.Prompt
+	if provider.SystemPromptID.Valid {
+		prompt, err := s.providerStore.GetPromptById(ctx, provider.SystemPromptID.Int64)
+		if err != nil {
+			s.logger.Error("Failed to get system prompt for provider", "provider_id", providerID, "system_prompt_id", provider.SystemPromptID.Int64, "error", err)
+			// Don't fail the entire operation if system prompt is missing
+		} else {
+			systemPrompt = &prompt
+		}
+	}
+
+	s.logger.Debug("Provider with relations retrieved successfully", "provider_id", providerID)
+	return &provider, &llmService, systemPrompt, nil
+}
+
 // UpdateProvider updates a provider by its ID
 func (s *ProviderService) UpdateProvider(ctx context.Context, id int64, name, description string, llmServiceID int64, systemPromptID *int64) error {
 	s.logger.Info("Updating provider",
@@ -134,6 +211,10 @@ func (s *ProviderService) UpdateProvider(ctx context.Context, id int64, name, de
 		params.SystemPromptID = sql.NullInt64{
 			Int64: *systemPromptID,
 			Valid: true,
+		}
+	} else {
+		params.SystemPromptID = sql.NullInt64{
+			Valid: false,
 		}
 	}
 

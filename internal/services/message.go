@@ -131,3 +131,83 @@ func (s *MessageService) DeleteMessage(ctx context.Context, id int64) error {
 	s.logger.Info("Message deleted successfully", "id", id)
 	return nil
 }
+
+// GetMessageWithConversation retrieves a message along with its conversation
+func (s *MessageService) GetMessageWithConversation(ctx context.Context, messageID int64) (*store.Message, *store.Conversation, error) {
+	s.logger.Debug("Getting message with conversation", "message_id", messageID)
+
+	// Get the message
+	message, err := s.messageStore.GetMessageByID(ctx, messageID)
+	if err != nil {
+		s.logger.Error("Failed to get message", "message_id", messageID, "error", err)
+		return nil, nil, err
+	}
+
+	// Get the related conversation
+	conversation, err := s.messageStore.GetConversationByID(ctx, message.ConversationID)
+	if err != nil {
+		s.logger.Error("Failed to get conversation for message", "message_id", messageID, "conversation_id", message.ConversationID, "error", err)
+		return &message, nil, err
+	}
+
+	s.logger.Debug("Message with conversation retrieved successfully", "message_id", messageID)
+	return &message, &conversation, nil
+}
+
+// GetMessageWithSender retrieves a message along with its sender actor
+func (s *MessageService) GetMessageWithSender(ctx context.Context, messageID int64) (*store.Message, *store.Actor, error) {
+	s.logger.Debug("Getting message with sender", "message_id", messageID)
+
+	// Get the message
+	message, err := s.messageStore.GetMessageByID(ctx, messageID)
+	if err != nil {
+		s.logger.Error("Failed to get message", "message_id", messageID, "error", err)
+		return nil, nil, err
+	}
+
+	// Get the related sender actor
+	actor, err := s.messageStore.GetActorByID(ctx, message.SenderActorID)
+	if err != nil {
+		s.logger.Error("Failed to get sender actor for message", "message_id", messageID, "sender_actor_id", message.SenderActorID, "error", err)
+		return &message, nil, err
+	}
+
+	s.logger.Debug("Message with sender retrieved successfully", "message_id", messageID)
+	return &message, &actor, nil
+}
+
+// GetMessageWithRelations retrieves a message along with both its conversation and sender actor
+//
+// FUTURE OPTIMIZATION: If this becomes a performance bottleneck, consider:
+// 1. SQL JOIN approach: Single query with JOINs to conversations and actors
+// 2. Batch loading: Load multiple messages with relations in one operation
+// 3. Stored procedure: Complex message loading logic for chat interfaces
+// 4. Caching: Cache message context for frequently accessed messages
+// 5. Streaming: For real-time chat, consider streaming message updates
+func (s *MessageService) GetMessageWithRelations(ctx context.Context, messageID int64) (*store.Message, *store.Conversation, *store.Actor, error) {
+	s.logger.Debug("Getting message with relations", "message_id", messageID)
+
+	// Get the message
+	message, err := s.messageStore.GetMessageByID(ctx, messageID)
+	if err != nil {
+		s.logger.Error("Failed to get message", "message_id", messageID, "error", err)
+		return nil, nil, nil, err
+	}
+
+	// Get the related conversation
+	conversation, err := s.messageStore.GetConversationByID(ctx, message.ConversationID)
+	if err != nil {
+		s.logger.Error("Failed to get conversation for message", "message_id", messageID, "conversation_id", message.ConversationID, "error", err)
+		return &message, nil, nil, err
+	}
+
+	// Get the related sender actor
+	actor, err := s.messageStore.GetActorByID(ctx, message.SenderActorID)
+	if err != nil {
+		s.logger.Error("Failed to get sender actor for message", "message_id", messageID, "sender_actor_id", message.SenderActorID, "error", err)
+		return &message, &conversation, nil, err
+	}
+
+	s.logger.Debug("Message with relations retrieved successfully", "message_id", messageID)
+	return &message, &conversation, &actor, nil
+}

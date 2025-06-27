@@ -118,12 +118,19 @@ func (s *PromptService) GetSystemPrompts(ctx context.Context) ([]store.Prompt, e
 }
 
 // UpdatePrompt updates a prompt by its ID
-func (s *PromptService) UpdatePrompt(ctx context.Context, id int64, title, content string, isSystem bool) error {
+func (s *PromptService) UpdatePrompt(ctx context.Context, id int64, actorID *int64, title, content string, isSystem bool) error {
 	s.logger.Info("Updating prompt",
 		"id", id,
+		"actor_id", actorID,
 		"title", title,
 		"is_system", isSystem,
 		"content_length", len(content))
+
+	var actorIDNull sql.NullInt64
+	if actorID != nil {
+		actorIDNull.Int64 = *actorID
+		actorIDNull.Valid = true
+	}
 
 	var isSystemNull sql.NullInt64
 	if isSystem {
@@ -132,15 +139,17 @@ func (s *PromptService) UpdatePrompt(ctx context.Context, id int64, title, conte
 	}
 
 	params := store.UpdatePromptParams{
-		ID:       id,
+		ActorID:  actorIDNull,
 		Title:    title,
 		Content:  content,
 		IsSystem: isSystemNull,
+		ID:       id,
 	}
 
 	if err := s.promptStore.UpdatePrompt(ctx, params); err != nil {
 		s.logger.Error("Failed to update prompt",
 			"id", id,
+			"actor_id", actorID,
 			"title", title,
 			"is_system", isSystem,
 			"error", err)
@@ -162,4 +171,39 @@ func (s *PromptService) DeletePrompt(ctx context.Context, id int64) error {
 
 	s.logger.Info("Prompt deleted successfully", "id", id)
 	return nil
+}
+
+// GetPromptWithActor retrieves a user prompt along with its owner actor (only for non-system prompts)
+//
+// FUTURE OPTIMIZATION: If this becomes a performance bottleneck, consider:
+// 1. SQL JOIN approach: Single query with LEFT JOIN to actors for user prompts
+// 2. Batch loading: Load multiple prompts with actors in one operation
+// 3. Stored procedure: Complex prompt loading logic for prompt management interfaces
+// 4. Caching: Cache prompt-actor relationships for frequently accessed prompts
+// 5. Indexing: Ensure proper indexes on actor_id for user prompts
+func (s *PromptService) GetPromptWithActor(ctx context.Context, promptID int64) (*store.Prompt, *store.Actor, error) {
+	s.logger.Debug("Getting prompt with actor", "prompt_id", promptID)
+
+	// Get the prompt
+	prompt, err := s.promptStore.GetPromptById(ctx, promptID)
+	if err != nil {
+		s.logger.Error("Failed to get prompt", "prompt_id", promptID, "error", err)
+		return nil, nil, err
+	}
+
+	// Check if this is a user prompt (has an actor_id)
+	if !prompt.ActorID.Valid {
+		s.logger.Debug("Prompt is a system prompt, no actor relationship", "prompt_id", promptID)
+		return &prompt, nil, nil
+	}
+
+	// Get the related actor
+	actor, err := s.promptStore.GetActorByID(ctx, prompt.ActorID.Int64)
+	if err != nil {
+		s.logger.Error("Failed to get actor for prompt", "prompt_id", promptID, "actor_id", prompt.ActorID.Int64, "error", err)
+		return &prompt, nil, err
+	}
+
+	s.logger.Debug("Prompt with actor retrieved successfully", "prompt_id", promptID)
+	return &prompt, &actor, nil
 }
