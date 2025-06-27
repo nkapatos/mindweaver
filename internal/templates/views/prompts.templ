@@ -18,115 +18,7 @@ templ PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt, activePat
 				<!-- Create/Edit Prompt Form -->
 				<div class="card bg-base-100 shadow-lg">
 					<div class="card-body">
-						if editingPrompt != nil {
-							<div class="flex items-center gap-4 mb-4">
-								<h2 class="card-title text-xl">Edit Prompt</h2>
-								<a href="/prompts" class="btn btn-ghost btn-sm">
-									← Back to Create
-								</a>
-							</div>
-							<form action={ templ.SafeURL("/prompts/edit/" + strconv.FormatInt(editingPrompt.ID, 10)) } method="POST" class="space-y-4">
-								<div>
-									<label class="label" for="title">
-										<span class="label-text font-medium">Title</span>
-									</label>
-									<input
-										type="text"
-										id="title"
-										name="title"
-										class="input input-bordered w-full"
-										placeholder="Enter prompt title"
-										value={ editingPrompt.Title }
-										required
-									/>
-								</div>
-								<div>
-									<label class="label" for="content">
-										<span class="label-text font-medium">Content</span>
-									</label>
-									<textarea
-										id="content"
-										name="content"
-										class="textarea textarea-bordered w-full h-32"
-										placeholder="Enter prompt content"
-										required
-									>{ editingPrompt.Content }</textarea>
-								</div>
-								<label class="label cursor-pointer">
-									<span class="label-text font-medium">System Prompt</span>
-									<input
-										type="checkbox"
-										id="is_system"
-										name="is_system"
-										class="checkbox checkbox-primary"
-										value="1"
-										if editingPrompt.IsSystem.Valid && editingPrompt.IsSystem.Int64 == 1 {
-											checked
-										}
-									/>
-								</label>
-								<label class="label">
-									<span class="label-text-alt text-base-content/60">
-										System prompts are used as default templates
-									</span>
-								</label>
-								<div class="flex gap-3">
-									<a href="/prompts" class="btn btn-outline flex-1">
-										Cancel
-									</a>
-									<button type="submit" class="btn btn-primary flex-1">
-										Update Prompt
-									</button>
-								</div>
-							</form>
-						} else {
-							<h2 class="card-title text-xl mb-4">Create New Prompt</h2>
-							<form action="/prompts" method="POST" class="space-y-4">
-								<div>
-									<label class="label" for="title">
-										<span class="label-text font-medium">Title</span>
-									</label>
-									<input
-										type="text"
-										id="title"
-										name="title"
-										class="input input-bordered w-full"
-										placeholder="Enter prompt title"
-										required
-									/>
-								</div>
-								<div>
-									<label class="label" for="content">
-										<span class="label-text font-medium">Content</span>
-									</label>
-									<textarea
-										id="content"
-										name="content"
-										class="textarea textarea-bordered w-full h-32"
-										placeholder="Enter prompt content"
-										required
-									></textarea>
-								</div>
-								<label class="label cursor-pointer">
-									<span class="label-text font-medium">System Prompt</span>
-									<input
-										type="checkbox"
-										id="is_system"
-										name="is_system"
-										class="checkbox checkbox-primary"
-										value="1"
-									/>
-								</label>
-								<label class="label">
-									<span class="label-text-alt text-base-content/60">
-										System prompts are used as default templates
-									</span>
-								</label>
-								<button type="submit" class="btn btn-primary w-full">
-									Create Prompt
-								</button>
-							</form>
-						}
+						@PromptForm(editingPrompt)
 					</div>
 				</div>
 				<!-- Existing Prompts List -->
@@ -174,4 +66,89 @@ templ PromptsPage(prompts []store.Prompt, editingPrompt *store.Prompt, activePat
 			</div>
 		</div>
 	}
+}
+
+templ PromptForm(editingPrompt *store.Prompt) {
+	if editingPrompt != nil {
+		<div class="flex items-center gap-4 mb-4">
+			<h2 class="card-title text-xl">Edit Prompt</h2>
+			<a href="/prompts" class="btn btn-ghost btn-sm">
+				← Back to Create
+			</a>
+		</div>
+		<form action={ templ.SafeURL("/prompts/edit/" + strconv.FormatInt(editingPrompt.ID, 10)) } method="POST" class="space-y-4">
+			@PromptFormFields(editingPrompt)
+			<div class="flex gap-3">
+				<a href="/prompts" class="btn btn-outline flex-1">
+					Cancel
+				</a>
+				<button type="submit" class="btn btn-primary flex-1">
+					Update Prompt
+				</button>
+			</div>
+		</form>
+	} else {
+		<h2 class="card-title text-xl mb-4">Create New Prompt</h2>
+		<form action="/prompts" method="POST" class="space-y-4">
+			@PromptFormFields(nil)
+			<button type="submit" class="btn btn-primary w-full">
+				Create Prompt
+			</button>
+		</form>
+	}
+}
+
+templ PromptFormFields(editingPrompt *store.Prompt) {
+	<div>
+		<label class="label" for="title">
+			<span class="label-text font-medium">Title</span>
+		</label>
+		<input
+			type="text"
+			id="title"
+			name="title"
+			class="input input-bordered w-full"
+			placeholder="Enter prompt title"
+			if editingPrompt != nil {
+				value={ editingPrompt.Title }
+			}
+			required
+		/>
+	</div>
+	<div>
+		<label class="label" for="content">
+			<span class="label-text font-medium">Content</span>
+		</label>
+		<textarea
+			id="content"
+			name="content"
+			class="textarea textarea-bordered w-full h-32"
+			placeholder="Enter prompt content"
+			required
+		>
+		if editingPrompt != nil {
+			{editingPrompt.Content}
+		} else {
+			"Enter prompt content"
+		}
+		</textarea>
+	</div>
+	<label class="label cursor-pointer">
+		<span class="label-text font-medium">System Prompt</span>
+		<input
+			type="checkbox"
+			id="is_system"
+			name="is_system"
+			class="checkbox checkbox-primary"
+			value="1"
+			if editingPrompt != nil && editingPrompt.IsSystem.Valid && editingPrompt.IsSystem.Int64 == 1 {
+				checked
+			}
+		/>
+	</label>
+	<label class="label">
+		<span class="label-text-alt text-base-content/60">
+			System prompts are used as default templates
+		</span>
+	</label>
 }
