@@ -11,9 +11,9 @@ import (
 )
 
 const createActor = `-- name: CreateActor :one
-INSERT INTO actors (type, name, display_name, avatar_url, metadata, is_active) 
+INSERT INTO actors (type, name, display_name, avatar_url, is_active, metadata) 
 VALUES (?, ?, ?, ?, ?, ?) 
-RETURNING id, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at
+RETURNING id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at
 `
 
 type CreateActorParams struct {
@@ -21,8 +21,8 @@ type CreateActorParams struct {
 	Name        string         `json:"name"`
 	DisplayName sql.NullString `json:"display_name"`
 	AvatarUrl   sql.NullString `json:"avatar_url"`
-	Metadata    sql.NullString `json:"metadata"`
 	IsActive    sql.NullBool   `json:"is_active"`
+	Metadata    sql.NullString `json:"metadata"`
 }
 
 func (q *Queries) CreateActor(ctx context.Context, arg CreateActorParams) (Actor, error) {
@@ -31,8 +31,8 @@ func (q *Queries) CreateActor(ctx context.Context, arg CreateActorParams) (Actor
 		arg.Name,
 		arg.DisplayName,
 		arg.AvatarUrl,
-		arg.Metadata,
 		arg.IsActive,
+		arg.Metadata,
 	)
 	var i Actor
 	err := row.Scan(
@@ -41,8 +41,8 @@ func (q *Queries) CreateActor(ctx context.Context, arg CreateActorParams) (Actor
 		&i.Name,
 		&i.DisplayName,
 		&i.AvatarUrl,
-		&i.Metadata,
 		&i.IsActive,
+		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -59,7 +59,7 @@ func (q *Queries) DeleteActor(ctx context.Context, id int64) error {
 }
 
 const getActorByID = `-- name: GetActorByID :one
-SELECT id, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at 
+SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at 
 FROM actors 
 WHERE id = ? 
 LIMIT 1
@@ -74,8 +74,8 @@ func (q *Queries) GetActorByID(ctx context.Context, id int64) (Actor, error) {
 		&i.Name,
 		&i.DisplayName,
 		&i.AvatarUrl,
-		&i.Metadata,
 		&i.IsActive,
+		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -83,7 +83,7 @@ func (q *Queries) GetActorByID(ctx context.Context, id int64) (Actor, error) {
 }
 
 const getActorByName = `-- name: GetActorByName :one
-SELECT id, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at 
+SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at 
 FROM actors 
 WHERE name = ? AND type = ? 
 LIMIT 1
@@ -103,8 +103,8 @@ func (q *Queries) GetActorByName(ctx context.Context, arg GetActorByNameParams) 
 		&i.Name,
 		&i.DisplayName,
 		&i.AvatarUrl,
-		&i.Metadata,
 		&i.IsActive,
+		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -112,7 +112,7 @@ func (q *Queries) GetActorByName(ctx context.Context, arg GetActorByNameParams) 
 }
 
 const getActorsByType = `-- name: GetActorsByType :many
-SELECT id, type, name, display_name, avatar_url, metadata, is_active, created_at, updated_at 
+SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at 
 FROM actors 
 WHERE type = ? AND is_active = true 
 ORDER BY name
@@ -133,8 +133,8 @@ func (q *Queries) GetActorsByType(ctx context.Context, type_ string) ([]Actor, e
 			&i.Name,
 			&i.DisplayName,
 			&i.AvatarUrl,
-			&i.Metadata,
 			&i.IsActive,
+			&i.Metadata,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -153,26 +153,28 @@ func (q *Queries) GetActorsByType(ctx context.Context, type_ string) ([]Actor, e
 
 const updateActor = `-- name: UpdateActor :exec
 UPDATE actors 
-SET name = ?, display_name = ?, avatar_url = ?, metadata = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP 
+SET type = ?, name = ?, display_name = ?, avatar_url = ?, is_active = ?, metadata = ?, updated_at = CURRENT_TIMESTAMP 
 WHERE id = ?
 `
 
 type UpdateActorParams struct {
+	Type        string         `json:"type"`
 	Name        string         `json:"name"`
 	DisplayName sql.NullString `json:"display_name"`
 	AvatarUrl   sql.NullString `json:"avatar_url"`
-	Metadata    sql.NullString `json:"metadata"`
 	IsActive    sql.NullBool   `json:"is_active"`
+	Metadata    sql.NullString `json:"metadata"`
 	ID          int64          `json:"id"`
 }
 
 func (q *Queries) UpdateActor(ctx context.Context, arg UpdateActorParams) error {
 	_, err := q.db.ExecContext(ctx, updateActor,
+		arg.Type,
 		arg.Name,
 		arg.DisplayName,
 		arg.AvatarUrl,
-		arg.Metadata,
 		arg.IsActive,
+		arg.Metadata,
 		arg.ID,
 	)
 	return err

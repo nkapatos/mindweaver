@@ -13,7 +13,7 @@ import (
 const createLLMService = `-- name: CreateLLMService :one
 INSERT INTO llm_services (name, description, adapter, api_key, base_url, organization, configuration) 
 VALUES (?, ?, ?, ?, ?, ?, ?) 
-RETURNING id, name, description, adapter, created_at, api_key, base_url, organization, configuration
+RETURNING id, name, description, adapter, api_key, base_url, organization, configuration, created_at
 `
 
 type CreateLLMServiceParams struct {
@@ -42,11 +42,11 @@ func (q *Queries) CreateLLMService(ctx context.Context, arg CreateLLMServicePara
 		&i.Name,
 		&i.Description,
 		&i.Adapter,
-		&i.CreatedAt,
 		&i.ApiKey,
 		&i.BaseUrl,
 		&i.Organization,
 		&i.Configuration,
+		&i.CreatedAt,
 	)
 	return i, err
 }
@@ -62,7 +62,7 @@ func (q *Queries) DeleteLLMService(ctx context.Context, id int64) error {
 }
 
 const getAllLLMServices = `-- name: GetAllLLMServices :many
-SELECT id, name, description, adapter, created_at, api_key, base_url, organization, configuration
+SELECT id, name, description, adapter, api_key, base_url, organization, configuration, created_at
 FROM llm_services 
 ORDER BY name
 `
@@ -81,11 +81,11 @@ func (q *Queries) GetAllLLMServices(ctx context.Context) ([]LlmService, error) {
 			&i.Name,
 			&i.Description,
 			&i.Adapter,
-			&i.CreatedAt,
 			&i.ApiKey,
 			&i.BaseUrl,
 			&i.Organization,
 			&i.Configuration,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -101,7 +101,7 @@ func (q *Queries) GetAllLLMServices(ctx context.Context) ([]LlmService, error) {
 }
 
 const getLLMServiceByID = `-- name: GetLLMServiceByID :one
-SELECT id, name, description, adapter, created_at, api_key, base_url, organization, configuration
+SELECT id, name, description, adapter, api_key, base_url, organization, configuration, created_at
 FROM llm_services 
 WHERE id = ?
 `
@@ -114,17 +114,17 @@ func (q *Queries) GetLLMServiceByID(ctx context.Context, id int64) (LlmService, 
 		&i.Name,
 		&i.Description,
 		&i.Adapter,
-		&i.CreatedAt,
 		&i.ApiKey,
 		&i.BaseUrl,
 		&i.Organization,
 		&i.Configuration,
+		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getLLMServiceByName = `-- name: GetLLMServiceByName :one
-SELECT id, name, description, adapter, created_at, api_key, base_url, organization, configuration
+SELECT id, name, description, adapter, api_key, base_url, organization, configuration, created_at
 FROM llm_services 
 WHERE name = ?
 LIMIT 1
@@ -138,11 +138,11 @@ func (q *Queries) GetLLMServiceByName(ctx context.Context, name string) (LlmServ
 		&i.Name,
 		&i.Description,
 		&i.Adapter,
-		&i.CreatedAt,
 		&i.ApiKey,
 		&i.BaseUrl,
 		&i.Organization,
 		&i.Configuration,
+		&i.CreatedAt,
 	)
 	return i, err
 }

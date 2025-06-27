@@ -14,23 +14,10 @@ type Actor struct {
 	Name        string         `json:"name"`
 	DisplayName sql.NullString `json:"display_name"`
 	AvatarUrl   sql.NullString `json:"avatar_url"`
-	Metadata    sql.NullString `json:"metadata"`
 	IsActive    sql.NullBool   `json:"is_active"`
+	Metadata    sql.NullString `json:"metadata"`
 	CreatedAt   sql.NullTime   `json:"created_at"`
 	UpdatedAt   sql.NullTime   `json:"updated_at"`
-}
-
-type Chat struct {
-	ID             int64          `json:"id"`
-	Uuid           string         `json:"uuid"`
-	ConversationID int64          `json:"conversation_id"`
-	ActorID        int64          `json:"actor_id"`
-	Title          string         `json:"title"`
-	ProviderID     sql.NullInt64  `json:"provider_id"`
-	ModelName      sql.NullString `json:"model_name"`
-	SystemPromptID sql.NullInt64  `json:"system_prompt_id"`
-	CreatedAt      sql.NullTime   `json:"created_at"`
-	UpdatedAt      sql.NullTime   `json:"updated_at"`
 }
 
 type Conversation struct {
@@ -38,8 +25,8 @@ type Conversation struct {
 	ActorID     int64          `json:"actor_id"`
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
-	Metadata    sql.NullString `json:"metadata"`
 	IsActive    sql.NullBool   `json:"is_active"`
+	Metadata    sql.NullString `json:"metadata"`
 	CreatedAt   sql.NullTime   `json:"created_at"`
 	UpdatedAt   sql.NullTime   `json:"updated_at"`
 }
@@ -49,11 +36,22 @@ type LlmService struct {
 	Name          string         `json:"name"`
 	Description   sql.NullString `json:"description"`
 	Adapter       string         `json:"adapter"`
-	CreatedAt     sql.NullTime   `json:"created_at"`
 	ApiKey        string         `json:"api_key"`
 	BaseUrl       string         `json:"base_url"`
 	Organization  sql.NullString `json:"organization"`
 	Configuration string         `json:"configuration"`
+	CreatedAt     sql.NullTime   `json:"created_at"`
+}
+
+type Message struct {
+	ID             int64          `json:"id"`
+	ConversationID int64          `json:"conversation_id"`
+	SenderActorID  int64          `json:"sender_actor_id"`
+	Uuid           string         `json:"uuid"`
+	Content        string         `json:"content"`
+	MessageType    sql.NullString `json:"message_type"`
+	Metadata       sql.NullString `json:"metadata"`
+	CreatedAt      sql.NullTime   `json:"created_at"`
 }
 
 type Prompt struct {
@@ -67,10 +65,10 @@ type Prompt struct {
 }
 
 type Provider struct {
-	ID           int64          `json:"id"`
-	Name         string         `json:"name"`
-	Description  string         `json:"description"`
-	LlmServiceID sql.NullInt64  `json:"llm_service_id"`
-	SystemPrompt sql.NullString `json:"system_prompt"`
-	CreatedAt    sql.NullTime   `json:"created_at"`
+	ID             int64         `json:"id"`
+	LlmServiceID   sql.NullInt64 `json:"llm_service_id"`
+	SystemPromptID sql.NullInt64 `json:"system_prompt_id"`
+	Name           string        `json:"name"`
+	Description    string        `json:"description"`
+	CreatedAt      sql.NullTime  `json:"created_at"`
 }
