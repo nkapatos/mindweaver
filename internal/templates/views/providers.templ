@@ -7,7 +7,7 @@ import (
 	"github.com/nkapatos/mindweaver/internal/templates/layouts"
 )
 
-templ ProvidersPage(providers []store.Provider, editingProvider *store.Provider, providerModels []store.Model, activePath string) {
+templ ProvidersPage(providers []store.Provider, editingProvider *store.Provider, llmServices []store.LlmService, systemPrompts []store.Prompt, activePath string) {
 	@layouts.AppLayout("Mindweaver - Providers", "Manage your AI providers", activePath) {
 		<div class="container mx-auto px-4 py-8">
 			<div class="mb-8">
@@ -18,128 +18,7 @@ templ ProvidersPage(providers []store.Provider, editingProvider *store.Provider,
 				<!-- Create/Edit Provider Form -->
 				<div class="card bg-base-100 shadow-lg">
 					<div class="card-body">
-						if editingProvider != nil {
-							<div class="flex items-center gap-4 mb-4">
-								<h2 class="card-title text-xl">Edit Provider</h2>
-								<a href="/providers" class="btn btn-ghost btn-sm">
-									← Back to Create
-								</a>
-							</div>
-							<form action={ templ.SafeURL("/providers/edit/" + strconv.FormatInt(editingProvider.ID, 10)) } method="POST" class="space-y-4">
-								<div>
-									<label class="label" for="name">
-										<span class="label-text font-medium">Provider Name</span>
-									</label>
-									<input
-										type="text"
-										id="name"
-										name="name"
-										class="input input-bordered w-full"
-										placeholder="e.g., openai, anthropic, local"
-										value={ editingProvider.Name }
-										required
-									/>
-								</div>
-								<div>
-									<label class="label" for="type">
-										<span class="label-text font-medium">Provider Type</span>
-									</label>
-									<select id="type" name="type" class="select select-bordered w-full" required>
-										<option
-											value="llm"
-											if editingProvider.Type == "llm" {
-												selected
-											}
-										>LLM</option>
-										<option
-											value="embedding"
-											if editingProvider.Type == "embedding" {
-												selected
-											}
-										>Embedding</option>
-										<option
-											value="image"
-											if editingProvider.Type == "image" {
-												selected
-											}
-										>Image Generation</option>
-									</select>
-								</div>
-								<label class="label cursor-pointer">
-									<span class="label-text font-medium">Active</span>
-									<input
-										type="checkbox"
-										id="is_active"
-										name="is_active"
-										class="checkbox checkbox-primary"
-										value="1"
-										if editingProvider.IsActive.Valid && editingProvider.IsActive.Bool {
-											checked
-										}
-									/>
-								</label>
-								<label class="label">
-									<span class="label-text-alt text-base-content/60">
-										Only active providers are available for use
-									</span>
-								</label>
-								<div class="flex gap-3">
-									<a href="/providers" class="btn btn-outline flex-1">
-										Cancel
-									</a>
-									<button type="submit" class="btn btn-primary flex-1">
-										Update Provider
-									</button>
-								</div>
-							</form>
-						} else {
-							<h2 class="card-title text-xl mb-4">Create New Provider</h2>
-							<form action="/providers" method="POST" class="space-y-4">
-								<div>
-									<label class="label" for="name">
-										<span class="label-text font-medium">Provider Name</span>
-									</label>
-									<input
-										type="text"
-										id="name"
-										name="name"
-										class="input input-bordered w-full"
-										placeholder="e.g., openai, anthropic, local"
-										required
-									/>
-								</div>
-								<div>
-									<label class="label" for="type">
-										<span class="label-text font-medium">Provider Type</span>
-									</label>
-									<select id="type" name="type" class="select select-bordered w-full" required>
-										<option value="">Select provider type</option>
-										<option value="llm">LLM</option>
-										<option value="embedding">Embedding</option>
-										<option value="image">Image Generation</option>
-									</select>
-								</div>
-								<label class="label cursor-pointer">
-									<span class="label-text font-medium">Active</span>
-									<input
-										type="checkbox"
-										id="is_active"
-										name="is_active"
-										class="checkbox checkbox-primary"
-										value="1"
-										checked
-									/>
-								</label>
-								<label class="label">
-									<span class="label-text-alt text-base-content/60">
-										Only active providers are available for use
-									</span>
-								</label>
-								<button type="submit" class="btn btn-primary w-full">
-									Create Provider
-								</button>
-							</form>
-						}
+						@ProviderForm(editingProvider, llmServices, systemPrompts)
 					</div>
 				</div>
 				<!-- Existing Providers List -->
@@ -157,13 +36,8 @@ templ ProvidersPage(providers []store.Provider, editingProvider *store.Provider,
 										<div class="flex justify-between items-start mb-2">
 											<div>
 												<h3 class="font-semibold text-lg">{ provider.Name }</h3>
-												<span class="badge badge-secondary badge-sm">{ provider.Type }</span>
+												<p class="text-sm text-base-content/70">{ provider.Description }</p>
 											</div>
-											if provider.IsActive.Valid && provider.IsActive.Bool {
-												<span class="badge badge-success badge-sm">Active</span>
-											} else {
-												<span class="badge badge-neutral badge-sm">Inactive</span>
-											}
 										</div>
 										<div class="flex justify-between items-center text-xs text-base-content/50 mb-3">
 											<span>ID: { strconv.FormatInt(provider.ID, 10) }</span>
@@ -197,4 +71,101 @@ templ ProvidersPage(providers []store.Provider, editingProvider *store.Provider,
 			</div>
 		</div>
 	}
+}
+
+templ ProviderForm(editingProvider *store.Provider, llmServices []store.LlmService, systemPrompts []store.Prompt) {
+	if editingProvider != nil {
+		<div class="flex items-center gap-4 mb-4">
+			<h2 class="card-title text-xl">Edit Provider</h2>
+			<a href="/providers" class="btn btn-ghost btn-sm">
+				← Back to Create
+			</a>
+		</div>
+		<form action={ templ.SafeURL("/providers/edit/" + strconv.FormatInt(editingProvider.ID, 10)) } method="POST" class="space-y-4">
+			@ProviderFormFields(editingProvider, llmServices, systemPrompts)
+			<div class="flex gap-3">
+				<a href="/providers" class="btn btn-outline flex-1">
+					Cancel
+				</a>
+				<button type="submit" class="btn btn-primary flex-1">
+					Update Provider
+				</button>
+			</div>
+		</form>
+	} else {
+		<h2 class="card-title text-xl mb-4">Create New Provider</h2>
+		<form action="/providers" method="POST" class="space-y-4">
+			@ProviderFormFields(nil, llmServices, systemPrompts)
+			<button type="submit" class="btn btn-primary w-full">
+				Create Provider
+			</button>
+		</form>
+	}
+}
+
+templ ProviderFormFields(editingProvider *store.Provider, llmServices []store.LlmService, systemPrompts []store.Prompt) {
+	<div>
+		<label class="label" for="name">
+			<span class="label-text font-medium">Provider Name</span>
+		</label>
+		<input
+			type="text"
+			id="name"
+			name="name"
+			class="input input-bordered w-full"
+			placeholder="e.g., Creative GPT-4, Analytical Claude"
+			if editingProvider != nil {
+				value={ editingProvider.Name }
+			}
+			required
+		/>
+	</div>
+	<div>
+		<label class="label" for="llm_service_id">
+			<span class="label-text font-medium">LLM Service</span>
+		</label>
+		<select id="llm_service_id" name="llm_service_id" class="select select-bordered w-full" required>
+			<option value="">Select LLM service</option>
+			for _, service := range llmServices {
+				<option
+					value={ strconv.FormatInt(service.ID, 10) }
+					if editingProvider != nil && editingProvider.LlmServiceID == service.ID {
+						selected
+					}
+				>{ service.Name }</option>
+			}
+		</select>
+	</div>
+	<div>
+		<label class="label" for="system_prompt_id">
+			<span class="label-text font-medium">System Prompt (Optional)</span>
+		</label>
+		<select id="system_prompt_id" name="system_prompt_id" class="select select-bordered w-full">
+			<option value="">No system prompt</option>
+			for _, prompt := range systemPrompts {
+				<option
+					value={ strconv.FormatInt(prompt.ID, 10) }
+					if editingProvider != nil && editingProvider.SystemPromptID.Valid && editingProvider.SystemPromptID.Int64 == prompt.ID {
+						selected
+					}
+				>{ prompt.Title }</option>
+			}
+		</select>
+	</div>
+	<div>
+		<label class="label" for="description">
+			<span class="label-text font-medium">Description</span>
+		</label>
+		<textarea
+			id="description"
+			name="description"
+			class="textarea textarea-bordered w-full h-20"
+			placeholder="What this provider is used for"
+			required
+		>
+		if editingProvider != nil {
+			{editingProvider.Description}
+		}
+		</textarea>
+	</div>
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/nkapatos/mindweaver/internal/templates/layouts"
 )
 
-templ LLMServicesPage(llmServices []store.LlmService, editingService *store.LlmService, activePath string) {
+templ LLMServicesPage(llmServices []store.LlmService, editingService *store.LlmService, adapters []string, activePath string) {
 	@layouts.AppLayout("Mindweaver - LLM Services", "Manage your LLM services", activePath) {
 		<div class="container mx-auto px-4 py-8">
 			<div class="mb-8">
@@ -18,208 +18,7 @@ templ LLMServicesPage(llmServices []store.LlmService, editingService *store.LlmS
 				<!-- Create/Edit LLM Service Form -->
 				<div class="card bg-base-100 shadow-lg">
 					<div class="card-body">
-						if editingService != nil {
-							<div class="flex items-center gap-4 mb-4">
-								<h2 class="card-title text-xl">Edit LLM Service</h2>
-								<a href="/llm-services" class="btn btn-ghost btn-sm">
-									← Back to Create
-								</a>
-							</div>
-							<form action={ templ.SafeURL("/llm-services/edit/" + strconv.FormatInt(editingService.ID, 10)) } method="POST" class="space-y-4">
-								<div>
-									<label class="label" for="name">
-										<span class="label-text font-medium">Service Name</span>
-									</label>
-									<input
-										type="text"
-										id="name"
-										name="name"
-										class="input input-bordered w-full"
-										placeholder="e.g., OpenAI, Anthropic, Local"
-										value={ editingService.Name }
-										required
-									/>
-								</div>
-								<div>
-									<label class="label" for="description">
-										<span class="label-text font-medium">Description</span>
-									</label>
-									<input
-										type="text"
-										id="description"
-										name="description"
-										class="input input-bordered w-full"
-										placeholder="Brief description of the service"
-										value={ templ.KV("description", editingService.Description.String) }
-									/>
-								</div>
-								<div>
-									<label class="label" for="adapter">
-										<span class="label-text font-medium">Adapter</span>
-									</label>
-									<select id="adapter" name="adapter" class="select select-bordered w-full" required>
-										<option value="">Select an adapter</option>
-										<option value="openai" if editingService.Adapter == "openai" { selected }>OpenAI</option>
-										<option value="anthropic" if editingService.Adapter == "anthropic" { selected }>Anthropic</option>
-										<option value="local" if editingService.Adapter == "local" { selected }>Local</option>
-									</select>
-								</div>
-								<div>
-									<label class="label" for="api_key">
-										<span class="label-text font-medium">API Key</span>
-									</label>
-									<input
-										type="password"
-										id="api_key"
-										name="api_key"
-										class="input input-bordered w-full"
-										placeholder="Enter your API key"
-										value={ editingService.ApiKey }
-										required
-									/>
-								</div>
-								<div>
-									<label class="label" for="base_url">
-										<span class="label-text font-medium">Base URL</span>
-									</label>
-									<input
-										type="url"
-										id="base_url"
-										name="base_url"
-										class="input input-bordered w-full"
-										placeholder="https://api.openai.com/v1"
-										value={ editingService.BaseUrl }
-										required
-									/>
-								</div>
-								<div>
-									<label class="label" for="organization">
-										<span class="label-text font-medium">Organization (Optional)</span>
-									</label>
-									<input
-										type="text"
-										id="organization"
-										name="organization"
-										class="input input-bordered w-full"
-										placeholder="Organization ID or name"
-										value={ templ.KV("organization", editingService.Organization.String) }
-									/>
-								</div>
-								<div>
-									<label class="label" for="configuration">
-										<span class="label-text font-medium">Configuration (JSON)</span>
-									</label>
-									<textarea
-										id="configuration"
-										name="configuration"
-										class="textarea textarea-bordered w-full h-24"
-										placeholder='{"temperature": 0.7, "max_tokens": 1000}'
-										required
-									>{ editingService.Configuration }</textarea>
-								</div>
-								<div class="flex gap-3">
-									<a href="/llm-services" class="btn btn-outline flex-1">
-										Cancel
-									</a>
-									<button type="submit" class="btn btn-primary flex-1">
-										Update Service
-									</button>
-								</div>
-							</form>
-						} else {
-							<h2 class="card-title text-xl mb-4">Create New LLM Service</h2>
-							<form action="/llm-services" method="POST" class="space-y-4">
-								<div>
-									<label class="label" for="name">
-										<span class="label-text font-medium">Service Name</span>
-									</label>
-									<input
-										type="text"
-										id="name"
-										name="name"
-										class="input input-bordered w-full"
-										placeholder="e.g., OpenAI, Anthropic, Local"
-										required
-									/>
-								</div>
-								<div>
-									<label class="label" for="description">
-										<span class="label-text font-medium">Description</span>
-									</label>
-									<input
-										type="text"
-										id="description"
-										name="description"
-										class="input input-bordered w-full"
-										placeholder="Brief description of the service"
-									/>
-								</div>
-								<div>
-									<label class="label" for="adapter">
-										<span class="label-text font-medium">Adapter</span>
-									</label>
-									<select id="adapter" name="adapter" class="select select-bordered w-full" required>
-										<option value="">Select an adapter</option>
-										<option value="openai">OpenAI</option>
-										<option value="anthropic">Anthropic</option>
-										<option value="local">Local</option>
-									</select>
-								</div>
-								<div>
-									<label class="label" for="api_key">
-										<span class="label-text font-medium">API Key</span>
-									</label>
-									<input
-										type="password"
-										id="api_key"
-										name="api_key"
-										class="input input-bordered w-full"
-										placeholder="Enter your API key"
-										required
-									/>
-								</div>
-								<div>
-									<label class="label" for="base_url">
-										<span class="label-text font-medium">Base URL</span>
-									</label>
-									<input
-										type="url"
-										id="base_url"
-										name="base_url"
-										class="input input-bordered w-full"
-										placeholder="https://api.openai.com/v1"
-										required
-									/>
-								</div>
-								<div>
-									<label class="label" for="organization">
-										<span class="label-text font-medium">Organization (Optional)</span>
-									</label>
-									<input
-										type="text"
-										id="organization"
-										name="organization"
-										class="input input-bordered w-full"
-										placeholder="Organization ID or name"
-									/>
-								</div>
-								<div>
-									<label class="label" for="configuration">
-										<span class="label-text font-medium">Configuration (JSON)</span>
-									</label>
-									<textarea
-										id="configuration"
-										name="configuration"
-										class="textarea textarea-bordered w-full h-24"
-										placeholder='{"temperature": 0.7, "max_tokens": 1000}'
-										required
-									></textarea>
-								</div>
-								<button type="submit" class="btn btn-primary w-full">
-									Create Service
-								</button>
-							</form>
-						}
+						@LLMServiceForm(editingService, adapters)
 					</div>
 				</div>
 				<!-- Existing LLM Services List -->
@@ -279,4 +78,148 @@ templ LLMServicesPage(llmServices []store.LlmService, editingService *store.LlmS
 			</div>
 		</div>
 	}
+}
+
+templ LLMServiceForm(editingService *store.LlmService, adapters []string) {
+	if editingService != nil {
+		<div class="flex items-center gap-4 mb-4">
+			<h2 class="card-title text-xl">Edit LLM Service</h2>
+			<a href="/llm-services" class="btn btn-ghost btn-sm">
+				← Back to Create
+			</a>
+		</div>
+		<form action={ templ.SafeURL("/llm-services/edit/" + strconv.FormatInt(editingService.ID, 10)) } method="POST" class="space-y-4">
+			@LLMServiceFormFields(editingService, adapters)
+			<div class="flex gap-3">
+				<a href="/llm-services" class="btn btn-outline flex-1">
+					Cancel
+				</a>
+				<button type="submit" class="btn btn-primary flex-1">
+					Update Service
+				</button>
+			</div>
+		</form>
+	} else {
+		<h2 class="card-title text-xl mb-4">Create New LLM Service</h2>
+		<form action="/llm-services" method="POST" class="space-y-4">
+			@LLMServiceFormFields(nil, adapters)
+			<button type="submit" class="btn btn-primary w-full">
+				Create Service
+			</button>
+		</form>
+	}
+}
+
+templ LLMServiceFormFields(editingService *store.LlmService, adapters []string) {
+	<div>
+		<label class="label" for="name">
+			<span class="label-text font-medium">Service Name</span>
+		</label>
+		<input
+			type="text"
+			id="name"
+			name="name"
+			class="input input-bordered w-full"
+			placeholder="e.g., OpenAI, Anthropic, Local"
+			if editingService != nil {
+				value={ editingService.Name }
+			}
+			required
+		/>
+	</div>
+	<div>
+		<label class="label" for="description">
+			<span class="label-text font-medium">Description</span>
+		</label>
+		<input
+			type="text"
+			id="description"
+			name="description"
+			class="input input-bordered w-full"
+			placeholder="Brief description of the service"
+			if editingService != nil && editingService.Description.Valid {
+				value={ editingService.Description.String }
+			}
+		/>
+	</div>
+	<div>
+		<label class="label" for="adapter">
+			<span class="label-text font-medium">Adapter</span>
+		</label>
+		<select id="adapter" name="adapter" class="select select-bordered w-full" required>
+			<option value="">Select an adapter</option>
+			<!-- TODO: Update this to use dynamic adapter discovery from the service layer when we implement adapter registration -->
+			for _, adapter := range adapters {
+				<option
+					value={ adapter }
+					if editingService != nil && editingService.Adapter == adapter {
+						selected
+					}
+				>{ adapter }</option>
+			}
+		</select>
+	</div>
+	<div>
+		<label class="label" for="api_key">
+			<span class="label-text font-medium">API Key</span>
+		</label>
+		<input
+			type="password"
+			id="api_key"
+			name="api_key"
+			class="input input-bordered w-full"
+			placeholder="Enter your API key"
+			if editingService != nil {
+				value={ editingService.ApiKey }
+			}
+			required
+		/>
+	</div>
+	<div>
+		<label class="label" for="base_url">
+			<span class="label-text font-medium">Base URL</span>
+		</label>
+		<input
+			type="url"
+			id="base_url"
+			name="base_url"
+			class="input input-bordered w-full"
+			placeholder="https://api.openai.com/v1"
+			if editingService != nil {
+				value={ editingService.BaseUrl }
+			}
+			required
+		/>
+	</div>
+	<div>
+		<label class="label" for="organization">
+			<span class="label-text font-medium">Organization (Optional)</span>
+		</label>
+		<input
+			type="text"
+			id="organization"
+			name="organization"
+			class="input input-bordered w-full"
+			placeholder="Organization ID or name"
+			if editingService != nil && editingService.Organization.Valid {
+				value={ editingService.Organization.String }
+			}
+		/>
+	</div>
+	<div>
+		<label class="label" for="configuration">
+			<span class="label-text font-medium">Configuration (JSON)</span>
+		</label>
+		<textarea
+			id="configuration"
+			name="configuration"
+			class="textarea textarea-bordered w-full h-24"
+			placeholder='{"temperature": 0.7, "max_tokens": 1000}'
+			required
+		>
+		if editingService != nil {
+			{editingService.Configuration}
+		}
+		</textarea>
+	</div>
 } 
