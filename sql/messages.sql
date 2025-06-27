@@ -25,7 +25,7 @@ ORDER BY uuid ASC;
 SELECT id, conversation_id, sender_actor_id, uuid, content, message_type, metadata, created_at 
 FROM messages 
 WHERE sender_actor_id = ? 
-ORDER BY created_at DESC;
+ORDER BY uuid DESC;
 
 -- name: UpdateMessage :exec
 UPDATE messages 

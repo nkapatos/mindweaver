@@ -5,9 +5,25 @@ import (
 	"database/sql"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/nkapatos/mindweaver/internal/store"
 )
 
+// MessageService handles message operations
+//
+// MESSAGE ORDERING OPTIMIZATION:
+// Messages use UUID v7 for optimal performance and ordering:
+// - UUID v7 includes a timestamp component that provides natural chronological ordering
+// - Messages are ordered by UUID ASC in SQL queries, leveraging the timestamp component
+// - This eliminates the need for additional ORDER BY created_at clauses
+// - UUID v7 provides both uniqueness and timestamp-based sorting in a single field
+// - Perfect for high-volume message systems where chronological order is critical
+//
+// FUTURE OPTIMIZATION: If message volume becomes extremely high, consider:
+// 1. Partitioning: Partition messages by conversation_id or date ranges
+// 2. Indexing: Ensure proper indexes on (conversation_id, uuid) for fast retrieval
+// 3. Caching: Cache recent messages for active conversations
+// 4. Pagination: Implement cursor-based pagination using UUID v7 timestamps
 type MessageService struct {
 	messageStore store.Querier
 	logger       *slog.Logger
@@ -20,14 +36,18 @@ func NewMessageService(messageStore store.Querier) *MessageService {
 	}
 }
 
-// CreateMessage creates a new message
-func (s *MessageService) CreateMessage(ctx context.Context, conversationID, senderActorID int64, uuid, content, messageType, metadata string) (*store.Message, error) {
-	s.logger.Info("Creating new message", "conversation_id", conversationID, "sender_actor_id", senderActorID, "uuid", uuid)
+// CreateMessage creates a new message with an automatically generated UUID v7
+// UUID v7 provides both uniqueness and timestamp-based ordering for optimal message sequencing
+func (s *MessageService) CreateMessage(ctx context.Context, conversationID, senderActorID int64, content, messageType, metadata string) (*store.Message, error) {
+	// Generate UUID v7 for optimal message ordering and uniqueness
+	messageUUID := uuid.Must(uuid.NewV7())
+
+	s.logger.Info("Creating new message", "conversation_id", conversationID, "sender_actor_id", senderActorID, "uuid", messageUUID)
 
 	params := store.CreateMessageParams{
 		ConversationID: conversationID,
 		SenderActorID:  senderActorID,
-		Uuid:           uuid,
+		Uuid:           messageUUID.String(),
 		Content:        content,
 		MessageType:    sql.NullString{String: messageType, Valid: messageType != ""},
 		Metadata:       sql.NullString{String: metadata, Valid: metadata != ""},
@@ -35,11 +55,11 @@ func (s *MessageService) CreateMessage(ctx context.Context, conversationID, send
 
 	message, err := s.messageStore.CreateMessage(ctx, params)
 	if err != nil {
-		s.logger.Error("Failed to create message", "conversation_id", conversationID, "sender_actor_id", senderActorID, "uuid", uuid, "error", err)
+		s.logger.Error("Failed to create message", "conversation_id", conversationID, "sender_actor_id", senderActorID, "uuid", messageUUID, "error", err)
 		return nil, err
 	}
 
-	s.logger.Info("Message created successfully", "id", message.ID, "uuid", uuid)
+	s.logger.Info("Message created successfully", "id", message.ID, "uuid", messageUUID)
 	return &message, nil
 }
 

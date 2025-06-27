@@ -35,7 +35,7 @@ func (h *ProvidersHandler) Providers(c echo.Context) error {
 	// This can be enhanced later when we implement model management
 	providerModels := []store.Model{}
 
-	return views..ProvidersPage(providers, nil, providerModels, currentPath).Render(c.Request().Context(), c.Response().Writer)
+	return views.ProvidersPage(providers, nil, providerModels, currentPath).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // CreateProvider handles POST /providers - processes form submission
