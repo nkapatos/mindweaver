@@ -166,6 +166,43 @@ func (q *Queries) GetProvidersByLLMService(ctx context.Context, llmServiceID int
 	return items, nil
 }
 
+const getProvidersBySystemPrompt = `-- name: GetProvidersBySystemPrompt :many
+SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+FROM providers
+WHERE system_prompt_id = ?
+ORDER BY name
+`
+
+func (q *Queries) GetProvidersBySystemPrompt(ctx context.Context, systemPromptID sql.NullInt64) ([]Provider, error) {
+	rows, err := q.db.QueryContext(ctx, getProvidersBySystemPrompt, systemPromptID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Provider
+	for rows.Next() {
+		var i Provider
+		if err := rows.Scan(
+			&i.ID,
+			&i.LlmServiceID,
+			&i.SystemPromptID,
+			&i.Name,
+			&i.Description,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateProvider = `-- name: UpdateProvider :exec
 UPDATE providers 
 SET llm_service_id = ?, system_prompt_id = ?, name = ?, description = ? 
