@@ -14,7 +14,7 @@ SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prom
 SELECT id, actor_id, title, content, is_system, created_at, updated_at FROM prompts WHERE is_system = 1;
 
 -- name: UpdatePrompt :exec
-UPDATE prompts SET title = ?, content = ?, is_system = ?, updated_at = (datetime('now')) WHERE id = ?;
+UPDATE prompts SET actor_id = ?, title = ?, content = ?, is_system = ?, updated_at = (datetime('now')) WHERE id = ?;
 
 -- name: DeletePrompt :exec
 DELETE FROM prompts WHERE id = ?;

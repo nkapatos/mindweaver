@@ -11,32 +11,32 @@ import (
 )
 
 const createProvider = `-- name: CreateProvider :one
-INSERT INTO providers (name, description, llm_service_id, system_prompt) 
+INSERT INTO providers (llm_service_id, system_prompt_id, name, description) 
 VALUES (?, ?, ?, ?) 
-RETURNING id, name, description, llm_service_id, system_prompt, created_at
+RETURNING id, llm_service_id, system_prompt_id, name, description, created_at
 `
 
 type CreateProviderParams struct {
-	Name         string         `json:"name"`
-	Description  string         `json:"description"`
-	LlmServiceID sql.NullInt64  `json:"llm_service_id"`
-	SystemPrompt sql.NullString `json:"system_prompt"`
+	LlmServiceID   sql.NullInt64 `json:"llm_service_id"`
+	SystemPromptID sql.NullInt64 `json:"system_prompt_id"`
+	Name           string        `json:"name"`
+	Description    string        `json:"description"`
 }
 
 func (q *Queries) CreateProvider(ctx context.Context, arg CreateProviderParams) (Provider, error) {
 	row := q.db.QueryRowContext(ctx, createProvider,
+		arg.LlmServiceID,
+		arg.SystemPromptID,
 		arg.Name,
 		arg.Description,
-		arg.LlmServiceID,
-		arg.SystemPrompt,
 	)
 	var i Provider
 	err := row.Scan(
 		&i.ID,
+		&i.LlmServiceID,
+		&i.SystemPromptID,
 		&i.Name,
 		&i.Description,
-		&i.LlmServiceID,
-		&i.SystemPrompt,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -53,48 +53,27 @@ func (q *Queries) DeleteProvider(ctx context.Context, id int64) error {
 }
 
 const getAllProviders = `-- name: GetAllProviders :many
-SELECT p.id, p.name, p.description, p.llm_service_id, p.system_prompt, p.created_at,
-       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
-FROM providers p
-JOIN llm_services ls ON p.llm_service_id = ls.id
-ORDER BY p.name
+SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+FROM providers
+ORDER BY name
 `
 
-type GetAllProvidersRow struct {
-	ID             int64          `json:"id"`
-	Name           string         `json:"name"`
-	Description    string         `json:"description"`
-	LlmServiceID   sql.NullInt64  `json:"llm_service_id"`
-	SystemPrompt   sql.NullString `json:"system_prompt"`
-	CreatedAt      sql.NullTime   `json:"created_at"`
-	LlmServiceName string         `json:"llm_service_name"`
-	Adapter        string         `json:"adapter"`
-	BaseUrl        string         `json:"base_url"`
-	Organization   sql.NullString `json:"organization"`
-	Configuration  string         `json:"configuration"`
-}
-
-func (q *Queries) GetAllProviders(ctx context.Context) ([]GetAllProvidersRow, error) {
+func (q *Queries) GetAllProviders(ctx context.Context) ([]Provider, error) {
 	rows, err := q.db.QueryContext(ctx, getAllProviders)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetAllProvidersRow
+	var items []Provider
 	for rows.Next() {
-		var i GetAllProvidersRow
+		var i Provider
 		if err := rows.Scan(
 			&i.ID,
+			&i.LlmServiceID,
+			&i.SystemPromptID,
 			&i.Name,
 			&i.Description,
-			&i.LlmServiceID,
-			&i.SystemPrompt,
 			&i.CreatedAt,
-			&i.LlmServiceName,
-			&i.Adapter,
-			&i.BaseUrl,
-			&i.Organization,
-			&i.Configuration,
 		); err != nil {
 			return nil, err
 		}
@@ -110,132 +89,69 @@ func (q *Queries) GetAllProviders(ctx context.Context) ([]GetAllProvidersRow, er
 }
 
 const getProviderByID = `-- name: GetProviderByID :one
-SELECT p.id, p.name, p.description, p.llm_service_id, p.system_prompt, p.created_at,
-       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
-FROM providers p
-JOIN llm_services ls ON p.llm_service_id = ls.id
-WHERE p.id = ?
+SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+FROM providers
+WHERE id = ?
 `
 
-type GetProviderByIDRow struct {
-	ID             int64          `json:"id"`
-	Name           string         `json:"name"`
-	Description    string         `json:"description"`
-	LlmServiceID   sql.NullInt64  `json:"llm_service_id"`
-	SystemPrompt   sql.NullString `json:"system_prompt"`
-	CreatedAt      sql.NullTime   `json:"created_at"`
-	LlmServiceName string         `json:"llm_service_name"`
-	Adapter        string         `json:"adapter"`
-	BaseUrl        string         `json:"base_url"`
-	Organization   sql.NullString `json:"organization"`
-	Configuration  string         `json:"configuration"`
-}
-
-func (q *Queries) GetProviderByID(ctx context.Context, id int64) (GetProviderByIDRow, error) {
+func (q *Queries) GetProviderByID(ctx context.Context, id int64) (Provider, error) {
 	row := q.db.QueryRowContext(ctx, getProviderByID, id)
-	var i GetProviderByIDRow
+	var i Provider
 	err := row.Scan(
 		&i.ID,
+		&i.LlmServiceID,
+		&i.SystemPromptID,
 		&i.Name,
 		&i.Description,
-		&i.LlmServiceID,
-		&i.SystemPrompt,
 		&i.CreatedAt,
-		&i.LlmServiceName,
-		&i.Adapter,
-		&i.BaseUrl,
-		&i.Organization,
-		&i.Configuration,
 	)
 	return i, err
 }
 
 const getProviderByName = `-- name: GetProviderByName :one
-SELECT p.id, p.name, p.description, p.llm_service_id, p.system_prompt, p.created_at,
-       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
-FROM providers p
-JOIN llm_services ls ON p.llm_service_id = ls.id
-WHERE p.name = ?
+SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+FROM providers
+WHERE name = ?
 LIMIT 1
 `
 
-type GetProviderByNameRow struct {
-	ID             int64          `json:"id"`
-	Name           string         `json:"name"`
-	Description    string         `json:"description"`
-	LlmServiceID   sql.NullInt64  `json:"llm_service_id"`
-	SystemPrompt   sql.NullString `json:"system_prompt"`
-	CreatedAt      sql.NullTime   `json:"created_at"`
-	LlmServiceName string         `json:"llm_service_name"`
-	Adapter        string         `json:"adapter"`
-	BaseUrl        string         `json:"base_url"`
-	Organization   sql.NullString `json:"organization"`
-	Configuration  string         `json:"configuration"`
-}
-
-func (q *Queries) GetProviderByName(ctx context.Context, name string) (GetProviderByNameRow, error) {
+func (q *Queries) GetProviderByName(ctx context.Context, name string) (Provider, error) {
 	row := q.db.QueryRowContext(ctx, getProviderByName, name)
-	var i GetProviderByNameRow
+	var i Provider
 	err := row.Scan(
 		&i.ID,
+		&i.LlmServiceID,
+		&i.SystemPromptID,
 		&i.Name,
 		&i.Description,
-		&i.LlmServiceID,
-		&i.SystemPrompt,
 		&i.CreatedAt,
-		&i.LlmServiceName,
-		&i.Adapter,
-		&i.BaseUrl,
-		&i.Organization,
-		&i.Configuration,
 	)
 	return i, err
 }
 
 const getProvidersByLLMService = `-- name: GetProvidersByLLMService :many
-SELECT p.id, p.name, p.description, p.llm_service_id, p.system_prompt, p.created_at,
-       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
-FROM providers p
-JOIN llm_services ls ON p.llm_service_id = ls.id
-WHERE p.llm_service_id = ?
-ORDER BY p.name
+SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+FROM providers
+WHERE llm_service_id = ?
+ORDER BY name
 `
 
-type GetProvidersByLLMServiceRow struct {
-	ID             int64          `json:"id"`
-	Name           string         `json:"name"`
-	Description    string         `json:"description"`
-	LlmServiceID   sql.NullInt64  `json:"llm_service_id"`
-	SystemPrompt   sql.NullString `json:"system_prompt"`
-	CreatedAt      sql.NullTime   `json:"created_at"`
-	LlmServiceName string         `json:"llm_service_name"`
-	Adapter        string         `json:"adapter"`
-	BaseUrl        string         `json:"base_url"`
-	Organization   sql.NullString `json:"organization"`
-	Configuration  string         `json:"configuration"`
-}
-
-func (q *Queries) GetProvidersByLLMService(ctx context.Context, llmServiceID sql.NullInt64) ([]GetProvidersByLLMServiceRow, error) {
+func (q *Queries) GetProvidersByLLMService(ctx context.Context, llmServiceID sql.NullInt64) ([]Provider, error) {
 	rows, err := q.db.QueryContext(ctx, getProvidersByLLMService, llmServiceID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetProvidersByLLMServiceRow
+	var items []Provider
 	for rows.Next() {
-		var i GetProvidersByLLMServiceRow
+		var i Provider
 		if err := rows.Scan(
 			&i.ID,
+			&i.LlmServiceID,
+			&i.SystemPromptID,
 			&i.Name,
 			&i.Description,
-			&i.LlmServiceID,
-			&i.SystemPrompt,
 			&i.CreatedAt,
-			&i.LlmServiceName,
-			&i.Adapter,
-			&i.BaseUrl,
-			&i.Organization,
-			&i.Configuration,
 		); err != nil {
 			return nil, err
 		}
@@ -252,24 +168,24 @@ func (q *Queries) GetProvidersByLLMService(ctx context.Context, llmServiceID sql
 
 const updateProvider = `-- name: UpdateProvider :exec
 UPDATE providers 
-SET name = ?, description = ?, llm_service_id = ?, system_prompt = ? 
+SET llm_service_id = ?, system_prompt_id = ?, name = ?, description = ? 
 WHERE id = ?
 `
 
 type UpdateProviderParams struct {
-	Name         string         `json:"name"`
-	Description  string         `json:"description"`
-	LlmServiceID sql.NullInt64  `json:"llm_service_id"`
-	SystemPrompt sql.NullString `json:"system_prompt"`
-	ID           int64          `json:"id"`
+	LlmServiceID   sql.NullInt64 `json:"llm_service_id"`
+	SystemPromptID sql.NullInt64 `json:"system_prompt_id"`
+	Name           string        `json:"name"`
+	Description    string        `json:"description"`
+	ID             int64         `json:"id"`
 }
 
 func (q *Queries) UpdateProvider(ctx context.Context, arg UpdateProviderParams) error {
 	_, err := q.db.ExecContext(ctx, updateProvider,
+		arg.LlmServiceID,
+		arg.SystemPromptID,
 		arg.Name,
 		arg.Description,
-		arg.LlmServiceID,
-		arg.SystemPrompt,
 		arg.ID,
 	)
 	return err

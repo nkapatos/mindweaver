@@ -165,10 +165,11 @@ func (q *Queries) GetSystemPrompts(ctx context.Context) ([]Prompt, error) {
 }
 
 const updatePrompt = `-- name: UpdatePrompt :exec
-UPDATE prompts SET title = ?, content = ?, is_system = ?, updated_at = (datetime('now')) WHERE id = ?
+UPDATE prompts SET actor_id = ?, title = ?, content = ?, is_system = ?, updated_at = (datetime('now')) WHERE id = ?
 `
 
 type UpdatePromptParams struct {
+	ActorID  sql.NullInt64 `json:"actor_id"`
 	Title    string        `json:"title"`
 	Content  string        `json:"content"`
 	IsSystem sql.NullInt64 `json:"is_system"`
@@ -177,6 +178,7 @@ type UpdatePromptParams struct {
 
 func (q *Queries) UpdatePrompt(ctx context.Context, arg UpdatePromptParams) error {
 	_, err := q.db.ExecContext(ctx, updatePrompt,
+		arg.ActorID,
 		arg.Title,
 		arg.Content,
 		arg.IsSystem,

@@ -1,33 +1,27 @@
 -- name: GetProviderByName :one
-SELECT p.id, p.name, p.description, p.llm_service_id, p.system_prompt, p.created_at,
-       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
-FROM providers p
-JOIN llm_services ls ON p.llm_service_id = ls.id
-WHERE p.name = ?
+SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+FROM providers
+WHERE name = ?
 LIMIT 1;
 
 -- name: GetProviderByID :one
-SELECT p.id, p.name, p.description, p.llm_service_id, p.system_prompt, p.created_at,
-       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
-FROM providers p
-JOIN llm_services ls ON p.llm_service_id = ls.id
-WHERE p.id = ?;
+SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+FROM providers
+WHERE id = ?;
 
 -- name: GetAllProviders :many
-SELECT p.id, p.name, p.description, p.llm_service_id, p.system_prompt, p.created_at,
-       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
-FROM providers p
-JOIN llm_services ls ON p.llm_service_id = ls.id
-ORDER BY p.name;
+SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+FROM providers
+ORDER BY name;
 
 -- name: CreateProvider :one
-INSERT INTO providers (name, description, llm_service_id, system_prompt) 
+INSERT INTO providers (llm_service_id, system_prompt_id, name, description) 
 VALUES (?, ?, ?, ?) 
-RETURNING id, name, description, llm_service_id, system_prompt, created_at;
+RETURNING id, llm_service_id, system_prompt_id, name, description, created_at;
 
 -- name: UpdateProvider :exec
 UPDATE providers 
-SET name = ?, description = ?, llm_service_id = ?, system_prompt = ? 
+SET llm_service_id = ?, system_prompt_id = ?, name = ?, description = ? 
 WHERE id = ?;
 
 -- name: DeleteProvider :exec
@@ -35,9 +29,7 @@ DELETE FROM providers
 WHERE id = ?;
 
 -- name: GetProvidersByLLMService :many
-SELECT p.id, p.name, p.description, p.llm_service_id, p.system_prompt, p.created_at,
-       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
-FROM providers p
-JOIN llm_services ls ON p.llm_service_id = ls.id
-WHERE p.llm_service_id = ?
-ORDER BY p.name;
+SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+FROM providers
+WHERE llm_service_id = ?
+ORDER BY name;
