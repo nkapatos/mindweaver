@@ -40,7 +40,7 @@ type Querier interface {
 	GetPromptsByActorID(ctx context.Context, actorID sql.NullInt64) ([]Prompt, error)
 	GetProviderByID(ctx context.Context, id int64) (Provider, error)
 	GetProviderByName(ctx context.Context, name string) (Provider, error)
-	GetProvidersByLLMService(ctx context.Context, llmServiceID sql.NullInt64) ([]Provider, error)
+	GetProvidersByLLMService(ctx context.Context, llmServiceID int64) ([]Provider, error)
 	GetSystemPrompts(ctx context.Context) ([]Prompt, error)
 	UpdateActor(ctx context.Context, arg UpdateActorParams) error
 	UpdateConversation(ctx context.Context, arg UpdateConversationParams) error

@@ -17,7 +17,7 @@ RETURNING id, llm_service_id, system_prompt_id, name, description, created_at
 `
 
 type CreateProviderParams struct {
-	LlmServiceID   sql.NullInt64 `json:"llm_service_id"`
+	LlmServiceID   int64         `json:"llm_service_id"`
 	SystemPromptID sql.NullInt64 `json:"system_prompt_id"`
 	Name           string        `json:"name"`
 	Description    string        `json:"description"`
@@ -136,7 +136,7 @@ WHERE llm_service_id = ?
 ORDER BY name
 `
 
-func (q *Queries) GetProvidersByLLMService(ctx context.Context, llmServiceID sql.NullInt64) ([]Provider, error) {
+func (q *Queries) GetProvidersByLLMService(ctx context.Context, llmServiceID int64) ([]Provider, error) {
 	rows, err := q.db.QueryContext(ctx, getProvidersByLLMService, llmServiceID)
 	if err != nil {
 		return nil, err
@@ -173,7 +173,7 @@ WHERE id = ?
 `
 
 type UpdateProviderParams struct {
-	LlmServiceID   sql.NullInt64 `json:"llm_service_id"`
+	LlmServiceID   int64         `json:"llm_service_id"`
 	SystemPromptID sql.NullInt64 `json:"system_prompt_id"`
 	Name           string        `json:"name"`
 	Description    string        `json:"description"`

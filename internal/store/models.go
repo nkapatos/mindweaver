@@ -66,7 +66,7 @@ type Prompt struct {
 
 type Provider struct {
 	ID             int64         `json:"id"`
-	LlmServiceID   sql.NullInt64 `json:"llm_service_id"`
+	LlmServiceID   int64         `json:"llm_service_id"`
 	SystemPromptID sql.NullInt64 `json:"system_prompt_id"`
 	Name           string        `json:"name"`
 	Description    string        `json:"description"`

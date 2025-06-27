@@ -14,30 +14,30 @@ var (
 	RouteProvidersEdit   = "/providers/edit/:id"
 	RouteProvidersDelete = "/providers/delete"
 	RouteSettings        = "/settings"
-	RouteChats           = "/chats"
+	RouteConversations   = "/conversations"
 )
 
 // SetupWebRoutes configures all web routes
-func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, settingsHandler *web.SettingsHandler, chatsHandler *web.ChatsHandler) {
-	e.GET("/", homeHandler.Home)
+func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, settingsHandler *web.SettingsHandler, conversationHandler *web.ConversationHandler) {
+	e.GET(RouteHome, homeHandler.Home)
 
 	// Prompts
-	e.GET("/prompts", promptsHandler.Prompts)
-	e.POST("/prompts", promptsHandler.CreatePrompt)
-	e.GET("/prompts/edit/:id", promptsHandler.EditPrompt)
-	e.POST("/prompts/edit/:id", promptsHandler.UpdatePrompt)
-	e.POST("/prompts/delete", promptsHandler.DeletePrompt)
+	e.GET(RoutePrompts, promptsHandler.Prompts)
+	e.POST(RoutePrompts, promptsHandler.CreatePrompt)
+	e.GET(RoutePromptsEdit, promptsHandler.EditPrompt)
+	e.POST(RoutePromptsEdit, promptsHandler.UpdatePrompt)
+	e.POST(RoutePromptsDelete, promptsHandler.DeletePrompt)
 
 	// Providers
-	e.GET("/providers", providersHandler.Providers)
-	e.POST("/providers", providersHandler.CreateProvider)
-	e.GET("/providers/edit/:id", providersHandler.EditProvider)
-	e.POST("/providers/edit/:id", providersHandler.UpdateProvider)
-	e.POST("/providers/delete", providersHandler.DeleteProvider)
+	e.GET(RouteProviders, providersHandler.Providers)
+	e.POST(RouteProviders, providersHandler.CreateProvider)
+	e.GET(RouteProvidersEdit, providersHandler.EditProvider)
+	e.POST(RouteProvidersEdit, providersHandler.UpdateProvider)
+	e.POST(RouteProvidersDelete, providersHandler.DeleteProvider)
 
 	// Settings
-	e.GET("/settings", settingsHandler.Settings)
+	e.GET(RouteSettings, settingsHandler.Settings)
 
-	// Chats
-	e.GET("/chats", chatsHandler.Chats)
+	// Conversation
+	e.GET(RouteConversations, conversationHandler.Conversation)
 }
