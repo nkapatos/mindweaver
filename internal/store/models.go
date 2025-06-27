@@ -44,14 +44,16 @@ type Conversation struct {
 	UpdatedAt   sql.NullTime   `json:"updated_at"`
 }
 
-type Model struct {
+type LlmService struct {
 	ID            int64          `json:"id"`
-	ProviderID    sql.NullInt64  `json:"provider_id"`
 	Name          string         `json:"name"`
-	Capabilities  sql.NullString `json:"capabilities"`
-	DefaultParams sql.NullString `json:"default_params"`
-	IsActive      sql.NullBool   `json:"is_active"`
+	Description   sql.NullString `json:"description"`
+	Adapter       string         `json:"adapter"`
 	CreatedAt     sql.NullTime   `json:"created_at"`
+	ApiKey        string         `json:"api_key"`
+	BaseUrl       string         `json:"base_url"`
+	Organization  sql.NullString `json:"organization"`
+	Configuration string         `json:"configuration"`
 }
 
 type Prompt struct {
@@ -65,18 +67,10 @@ type Prompt struct {
 }
 
 type Provider struct {
-	ID        int64        `json:"id"`
-	Name      string       `json:"name"`
-	Type      string       `json:"type"`
-	IsActive  sql.NullBool `json:"is_active"`
-	CreatedAt sql.NullTime `json:"created_at"`
-}
-
-type ProviderSetting struct {
-	ID           int64         `json:"id"`
-	ProviderID   sql.NullInt64 `json:"provider_id"`
-	SettingKey   string        `json:"setting_key"`
-	SettingValue string        `json:"setting_value"`
-	IsSecret     sql.NullBool  `json:"is_secret"`
-	CreatedAt    sql.NullTime  `json:"created_at"`
+	ID           int64          `json:"id"`
+	Name         string         `json:"name"`
+	Description  string         `json:"description"`
+	LlmServiceID sql.NullInt64  `json:"llm_service_id"`
+	SystemPrompt sql.NullString `json:"system_prompt"`
+	CreatedAt    sql.NullTime   `json:"created_at"`
 }

@@ -1,56 +1,43 @@
 -- name: GetProviderByName :one
-SELECT id, name, type, is_active, created_at 
-FROM providers 
-WHERE name = ? AND is_active = true
+SELECT p.id, p.name, p.description, p.llm_service_id, p.system_prompt, p.created_at,
+       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
+FROM providers p
+JOIN llm_services ls ON p.llm_service_id = ls.id
+WHERE p.name = ?
 LIMIT 1;
 
 -- name: GetProviderByID :one
-SELECT id, name, type, is_active, created_at 
-FROM providers 
-WHERE id = ?;
+SELECT p.id, p.name, p.description, p.llm_service_id, p.system_prompt, p.created_at,
+       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
+FROM providers p
+JOIN llm_services ls ON p.llm_service_id = ls.id
+WHERE p.id = ?;
 
 -- name: GetAllProviders :many
-SELECT id, name, type, is_active, created_at 
-FROM providers 
-WHERE is_active = true
-ORDER BY name;
+SELECT p.id, p.name, p.description, p.llm_service_id, p.system_prompt, p.created_at,
+       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
+FROM providers p
+JOIN llm_services ls ON p.llm_service_id = ls.id
+ORDER BY p.name;
 
 -- name: CreateProvider :one
-INSERT INTO providers (name, type, is_active) 
-VALUES (?, ?, ?) 
-RETURNING id, name, type, is_active, created_at;
+INSERT INTO providers (name, description, llm_service_id, system_prompt) 
+VALUES (?, ?, ?, ?) 
+RETURNING id, name, description, llm_service_id, system_prompt, created_at;
 
 -- name: UpdateProvider :exec
 UPDATE providers 
-SET name = ?, type = ?, is_active = ? 
+SET name = ?, description = ?, llm_service_id = ?, system_prompt = ? 
 WHERE id = ?;
 
 -- name: DeleteProvider :exec
 DELETE FROM providers 
 WHERE id = ?;
 
--- name: GetProviderSettings :many
-SELECT setting_key, setting_value, is_secret 
-FROM provider_settings 
-WHERE provider_id = ?;
-
--- name: GetModelByName :one
-SELECT id, provider_id, name, capabilities, default_params, is_active, created_at
-FROM models 
-WHERE provider_id = ? AND name = ? AND is_active = true
-LIMIT 1;
-
--- name: GetModelsByProvider :many
-SELECT id, provider_id, name, capabilities, default_params, is_active, created_at
-FROM models 
-WHERE provider_id = ? AND is_active = true
-ORDER BY name;
-
--- name: UpdateProviderSetting :exec
-UPDATE provider_settings 
-SET setting_value = ? 
-WHERE provider_id = ? AND setting_key = ?;
-
--- name: CreateProviderSetting :exec
-INSERT INTO provider_settings (provider_id, setting_key, setting_value, is_secret) 
-VALUES (?, ?, ?, ?);
+-- name: GetProvidersByLLMService :many
+SELECT p.id, p.name, p.description, p.llm_service_id, p.system_prompt, p.created_at,
+       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
+FROM providers p
+JOIN llm_services ls ON p.llm_service_id = ls.id
+WHERE p.llm_service_id = ?
+ORDER BY p.name;

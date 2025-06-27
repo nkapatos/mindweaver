@@ -111,6 +111,64 @@ func (q *Queries) GetChatByUUID(ctx context.Context, uuid string) (Chat, error) 
 	return i, err
 }
 
+const getChatWithProviderDetails = `-- name: GetChatWithProviderDetails :one
+SELECT c.id, c.uuid, c.conversation_id, c.actor_id, c.title, c.provider_id, c.model_name, c.system_prompt_id, c.created_at, c.updated_at,
+       p.name as provider_name, p.description as provider_description, p.system_prompt as provider_system_prompt,
+       ls.name as llm_service_name, ls.adapter, ls.base_url, ls.organization, ls.configuration
+FROM chats c
+LEFT JOIN providers p ON c.provider_id = p.id
+LEFT JOIN llm_services ls ON p.llm_service_id = ls.id
+WHERE c.id = ?
+LIMIT 1
+`
+
+type GetChatWithProviderDetailsRow struct {
+	ID                   int64          `json:"id"`
+	Uuid                 string         `json:"uuid"`
+	ConversationID       int64          `json:"conversation_id"`
+	ActorID              int64          `json:"actor_id"`
+	Title                string         `json:"title"`
+	ProviderID           sql.NullInt64  `json:"provider_id"`
+	ModelName            sql.NullString `json:"model_name"`
+	SystemPromptID       sql.NullInt64  `json:"system_prompt_id"`
+	CreatedAt            sql.NullTime   `json:"created_at"`
+	UpdatedAt            sql.NullTime   `json:"updated_at"`
+	ProviderName         sql.NullString `json:"provider_name"`
+	ProviderDescription  sql.NullString `json:"provider_description"`
+	ProviderSystemPrompt sql.NullString `json:"provider_system_prompt"`
+	LlmServiceName       sql.NullString `json:"llm_service_name"`
+	Adapter              sql.NullString `json:"adapter"`
+	BaseUrl              sql.NullString `json:"base_url"`
+	Organization         sql.NullString `json:"organization"`
+	Configuration        sql.NullString `json:"configuration"`
+}
+
+func (q *Queries) GetChatWithProviderDetails(ctx context.Context, id int64) (GetChatWithProviderDetailsRow, error) {
+	row := q.db.QueryRowContext(ctx, getChatWithProviderDetails, id)
+	var i GetChatWithProviderDetailsRow
+	err := row.Scan(
+		&i.ID,
+		&i.Uuid,
+		&i.ConversationID,
+		&i.ActorID,
+		&i.Title,
+		&i.ProviderID,
+		&i.ModelName,
+		&i.SystemPromptID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ProviderName,
+		&i.ProviderDescription,
+		&i.ProviderSystemPrompt,
+		&i.LlmServiceName,
+		&i.Adapter,
+		&i.BaseUrl,
+		&i.Organization,
+		&i.Configuration,
+	)
+	return i, err
+}
+
 const getChatsByActorID = `-- name: GetChatsByActorID :many
 SELECT id, uuid, conversation_id, actor_id, title, provider_id, model_name, system_prompt_id, created_at, updated_at 
 FROM chats 
