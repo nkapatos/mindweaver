@@ -33,3 +33,9 @@ SELECT id, llm_service_id, system_prompt_id, name, description, created_at
 FROM providers
 WHERE llm_service_id = ?
 ORDER BY name;
+
+-- name: GetProvidersBySystemPrompt :many
+SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+FROM providers
+WHERE system_prompt_id = ?
+ORDER BY name;

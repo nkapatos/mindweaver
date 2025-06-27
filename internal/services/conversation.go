@@ -104,3 +104,83 @@ func (s *ConversationService) DeleteConversation(ctx context.Context, id int64) 
 	s.logger.Info("Conversation deleted successfully", "id", id)
 	return nil
 }
+
+// GetConversationWithActor retrieves a conversation along with its owner actor
+func (s *ConversationService) GetConversationWithActor(ctx context.Context, conversationID int64) (*store.Conversation, *store.Actor, error) {
+	s.logger.Debug("Getting conversation with actor", "conversation_id", conversationID)
+
+	// Get the conversation
+	conversation, err := s.conversationStore.GetConversationByID(ctx, conversationID)
+	if err != nil {
+		s.logger.Error("Failed to get conversation", "conversation_id", conversationID, "error", err)
+		return nil, nil, err
+	}
+
+	// Get the related actor (conversation owner)
+	actor, err := s.conversationStore.GetActorByID(ctx, conversation.ActorID)
+	if err != nil {
+		s.logger.Error("Failed to get actor for conversation", "conversation_id", conversationID, "actor_id", conversation.ActorID, "error", err)
+		return &conversation, nil, err
+	}
+
+	s.logger.Debug("Conversation with actor retrieved successfully", "conversation_id", conversationID)
+	return &conversation, &actor, nil
+}
+
+// GetConversationWithMessages retrieves a conversation along with all its messages
+func (s *ConversationService) GetConversationWithMessages(ctx context.Context, conversationID int64) (*store.Conversation, []store.Message, error) {
+	s.logger.Debug("Getting conversation with messages", "conversation_id", conversationID)
+
+	// Get the conversation
+	conversation, err := s.conversationStore.GetConversationByID(ctx, conversationID)
+	if err != nil {
+		s.logger.Error("Failed to get conversation", "conversation_id", conversationID, "error", err)
+		return nil, nil, err
+	}
+
+	// Get all messages for this conversation
+	messages, err := s.conversationStore.GetMessagesByConversationID(ctx, conversationID)
+	if err != nil {
+		s.logger.Error("Failed to get messages for conversation", "conversation_id", conversationID, "error", err)
+		return &conversation, nil, err
+	}
+
+	s.logger.Debug("Conversation with messages retrieved successfully", "conversation_id", conversationID, "message_count", len(messages))
+	return &conversation, messages, nil
+}
+
+// GetConversationWithActorAndMessages retrieves a conversation with both its actor and messages
+//
+// FUTURE OPTIMIZATION: If this becomes a performance bottleneck, consider:
+// 1. SQL JOIN approach: Single query with JOINs to actors and LEFT JOIN to messages
+// 2. Pagination: For conversations with many messages, implement message pagination
+// 3. Stored procedure: Complex conversation loading logic in database
+// 4. Caching: Cache conversation context for frequently accessed conversations
+// 5. Lazy loading: Load messages only when needed (e.g., on scroll)
+func (s *ConversationService) GetConversationWithActorAndMessages(ctx context.Context, conversationID int64) (*store.Conversation, *store.Actor, []store.Message, error) {
+	s.logger.Debug("Getting conversation with actor and messages", "conversation_id", conversationID)
+
+	// Get the conversation
+	conversation, err := s.conversationStore.GetConversationByID(ctx, conversationID)
+	if err != nil {
+		s.logger.Error("Failed to get conversation", "conversation_id", conversationID, "error", err)
+		return nil, nil, nil, err
+	}
+
+	// Get the related actor (conversation owner)
+	actor, err := s.conversationStore.GetActorByID(ctx, conversation.ActorID)
+	if err != nil {
+		s.logger.Error("Failed to get actor for conversation", "conversation_id", conversationID, "actor_id", conversation.ActorID, "error", err)
+		return &conversation, nil, nil, err
+	}
+
+	// Get all messages for this conversation
+	messages, err := s.conversationStore.GetMessagesByConversationID(ctx, conversationID)
+	if err != nil {
+		s.logger.Error("Failed to get messages for conversation", "conversation_id", conversationID, "error", err)
+		return &conversation, &actor, nil, err
+	}
+
+	s.logger.Debug("Conversation with actor and messages retrieved successfully", "conversation_id", conversationID, "message_count", len(messages))
+	return &conversation, &actor, messages, nil
+}
