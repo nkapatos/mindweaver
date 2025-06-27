@@ -29,7 +29,7 @@ CREATE TABLE llm_services (
 -- coupling issues. Users can clone services to create new providers with different configs.
 CREATE TABLE providers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    llm_service_id INTEGER UNIQUE REFERENCES llm_services(id) ON DELETE CASCADE,  -- 1:1 relationship
+    llm_service_id INTEGER NOT NULL REFERENCES llm_services(id) ON DELETE CASCADE,
     system_prompt_id INTEGER REFERENCES prompts(id) ON DELETE SET NULL,  -- Reusable system prompt
     name TEXT NOT NULL UNIQUE,                    -- e.g., "Creative GPT-4", "Analytical Claude"
     description TEXT NOT NULL,                    -- What this provider is used for

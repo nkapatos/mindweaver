@@ -2,10 +2,10 @@ package views
 
 import "github.com/nkapatos/mindweaver/internal/templates/layouts"
 
-templ Chat(activePath string) {
-	@layouts.AppLayout("Chats", "chat stuff here", activePath) {
+templ Conversation(activePath string) {
+	@layouts.AppLayout("Conversation", "conversation stuff here", activePath) {
 		<div class="container mx-auto p-4">
-			<h1 class="text-3xl font-bold mb-6 text-center">Chats</h1>
+			<h1 class="text-3xl font-bold mb-6 text-center">Conversation</h1>
 			<div class="chat chat-start bg-base-200 rounded-lg shadow-md p-4 mb-4">
 				<div class="chat-image avatar">
 					<div class="w-10 rounded-full">

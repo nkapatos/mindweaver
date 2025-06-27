@@ -21,49 +21,68 @@ func NewProviderService(providerStore store.Querier) *ProviderService {
 }
 
 // CreateProvider creates a new provider
-func (s *ProviderService) CreateProvider(ctx context.Context, name, providerType string, isActive bool) error {
+func (s *ProviderService) CreateProvider(ctx context.Context, name, description string, llmServiceID int64, systemPromptID *int64) (*store.Provider, error) {
 	s.logger.Info("Creating new provider",
 		"name", name,
-		"type", providerType,
-		"is_active", isActive)
-
-	var isActiveNull sql.NullBool
-	if isActive {
-		isActiveNull.Bool = true
-		isActiveNull.Valid = true
-	}
+		"description", description,
+		"llm_service_id", llmServiceID,
+		"system_prompt_id", systemPromptID)
 
 	params := store.CreateProviderParams{
-		Name:     name,
-		Type:     providerType,
-		IsActive: isActiveNull,
+		Name:         name,
+		Description:  description,
+		LlmServiceID: llmServiceID,
 	}
 
-	if _, err := s.providerStore.CreateProvider(ctx, params); err != nil {
+	// Handle optional system_prompt_id
+	if systemPromptID != nil {
+		params.SystemPromptID = sql.NullInt64{
+			Int64: *systemPromptID,
+			Valid: true,
+		}
+	}
+
+	provider, err := s.providerStore.CreateProvider(ctx, params)
+	if err != nil {
 		s.logger.Error("Failed to create provider",
 			"name", name,
-			"type", providerType,
-			"is_active", isActive,
+			"description", description,
+			"llm_service_id", llmServiceID,
+			"system_prompt_id", systemPromptID,
 			"error", err)
-		return err
+		return nil, err
 	}
 
-	s.logger.Info("Provider created successfully", "name", name, "type", providerType, "is_active", isActive)
-	return nil
+	s.logger.Info("Provider created successfully", "id", provider.ID, "name", name)
+	return &provider, nil
 }
 
 // GetProviderByID retrieves a provider by its ID
-func (s *ProviderService) GetProviderByID(ctx context.Context, id int64) (store.Provider, error) {
+func (s *ProviderService) GetProviderByID(ctx context.Context, id int64) (*store.Provider, error) {
 	s.logger.Debug("Getting provider by ID", "id", id)
 
 	provider, err := s.providerStore.GetProviderByID(ctx, id)
 	if err != nil {
 		s.logger.Error("Failed to get provider by ID", "id", id, "error", err)
-		return store.Provider{}, err
+		return nil, err
 	}
 
 	s.logger.Debug("Provider retrieved successfully", "id", id, "name", provider.Name)
-	return provider, nil
+	return &provider, nil
+}
+
+// GetProviderByName retrieves a provider by its name
+func (s *ProviderService) GetProviderByName(ctx context.Context, name string) (*store.Provider, error) {
+	s.logger.Debug("Getting provider by name", "name", name)
+
+	provider, err := s.providerStore.GetProviderByName(ctx, name)
+	if err != nil {
+		s.logger.Error("Failed to get provider by name", "name", name, "error", err)
+		return nil, err
+	}
+
+	s.logger.Debug("Provider retrieved successfully", "id", provider.ID, "name", name)
+	return &provider, nil
 }
 
 // GetAllProviders retrieves all providers
@@ -80,38 +99,56 @@ func (s *ProviderService) GetAllProviders(ctx context.Context) ([]store.Provider
 	return providers, nil
 }
 
+// GetProvidersByLLMService retrieves all providers for a specific LLM service
+func (s *ProviderService) GetProvidersByLLMService(ctx context.Context, llmServiceID int64) ([]store.Provider, error) {
+	s.logger.Debug("Getting providers by LLM service", "llm_service_id", llmServiceID)
+
+	providers, err := s.providerStore.GetProvidersByLLMService(ctx, llmServiceID)
+	if err != nil {
+		s.logger.Error("Failed to get providers by LLM service", "llm_service_id", llmServiceID, "error", err)
+		return nil, err
+	}
+
+	s.logger.Debug("Providers retrieved successfully", "llm_service_id", llmServiceID, "count", len(providers))
+	return providers, nil
+}
+
 // UpdateProvider updates a provider by its ID
-func (s *ProviderService) UpdateProvider(ctx context.Context, id int64, name, providerType string, isActive bool) error {
+func (s *ProviderService) UpdateProvider(ctx context.Context, id int64, name, description string, llmServiceID int64, systemPromptID *int64) error {
 	s.logger.Info("Updating provider",
 		"id", id,
 		"name", name,
-		"type", providerType,
-		"is_active", isActive)
-
-	var isActiveNull sql.NullBool
-	if isActive {
-		isActiveNull.Bool = true
-		isActiveNull.Valid = true
-	}
+		"description", description,
+		"llm_service_id", llmServiceID,
+		"system_prompt_id", systemPromptID)
 
 	params := store.UpdateProviderParams{
-		ID:       id,
-		Name:     name,
-		Type:     providerType,
-		IsActive: isActiveNull,
+		ID:           id,
+		Name:         name,
+		Description:  description,
+		LlmServiceID: llmServiceID,
+	}
+
+	// Handle optional system_prompt_id
+	if systemPromptID != nil {
+		params.SystemPromptID = sql.NullInt64{
+			Int64: *systemPromptID,
+			Valid: true,
+		}
 	}
 
 	if err := s.providerStore.UpdateProvider(ctx, params); err != nil {
 		s.logger.Error("Failed to update provider",
 			"id", id,
 			"name", name,
-			"type", providerType,
-			"is_active", isActive,
+			"description", description,
+			"llm_service_id", llmServiceID,
+			"system_prompt_id", systemPromptID,
 			"error", err)
 		return err
 	}
 
-	s.logger.Info("Provider updated successfully", "id", id, "name", name, "type", providerType, "is_active", isActive)
+	s.logger.Info("Provider updated successfully", "id", id, "name", name)
 	return nil
 }
 

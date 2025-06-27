@@ -30,10 +30,10 @@ func (r *Router) SetupRoutes(
 	promptsHandler *web.PromptsHandler,
 	providersHandler *web.ProvidersHandler,
 	settingsHandler *web.SettingsHandler,
-	chatsHandler *web.ChatsHandler,
+	conversationHandler *web.ConversationHandler,
 	notFoundHandler *web.NotFoundHandler,
 ) {
-	routes.SetupWebRoutes(r.echo, homeHandler, promptsHandler, providersHandler, settingsHandler, chatsHandler)
+	routes.SetupWebRoutes(r.echo, homeHandler, promptsHandler, providersHandler, settingsHandler, conversationHandler)
 	routes.SetupAPIRoutes(r.echo, actorHandler, promptHandler, llmHandler)
 	routes.SetupStaticRoutes(r.echo)
 	r.setupErrorHandling(notFoundHandler)
