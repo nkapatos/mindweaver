@@ -7,7 +7,14 @@ import (
 	"github.com/nkapatos/mindweaver/internal/templates/layouts"
 )
 
-templ ProvidersPage(providers []store.Provider, editingProvider *store.Provider, llmServices []store.LlmService, systemPrompts []store.Prompt, activePath string) {
+// ProviderWithRelations represents a provider with its related data for display
+type ProviderWithRelations struct {
+	Provider     store.Provider
+	LLMService   store.LlmService
+	SystemPrompt *store.Prompt
+}
+
+templ ProvidersPage(providersWithRelations []ProviderWithRelations, editingProvider *store.Provider, llmServices []store.LlmService, systemPrompts []store.Prompt, activePath string) {
 	@layouts.AppLayout("Mindweaver - Providers", "Manage your AI providers", activePath) {
 		<div class="container mx-auto px-4 py-8">
 			<div class="mb-8">
@@ -25,38 +32,55 @@ templ ProvidersPage(providers []store.Provider, editingProvider *store.Provider,
 				<div class="card bg-base-100 shadow-lg">
 					<div class="card-body">
 						<h2 class="card-title text-xl mb-4">Your Providers</h2>
-						if len(providers) == 0 {
+						if len(providersWithRelations) == 0 {
 							<div class="text-center py-8">
 								<p class="text-base-content/60">No providers configured yet. Create your first provider using the form.</p>
 							</div>
 						} else {
 							<div class="space-y-4">
-								for _, provider := range providers {
+								for _, providerData := range providersWithRelations {
 									<div class="border border-base-300 rounded-lg p-4">
 										<div class="flex justify-between items-start mb-2">
 											<div>
-												<h3 class="font-semibold text-lg">{ provider.Name }</h3>
-												<p class="text-sm text-base-content/70">{ provider.Description }</p>
+												<h3 class="font-semibold text-lg">{ providerData.Provider.Name }</h3>
+												<p class="text-sm text-base-content/70">{ providerData.Provider.Description }</p>
 											</div>
 										</div>
+										<div class="grid grid-cols-2 gap-2 text-xs text-base-content/50 mb-3">
+											<div>
+												<span class="font-medium">LLM Service:</span>
+												<p class="truncate">{ providerData.LLMService.Name }</p>
+											</div>
+											if providerData.SystemPrompt != nil {
+												<div>
+													<span class="font-medium">System Prompt:</span>
+													<p class="truncate">{ providerData.SystemPrompt.Title }</p>
+												</div>
+											} else {
+												<div>
+													<span class="font-medium">System Prompt:</span>
+													<p class="truncate text-base-content/40">None</p>
+												</div>
+											}
+										</div>
 										<div class="flex justify-between items-center text-xs text-base-content/50 mb-3">
-											<span>ID: { strconv.FormatInt(provider.ID, 10) }</span>
-											if provider.CreatedAt.Valid {
-												<span>Created: { provider.CreatedAt.Time.Format("2006-01-02 15:04:05") }</span>
+											<span>ID: { strconv.FormatInt(providerData.Provider.ID, 10) }</span>
+											if providerData.Provider.CreatedAt.Valid {
+												<span>Created: { providerData.Provider.CreatedAt.Time.Format("2006-01-02 15:04:05") }</span>
 											}
 										</div>
 										<div class="mt-3 flex gap-2">
-											<a href={ templ.SafeURL("/providers/edit/" + strconv.FormatInt(provider.ID, 10)) } class="btn btn-sm btn-outline">
+											<a href={ templ.SafeURL("/providers/edit/" + strconv.FormatInt(providerData.Provider.ID, 10)) } class="btn btn-sm btn-outline">
 												Edit
 											</a>
-											<a href={ templ.SafeURL("/providers/" + strconv.FormatInt(provider.ID, 10) + "/settings") } class="btn btn-sm btn-outline">
+											<a href={ templ.SafeURL("/providers/" + strconv.FormatInt(providerData.Provider.ID, 10) + "/settings") } class="btn btn-sm btn-outline">
 												Settings
 											</a>
-											<a href={ templ.SafeURL("/providers/" + strconv.FormatInt(provider.ID, 10) + "/models") } class="btn btn-sm btn-outline">
+											<a href={ templ.SafeURL("/providers/" + strconv.FormatInt(providerData.Provider.ID, 10) + "/models") } class="btn btn-sm btn-outline">
 												Models
 											</a>
 											<form action="/providers/delete" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this provider? This will also delete all associated settings and models.')">
-												<input type="hidden" name="id" value={ strconv.FormatInt(provider.ID, 10) }/>
+												<input type="hidden" name="id" value={ strconv.FormatInt(providerData.Provider.ID, 10) }/>
 												<button type="submit" class="btn btn-sm btn-error">
 													Delete
 												</button>

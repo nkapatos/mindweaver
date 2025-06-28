@@ -9,6 +9,11 @@ FROM actors
 WHERE id = ? 
 LIMIT 1;
 
+-- name: GetAllActors :many
+SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at 
+FROM actors 
+ORDER BY name;
+
 -- name: GetActorByName :one
 SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at 
 FROM actors 

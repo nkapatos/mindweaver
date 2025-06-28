@@ -151,6 +151,45 @@ func (q *Queries) GetActorsByType(ctx context.Context, type_ string) ([]Actor, e
 	return items, nil
 }
 
+const getAllActors = `-- name: GetAllActors :many
+SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at 
+FROM actors 
+ORDER BY name
+`
+
+func (q *Queries) GetAllActors(ctx context.Context) ([]Actor, error) {
+	rows, err := q.db.QueryContext(ctx, getAllActors)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Actor
+	for rows.Next() {
+		var i Actor
+		if err := rows.Scan(
+			&i.ID,
+			&i.Type,
+			&i.Name,
+			&i.DisplayName,
+			&i.AvatarUrl,
+			&i.IsActive,
+			&i.Metadata,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateActor = `-- name: UpdateActor :exec
 UPDATE actors 
 SET type = ?, name = ?, display_name = ?, avatar_url = ?, is_active = ?, metadata = ?, updated_at = CURRENT_TIMESTAMP 
