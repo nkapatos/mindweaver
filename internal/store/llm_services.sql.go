@@ -11,19 +11,18 @@ import (
 )
 
 const createLLMService = `-- name: CreateLLMService :one
-INSERT INTO llm_services (name, description, adapter, api_key, base_url, organization, configuration) 
-VALUES (?, ?, ?, ?, ?, ?, ?) 
-RETURNING id, name, description, adapter, api_key, base_url, organization, configuration, created_at
+INSERT INTO llm_services (name, description, adapter, api_key, base_url, organization) 
+VALUES (?, ?, ?, ?, ?, ?) 
+RETURNING id, name, description, adapter, api_key, base_url, organization, created_at
 `
 
 type CreateLLMServiceParams struct {
-	Name          string         `json:"name"`
-	Description   sql.NullString `json:"description"`
-	Adapter       string         `json:"adapter"`
-	ApiKey        string         `json:"api_key"`
-	BaseUrl       string         `json:"base_url"`
-	Organization  sql.NullString `json:"organization"`
-	Configuration string         `json:"configuration"`
+	Name         string         `json:"name"`
+	Description  sql.NullString `json:"description"`
+	Adapter      string         `json:"adapter"`
+	ApiKey       string         `json:"api_key"`
+	BaseUrl      string         `json:"base_url"`
+	Organization sql.NullString `json:"organization"`
 }
 
 func (q *Queries) CreateLLMService(ctx context.Context, arg CreateLLMServiceParams) (LlmService, error) {
@@ -34,7 +33,6 @@ func (q *Queries) CreateLLMService(ctx context.Context, arg CreateLLMServicePara
 		arg.ApiKey,
 		arg.BaseUrl,
 		arg.Organization,
-		arg.Configuration,
 	)
 	var i LlmService
 	err := row.Scan(
@@ -45,7 +43,6 @@ func (q *Queries) CreateLLMService(ctx context.Context, arg CreateLLMServicePara
 		&i.ApiKey,
 		&i.BaseUrl,
 		&i.Organization,
-		&i.Configuration,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -62,7 +59,7 @@ func (q *Queries) DeleteLLMService(ctx context.Context, id int64) error {
 }
 
 const getAllLLMServices = `-- name: GetAllLLMServices :many
-SELECT id, name, description, adapter, api_key, base_url, organization, configuration, created_at
+SELECT id, name, description, adapter, api_key, base_url, organization, created_at
 FROM llm_services 
 ORDER BY name
 `
@@ -84,7 +81,6 @@ func (q *Queries) GetAllLLMServices(ctx context.Context) ([]LlmService, error) {
 			&i.ApiKey,
 			&i.BaseUrl,
 			&i.Organization,
-			&i.Configuration,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -101,7 +97,7 @@ func (q *Queries) GetAllLLMServices(ctx context.Context) ([]LlmService, error) {
 }
 
 const getLLMServiceByID = `-- name: GetLLMServiceByID :one
-SELECT id, name, description, adapter, api_key, base_url, organization, configuration, created_at
+SELECT id, name, description, adapter, api_key, base_url, organization, created_at
 FROM llm_services 
 WHERE id = ?
 `
@@ -117,14 +113,13 @@ func (q *Queries) GetLLMServiceByID(ctx context.Context, id int64) (LlmService, 
 		&i.ApiKey,
 		&i.BaseUrl,
 		&i.Organization,
-		&i.Configuration,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getLLMServiceByName = `-- name: GetLLMServiceByName :one
-SELECT id, name, description, adapter, api_key, base_url, organization, configuration, created_at
+SELECT id, name, description, adapter, api_key, base_url, organization, created_at
 FROM llm_services 
 WHERE name = ?
 LIMIT 1
@@ -141,7 +136,6 @@ func (q *Queries) GetLLMServiceByName(ctx context.Context, name string) (LlmServ
 		&i.ApiKey,
 		&i.BaseUrl,
 		&i.Organization,
-		&i.Configuration,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -149,19 +143,18 @@ func (q *Queries) GetLLMServiceByName(ctx context.Context, name string) (LlmServ
 
 const updateLLMService = `-- name: UpdateLLMService :exec
 UPDATE llm_services 
-SET name = ?, description = ?, adapter = ?, api_key = ?, base_url = ?, organization = ?, configuration = ? 
+SET name = ?, description = ?, adapter = ?, api_key = ?, base_url = ?, organization = ? 
 WHERE id = ?
 `
 
 type UpdateLLMServiceParams struct {
-	Name          string         `json:"name"`
-	Description   sql.NullString `json:"description"`
-	Adapter       string         `json:"adapter"`
-	ApiKey        string         `json:"api_key"`
-	BaseUrl       string         `json:"base_url"`
-	Organization  sql.NullString `json:"organization"`
-	Configuration string         `json:"configuration"`
-	ID            int64          `json:"id"`
+	Name         string         `json:"name"`
+	Description  sql.NullString `json:"description"`
+	Adapter      string         `json:"adapter"`
+	ApiKey       string         `json:"api_key"`
+	BaseUrl      string         `json:"base_url"`
+	Organization sql.NullString `json:"organization"`
+	ID           int64          `json:"id"`
 }
 
 func (q *Queries) UpdateLLMService(ctx context.Context, arg UpdateLLMServiceParams) error {
@@ -172,7 +165,6 @@ func (q *Queries) UpdateLLMService(ctx context.Context, arg UpdateLLMServicePara
 		arg.ApiKey,
 		arg.BaseUrl,
 		arg.Organization,
-		arg.Configuration,
 		arg.ID,
 	)
 	return err

@@ -13,12 +13,14 @@ type Querier interface {
 	CreateActor(ctx context.Context, arg CreateActorParams) (Actor, error)
 	CreateConversation(ctx context.Context, arg CreateConversationParams) (Conversation, error)
 	CreateLLMService(ctx context.Context, arg CreateLLMServiceParams) (LlmService, error)
+	CreateLLMServiceConfig(ctx context.Context, arg CreateLLMServiceConfigParams) (LlmServiceConfig, error)
 	CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error)
 	CreatePrompt(ctx context.Context, arg CreatePromptParams) error
 	CreateProvider(ctx context.Context, arg CreateProviderParams) (Provider, error)
 	DeleteActor(ctx context.Context, id int64) error
 	DeleteConversation(ctx context.Context, id int64) error
 	DeleteLLMService(ctx context.Context, id int64) error
+	DeleteLLMServiceConfig(ctx context.Context, id int64) error
 	DeleteMessage(ctx context.Context, id int64) error
 	DeletePrompt(ctx context.Context, id int64) error
 	DeleteProvider(ctx context.Context, id int64) error
@@ -26,6 +28,7 @@ type Querier interface {
 	GetActorByName(ctx context.Context, arg GetActorByNameParams) (Actor, error)
 	GetActorsByType(ctx context.Context, type_ string) ([]Actor, error)
 	GetAllActors(ctx context.Context) ([]Actor, error)
+	GetAllLLMServiceConfigs(ctx context.Context) ([]LlmServiceConfig, error)
 	GetAllLLMServices(ctx context.Context) ([]LlmService, error)
 	GetAllPrompts(ctx context.Context) ([]Prompt, error)
 	GetAllProviders(ctx context.Context) ([]Provider, error)
@@ -33,6 +36,9 @@ type Querier interface {
 	GetConversationsByActorID(ctx context.Context, actorID int64) ([]Conversation, error)
 	GetLLMServiceByID(ctx context.Context, id int64) (LlmService, error)
 	GetLLMServiceByName(ctx context.Context, name string) (LlmService, error)
+	GetLLMServiceConfigByID(ctx context.Context, id int64) (LlmServiceConfig, error)
+	GetLLMServiceConfigByName(ctx context.Context, arg GetLLMServiceConfigByNameParams) (LlmServiceConfig, error)
+	GetLLMServiceConfigsByServiceID(ctx context.Context, llmServiceID int64) ([]LlmServiceConfig, error)
 	GetMessageByID(ctx context.Context, id int64) (Message, error)
 	GetMessageByUUID(ctx context.Context, uuid string) (Message, error)
 	GetMessagesByActorID(ctx context.Context, senderActorID int64) ([]Message, error)
@@ -41,12 +47,13 @@ type Querier interface {
 	GetPromptsByActorID(ctx context.Context, actorID sql.NullInt64) ([]Prompt, error)
 	GetProviderByID(ctx context.Context, id int64) (Provider, error)
 	GetProviderByName(ctx context.Context, name string) (Provider, error)
-	GetProvidersByLLMService(ctx context.Context, llmServiceID int64) ([]Provider, error)
+	GetProvidersByLLMServiceConfig(ctx context.Context, llmServiceConfigID int64) ([]Provider, error)
 	GetProvidersBySystemPrompt(ctx context.Context, systemPromptID sql.NullInt64) ([]Provider, error)
 	GetSystemPrompts(ctx context.Context) ([]Prompt, error)
 	UpdateActor(ctx context.Context, arg UpdateActorParams) error
 	UpdateConversation(ctx context.Context, arg UpdateConversationParams) error
 	UpdateLLMService(ctx context.Context, arg UpdateLLMServiceParams) error
+	UpdateLLMServiceConfig(ctx context.Context, arg UpdateLLMServiceConfigParams) error
 	UpdateMessage(ctx context.Context, arg UpdateMessageParams) error
 	UpdatePrompt(ctx context.Context, arg UpdatePromptParams) error
 	UpdateProvider(ctx context.Context, arg UpdateProviderParams) error

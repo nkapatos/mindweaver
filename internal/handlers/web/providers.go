@@ -33,16 +33,28 @@ func (h *ProvidersHandler) Providers(c echo.Context) error {
 	if err != nil {
 		// For now, just log the error and continue with empty list
 		providersWithRelations = []struct {
-			Provider     store.Provider
-			LLMService   store.LlmService
-			SystemPrompt *store.Prompt
+			Provider         store.Provider
+			LLMServiceConfig store.LlmServiceConfig
+			LLMService       store.LlmService
+			SystemPrompt     *store.Prompt
 		}{}
 	}
 
-	// Get all LLM services for the form dropdown
+	// Get all LLM service configs for the form dropdown
+	// We need to get all services and their configs
 	llmServices, err := h.llmService.GetAllLLMServices(c.Request().Context())
 	if err != nil {
 		llmServices = []store.LlmService{}
+	}
+
+	// Get all configs from all services
+	var allConfigs []store.LlmServiceConfig
+	for _, service := range llmServices {
+		configs, err := h.llmService.GetLLMServiceConfigsByServiceID(c.Request().Context(), service.ID)
+		if err != nil {
+			continue // Skip this service if we can't get its configs
+		}
+		allConfigs = append(allConfigs, configs...)
 	}
 
 	// Get all system prompts for the form dropdown
@@ -55,13 +67,14 @@ func (h *ProvidersHandler) Providers(c echo.Context) error {
 	var templateProviders []views.ProviderWithRelations
 	for _, p := range providersWithRelations {
 		templateProviders = append(templateProviders, views.ProviderWithRelations{
-			Provider:     p.Provider,
-			LLMService:   p.LLMService,
-			SystemPrompt: p.SystemPrompt,
+			Provider:         p.Provider,
+			LLMServiceConfig: p.LLMServiceConfig,
+			LLMService:       p.LLMService,
+			SystemPrompt:     p.SystemPrompt,
 		})
 	}
 
-	return views.ProvidersPage(templateProviders, nil, llmServices, systemPrompts, currentPath).Render(c.Request().Context(), c.Response().Writer)
+	return views.ProvidersPage(templateProviders, nil, allConfigs, systemPrompts, currentPath).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // CreateProvider handles POST /providers - processes form submission
@@ -74,18 +87,18 @@ func (h *ProvidersHandler) CreateProvider(c echo.Context) error {
 	// Extract form values
 	name := c.FormValue("name")
 	description := c.FormValue("description")
-	llmServiceIDStr := c.FormValue("llm_service_id")
+	llmServiceConfigIDStr := c.FormValue("llm_service_config_id")
 	systemPromptIDStr := c.FormValue("system_prompt_id")
 
 	// Validate required fields
-	if name == "" || description == "" || llmServiceIDStr == "" {
-		return c.Redirect(http.StatusSeeOther, "/providers?error=Name, description and LLM service are required")
+	if name == "" || description == "" || llmServiceConfigIDStr == "" {
+		return c.Redirect(http.StatusSeeOther, "/providers?error=Name, description and LLM service configuration are required")
 	}
 
-	// Parse LLM service ID
-	llmServiceID, err := strconv.ParseInt(llmServiceIDStr, 10, 64)
+	// Parse LLM service config ID
+	llmServiceConfigID, err := strconv.ParseInt(llmServiceConfigIDStr, 10, 64)
 	if err != nil {
-		return c.Redirect(http.StatusSeeOther, "/providers?error=Invalid LLM service ID")
+		return c.Redirect(http.StatusSeeOther, "/providers?error=Invalid LLM service configuration ID")
 	}
 
 	// Parse optional system prompt ID
@@ -99,7 +112,7 @@ func (h *ProvidersHandler) CreateProvider(c echo.Context) error {
 	}
 
 	// Create the provider
-	_, err = h.providerService.CreateProvider(c.Request().Context(), name, description, llmServiceID, systemPromptID)
+	_, err = h.providerService.CreateProvider(c.Request().Context(), name, description, llmServiceConfigID, systemPromptID)
 	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/providers?error=Failed to create provider")
 	}
@@ -158,16 +171,27 @@ func (h *ProvidersHandler) EditProvider(c echo.Context) error {
 	providersWithRelations, err := h.providerService.GetAllProvidersWithRelations(c.Request().Context())
 	if err != nil {
 		providersWithRelations = []struct {
-			Provider     store.Provider
-			LLMService   store.LlmService
-			SystemPrompt *store.Prompt
+			Provider         store.Provider
+			LLMServiceConfig store.LlmServiceConfig
+			LLMService       store.LlmService
+			SystemPrompt     *store.Prompt
 		}{}
 	}
 
-	// Get all LLM services for the form dropdown
+	// Get all LLM service configs for the form dropdown
 	llmServices, err := h.llmService.GetAllLLMServices(c.Request().Context())
 	if err != nil {
 		llmServices = []store.LlmService{}
+	}
+
+	// Get all configs from all services
+	var allConfigs []store.LlmServiceConfig
+	for _, service := range llmServices {
+		configs, err := h.llmService.GetLLMServiceConfigsByServiceID(c.Request().Context(), service.ID)
+		if err != nil {
+			continue // Skip this service if we can't get its configs
+		}
+		allConfigs = append(allConfigs, configs...)
 	}
 
 	// Get all system prompts for the form dropdown
@@ -180,13 +204,14 @@ func (h *ProvidersHandler) EditProvider(c echo.Context) error {
 	var templateProviders []views.ProviderWithRelations
 	for _, p := range providersWithRelations {
 		templateProviders = append(templateProviders, views.ProviderWithRelations{
-			Provider:     p.Provider,
-			LLMService:   p.LLMService,
-			SystemPrompt: p.SystemPrompt,
+			Provider:         p.Provider,
+			LLMServiceConfig: p.LLMServiceConfig,
+			LLMService:       p.LLMService,
+			SystemPrompt:     p.SystemPrompt,
 		})
 	}
 
-	return views.ProvidersPage(templateProviders, provider, llmServices, systemPrompts, currentPath).Render(c.Request().Context(), c.Response().Writer)
+	return views.ProvidersPage(templateProviders, provider, allConfigs, systemPrompts, currentPath).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // UpdateProvider handles POST /providers/edit/{id} - processes edit form submission
@@ -209,18 +234,18 @@ func (h *ProvidersHandler) UpdateProvider(c echo.Context) error {
 	// Extract form values
 	name := c.FormValue("name")
 	description := c.FormValue("description")
-	llmServiceIDStr := c.FormValue("llm_service_id")
+	llmServiceConfigIDStr := c.FormValue("llm_service_config_id")
 	systemPromptIDStr := c.FormValue("system_prompt_id")
 
 	// Validate required fields
-	if name == "" || description == "" || llmServiceIDStr == "" {
-		return c.Redirect(http.StatusSeeOther, "/providers/edit/"+idStr+"?error=Name, description and LLM service are required")
+	if name == "" || description == "" || llmServiceConfigIDStr == "" {
+		return c.Redirect(http.StatusSeeOther, "/providers/edit/"+idStr+"?error=Name, description and LLM service configuration are required")
 	}
 
-	// Parse LLM service ID
-	llmServiceID, err := strconv.ParseInt(llmServiceIDStr, 10, 64)
+	// Parse LLM service config ID
+	llmServiceConfigID, err := strconv.ParseInt(llmServiceConfigIDStr, 10, 64)
 	if err != nil {
-		return c.Redirect(http.StatusSeeOther, "/providers/edit/"+idStr+"?error=Invalid LLM service ID")
+		return c.Redirect(http.StatusSeeOther, "/providers/edit/"+idStr+"?error=Invalid LLM service configuration ID")
 	}
 
 	// Parse optional system prompt ID
@@ -234,7 +259,7 @@ func (h *ProvidersHandler) UpdateProvider(c echo.Context) error {
 	}
 
 	// Update the provider
-	if err := h.providerService.UpdateProvider(c.Request().Context(), id, name, description, llmServiceID, systemPromptID); err != nil {
+	if err := h.providerService.UpdateProvider(c.Request().Context(), id, name, description, llmServiceConfigID, systemPromptID); err != nil {
 		return c.Redirect(http.StatusSeeOther, "/providers/edit/"+idStr+"?error=Failed to update provider")
 	}
 

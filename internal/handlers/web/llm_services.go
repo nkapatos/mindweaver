@@ -51,6 +51,8 @@ func (h *LLMServicesHandler) CreateLLMService(c echo.Context) error {
 	apiKey := c.FormValue("api_key")
 	baseURL := c.FormValue("base_url")
 	organization := c.FormValue("organization")
+	configName := c.FormValue("config_name")
+	configDescription := c.FormValue("config_description")
 	model := c.FormValue("model")
 
 	// Validate required fields
@@ -58,11 +60,13 @@ func (h *LLMServicesHandler) CreateLLMService(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/llm-services?error=Name, adapter, API key, base URL and model are required")
 	}
 
-	// Create configuration with defaults
-	config := services.DefaultConfiguration(model)
+	// Use default config name if not provided
+	if configName == "" {
+		configName = "Default Configuration"
+	}
 
-	// Create the LLM service
-	_, err := h.llmService.CreateLLMService(c.Request().Context(), name, description, adapter, apiKey, baseURL, organization, config)
+	// Create the LLM service with a default configuration
+	_, _, err := h.llmService.CreateLLMServiceWithConfig(c.Request().Context(), name, description, adapter, apiKey, baseURL, organization, configName, configDescription, model)
 	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/llm-services?error=Failed to create LLM service: "+err.Error())
 	}
@@ -112,7 +116,7 @@ func (h *LLMServicesHandler) EditLLMService(c echo.Context) error {
 	}
 
 	// Get the LLM service to edit
-	llmService, _, err := h.llmService.GetLLMServiceByID(c.Request().Context(), id)
+	llmService, err := h.llmService.GetLLMServiceByID(c.Request().Context(), id)
 	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/llm-services?error=LLM service not found")
 	}
@@ -181,18 +185,14 @@ func (h *LLMServicesHandler) UpdateLLMService(c echo.Context) error {
 	apiKey := c.FormValue("api_key")
 	baseURL := c.FormValue("base_url")
 	organization := c.FormValue("organization")
-	model := c.FormValue("model")
 
 	// Validate required fields
-	if name == "" || adapter == "" || apiKey == "" || baseURL == "" || model == "" {
-		return c.Redirect(http.StatusSeeOther, "/llm-services/edit/"+idStr+"?error=Name, adapter, API key, base URL and model are required")
+	if name == "" || adapter == "" || apiKey == "" || baseURL == "" {
+		return c.Redirect(http.StatusSeeOther, "/llm-services/edit/"+idStr+"?error=Name, adapter, API key, and base URL are required")
 	}
 
-	// Create configuration with defaults
-	config := services.DefaultConfiguration(model)
-
 	// Update the LLM service
-	if err := h.llmService.UpdateLLMService(c.Request().Context(), id, name, description, adapter, apiKey, baseURL, organization, config); err != nil {
+	if err := h.llmService.UpdateLLMService(c.Request().Context(), id, name, description, adapter, apiKey, baseURL, organization); err != nil {
 		return c.Redirect(http.StatusSeeOther, "/llm-services/edit/"+idStr+"?error=Failed to update LLM service: "+err.Error())
 	}
 
