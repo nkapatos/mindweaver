@@ -207,3 +207,61 @@ func (s *PromptService) GetPromptWithActor(ctx context.Context, promptID int64) 
 	s.logger.Debug("Prompt with actor retrieved successfully", "prompt_id", promptID)
 	return &prompt, &actor, nil
 }
+
+// GetAllPromptsWithRelations retrieves all prompts along with their related actors
+// This is optimized for UI display where we need to show meaningful names instead of IDs
+func (s *PromptService) GetAllPromptsWithRelations(ctx context.Context) ([]struct {
+	Prompt store.Prompt
+	Actor  *store.Actor
+}, error) {
+	s.logger.Debug("Getting all prompts with relations")
+
+	// Get all prompts
+	prompts, err := s.promptStore.GetAllPrompts(ctx)
+	if err != nil {
+		s.logger.Error("Failed to get all prompts for relations", "error", err)
+		return nil, err
+	}
+
+	// Get all actors for efficient lookup
+	allActors, err := s.promptStore.GetAllActors(ctx)
+	if err != nil {
+		s.logger.Error("Failed to get all actors for prompt relations", "error", err)
+		return nil, err
+	}
+
+	// Create a map for efficient actor lookup
+	actorMap := make(map[int64]store.Actor)
+	for _, actor := range allActors {
+		actorMap[actor.ID] = actor
+	}
+
+	// Build the result with relations
+	var result []struct {
+		Prompt store.Prompt
+		Actor  *store.Actor
+	}
+
+	for _, prompt := range prompts {
+		// Get the related actor (if any)
+		var actor *store.Actor
+		if prompt.ActorID.Valid {
+			if a, exists := actorMap[prompt.ActorID.Int64]; exists {
+				actor = &a
+			} else {
+				s.logger.Warn("Actor not found for prompt", "prompt_id", prompt.ID, "actor_id", prompt.ActorID.Int64)
+			}
+		}
+
+		result = append(result, struct {
+			Prompt store.Prompt
+			Actor  *store.Actor
+		}{
+			Prompt: prompt,
+			Actor:  actor,
+		})
+	}
+
+	s.logger.Debug("All prompts with relations retrieved successfully", "count", len(result))
+	return result, nil
+}

@@ -245,3 +245,85 @@ func (s *ProviderService) DeleteProvider(ctx context.Context, id int64) error {
 	s.logger.Info("Provider deleted successfully", "id", id)
 	return nil
 }
+
+// GetAllProvidersWithRelations retrieves all providers along with their related LLM services and system prompts
+// This is optimized for UI display where we need to show meaningful names instead of IDs
+func (s *ProviderService) GetAllProvidersWithRelations(ctx context.Context) ([]struct {
+	Provider     store.Provider
+	LLMService   store.LlmService
+	SystemPrompt *store.Prompt
+}, error) {
+	s.logger.Debug("Getting all providers with relations")
+
+	// Get all providers
+	providers, err := s.providerStore.GetAllProviders(ctx)
+	if err != nil {
+		s.logger.Error("Failed to get all providers for relations", "error", err)
+		return nil, err
+	}
+
+	// Get all LLM services for efficient lookup
+	allLLMServices, err := s.providerStore.GetAllLLMServices(ctx)
+	if err != nil {
+		s.logger.Error("Failed to get all LLM services for provider relations", "error", err)
+		return nil, err
+	}
+
+	// Create a map for efficient LLM service lookup
+	llmServiceMap := make(map[int64]store.LlmService)
+	for _, service := range allLLMServices {
+		llmServiceMap[service.ID] = service
+	}
+
+	// Get all system prompts for efficient lookup
+	allPrompts, err := s.providerStore.GetAllPrompts(ctx)
+	if err != nil {
+		s.logger.Error("Failed to get all prompts for provider relations", "error", err)
+		return nil, err
+	}
+
+	// Create a map for efficient prompt lookup
+	promptMap := make(map[int64]store.Prompt)
+	for _, prompt := range allPrompts {
+		promptMap[prompt.ID] = prompt
+	}
+
+	// Build the result with relations
+	var result []struct {
+		Provider     store.Provider
+		LLMService   store.LlmService
+		SystemPrompt *store.Prompt
+	}
+
+	for _, provider := range providers {
+		// Get the LLM service
+		llmService, exists := llmServiceMap[provider.LlmServiceID]
+		if !exists {
+			s.logger.Warn("LLM service not found for provider", "provider_id", provider.ID, "llm_service_id", provider.LlmServiceID)
+			continue
+		}
+
+		// Get the system prompt (if any)
+		var systemPrompt *store.Prompt
+		if provider.SystemPromptID.Valid {
+			if prompt, exists := promptMap[provider.SystemPromptID.Int64]; exists {
+				systemPrompt = &prompt
+			} else {
+				s.logger.Warn("System prompt not found for provider", "provider_id", provider.ID, "system_prompt_id", provider.SystemPromptID.Int64)
+			}
+		}
+
+		result = append(result, struct {
+			Provider     store.Provider
+			LLMService   store.LlmService
+			SystemPrompt *store.Prompt
+		}{
+			Provider:     provider,
+			LLMService:   llmService,
+			SystemPrompt: systemPrompt,
+		})
+	}
+
+	s.logger.Debug("All providers with relations retrieved successfully", "count", len(result))
+	return result, nil
+}

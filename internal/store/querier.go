@@ -25,6 +25,7 @@ type Querier interface {
 	GetActorByID(ctx context.Context, id int64) (Actor, error)
 	GetActorByName(ctx context.Context, arg GetActorByNameParams) (Actor, error)
 	GetActorsByType(ctx context.Context, type_ string) ([]Actor, error)
+	GetAllActors(ctx context.Context) ([]Actor, error)
 	GetAllLLMServices(ctx context.Context) ([]LlmService, error)
 	GetAllPrompts(ctx context.Context) ([]Prompt, error)
 	GetAllProviders(ctx context.Context) ([]Provider, error)
