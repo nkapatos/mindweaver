@@ -163,6 +163,7 @@ func (h *PromptHandler) UpdatePrompt(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
+		ActorID  *int64 `json:"actor_id,omitempty"`
 		Title    string `json:"title"`
 		Content  string `json:"content"`
 		IsSystem bool   `json:"is_system"`
@@ -178,7 +179,7 @@ func (h *PromptHandler) UpdatePrompt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.promptService.UpdatePrompt(r.Context(), id, req.Title, req.Content, req.IsSystem); err != nil {
+	if err := h.promptService.UpdatePrompt(r.Context(), id, req.ActorID, req.Title, req.Content, req.IsSystem); err != nil {
 		http.Error(w, "Failed to update prompt", http.StatusInternalServerError)
 		return
 	}

@@ -6,19 +6,22 @@ import (
 )
 
 var (
-	RouteHome            = "/"
-	RoutePrompts         = "/prompts"
-	RoutePromptsEdit     = "/prompts/edit/:id"
-	RoutePromptsDelete   = "/prompts/delete"
-	RouteProviders       = "/providers"
-	RouteProvidersEdit   = "/providers/edit/:id"
-	RouteProvidersDelete = "/providers/delete"
-	RouteSettings        = "/settings"
-	RouteConversations   = "/conversations"
+	RouteHome              = "/"
+	RoutePrompts           = "/prompts"
+	RoutePromptsEdit       = "/prompts/edit/:id"
+	RoutePromptsDelete     = "/prompts/delete"
+	RouteProviders         = "/providers"
+	RouteProvidersEdit     = "/providers/edit/:id"
+	RouteProvidersDelete   = "/providers/delete"
+	RouteLLMServices       = "/llm-services"
+	RouteLLMServicesEdit   = "/llm-services/edit/:id"
+	RouteLLMServicesDelete = "/llm-services/delete"
+	RouteSettings          = "/settings"
+	RouteConversations     = "/conversations"
 )
 
 // SetupWebRoutes configures all web routes
-func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, settingsHandler *web.SettingsHandler, conversationHandler *web.ConversationHandler) {
+func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, llmServicesHandler *web.LLMServicesHandler, settingsHandler *web.SettingsHandler, conversationHandler *web.ConversationHandler) {
 	e.GET(RouteHome, homeHandler.Home)
 
 	// Prompts
@@ -34,6 +37,13 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	e.GET(RouteProvidersEdit, providersHandler.EditProvider)
 	e.POST(RouteProvidersEdit, providersHandler.UpdateProvider)
 	e.POST(RouteProvidersDelete, providersHandler.DeleteProvider)
+
+	// LLM Services
+	e.GET(RouteLLMServices, llmServicesHandler.LLMServices)
+	e.POST(RouteLLMServices, llmServicesHandler.CreateLLMService)
+	e.GET(RouteLLMServicesEdit, llmServicesHandler.EditLLMService)
+	e.POST(RouteLLMServicesEdit, llmServicesHandler.UpdateLLMService)
+	e.POST(RouteLLMServicesDelete, llmServicesHandler.DeleteLLMService)
 
 	// Settings
 	e.GET(RouteSettings, settingsHandler.Settings)

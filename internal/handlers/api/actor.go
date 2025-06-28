@@ -149,6 +149,7 @@ func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
+		Type        string `json:"type"`
 		Name        string `json:"name"`
 		DisplayName string `json:"display_name"`
 		AvatarURL   string `json:"avatar_url"`
@@ -166,7 +167,7 @@ func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.actorService.UpdateActor(r.Context(), id, req.Name, req.DisplayName, req.AvatarURL, req.Metadata, req.IsActive); err != nil {
+	if err := h.actorService.UpdateActor(r.Context(), id, req.Name, req.Type, req.DisplayName, req.AvatarURL, req.Metadata, req.IsActive); err != nil {
 		http.Error(w, "Failed to update actor", http.StatusInternalServerError)
 		return
 	}

@@ -20,6 +20,11 @@ var WebRoutes = []RouteInfo{
 		Text: "Prompts",
 	},
 	{
+		Href: "/llm-services",
+		Icon: "zap",
+		Text: "LLM Services",
+	},
+	{
 		Href: "/providers",
 		Icon: "server",
 		Text: "Providers",

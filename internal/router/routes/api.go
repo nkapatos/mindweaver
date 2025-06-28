@@ -22,7 +22,9 @@ func SetupAPIRoutes(
 		return nil
 	})
 
-	// LLM routes
-	e.POST("/api/generate", llmHandler.Generate)
-	// e.POST("/api/chat", llmHandler.Chat)
+	// LLM routes - only if handler is provided
+	if llmHandler != nil {
+		e.POST("/api/generate", llmHandler.Generate)
+		// e.POST("/api/chat", llmHandler.Chat)
+	}
 }

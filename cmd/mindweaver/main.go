@@ -52,13 +52,17 @@ func main() {
 	promptService := services.NewPromptService(querier)
 	providerService := services.NewProviderService(querier)
 	llmService := services.NewLLMService(querier)
+
+	// API handlers (only the ones that work with our services)
 	actorHandler := api.NewActorHandler(actorService)
 	promptHandler := api.NewPromptHandler(promptService)
-	llmHandler := api.NewLLMHandler(llmService)
+
+	// Web handlers (our main focus)
 	homeHandler := web.NewHomeHandler()
 	notFoundHandler := web.NewNotFoundHandler()
 	promptsHandler := web.NewPromptsHandler(promptService)
-	providersHandler := web.NewProvidersHandler(providerService)
+	providersHandler := web.NewProvidersHandler(providerService, llmService, promptService)
+	llmServicesHandler := web.NewLLMServicesHandler(llmService)
 	settingsHandler := web.NewSettingsHandler()
 	conversationHandler := web.NewConversationHandler()
 
@@ -71,10 +75,11 @@ func main() {
 	router.SetupRoutes(
 		actorHandler,
 		promptHandler,
-		llmHandler,
+		nil, // No LLM API handler for now - focus on web handlers
 		homeHandler,
 		promptsHandler,
 		providersHandler,
+		llmServicesHandler,
 		settingsHandler,
 		conversationHandler,
 		notFoundHandler,
