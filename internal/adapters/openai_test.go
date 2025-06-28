@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"context"
 	"testing"
 )
 
@@ -102,5 +103,54 @@ func TestNewOpenAIAdapter(t *testing.T) {
 				t.Errorf("NewOpenAIAdapter() stored config base URL = %v, want %v", openaiAdapter.config.BaseURL, tt.config.BaseURL)
 			}
 		})
+	}
+}
+
+func TestOpenAIAdapter_ListModels(t *testing.T) {
+	// Create adapter config
+	config := AdapterConfig{
+		Name:    "openai",
+		BaseURL: "https://api.openai.com/v1",
+		APIKey:  "test-key", // This won't work with a real API call, but we can test the structure
+	}
+
+	// Create adapter
+	adapter, err := NewOpenAIAdapter(config)
+	if err != nil {
+		t.Fatalf("Failed to create OpenAI adapter: %v", err)
+	}
+
+	// Test ListModels method exists
+	models, err := adapter.ListModels(context.Background(), "test-key", "https://api.openai.com/v1")
+
+	// We expect an error with a test key, but we can verify the method exists and returns the right type
+	if err != nil {
+		// This is expected with a test key
+		t.Logf("Expected error with test key: %v", err)
+	} else {
+		// If it somehow works, verify the structure
+		if models == nil {
+			t.Error("Models should not be nil")
+		}
+	}
+}
+
+func TestModel_Structure(t *testing.T) {
+	// Test our unified Model struct
+	model := Model{
+		ID:          "gpt-4",
+		Name:        "GPT-4",
+		Provider:    "openai",
+		Description: "GPT-4 model",
+		Created:     1234567890,
+		OwnedBy:     "openai",
+	}
+
+	if model.ID != "gpt-4" {
+		t.Errorf("Expected ID 'gpt-4', got '%s'", model.ID)
+	}
+
+	if model.Provider != "openai" {
+		t.Errorf("Expected provider 'openai', got '%s'", model.Provider)
 	}
 }

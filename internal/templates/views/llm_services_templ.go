@@ -489,22 +489,7 @@ func LLMServiceFormFields(editingService *store.LlmService, adapters []string) t
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "></div><div><label class=\"label\" for=\"configuration\"><span class=\"label-text font-medium\">Configuration (JSON)</span></label> <textarea id=\"configuration\" name=\"configuration\" class=\"textarea textarea-bordered w-full h-24\" placeholder='{\"temperature\": 0.7, \"max_tokens\": 1000}' required>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if editingService != nil {
-			var templ_7745c5c3_Var22 string
-			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(editingService.Configuration)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_services.templ`, Line: 221, Col: 32}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</textarea></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "></div><div><label class=\"label\" for=\"model\"><span class=\"label-text font-medium\">Model</span></label> <input type=\"text\" id=\"model\" name=\"model\" class=\"input input-bordered w-full\" placeholder=\"e.g., gpt-4, claude-3-opus, llama-3.1-8b\" required> <label class=\"label\"><span class=\"label-text-alt text-base-content/60\">Default configuration will be applied (temperature: 0.7, max_tokens: 1000)</span></label></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

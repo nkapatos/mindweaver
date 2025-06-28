@@ -16,6 +16,7 @@ var (
 	RouteLLMServices       = "/llm-services"
 	RouteLLMServicesEdit   = "/llm-services/edit/:id"
 	RouteLLMServicesDelete = "/llm-services/delete"
+	RouteLLMServicesModels = "/llm-services/models"
 	RouteSettings          = "/settings"
 	RouteConversations     = "/conversations"
 )
@@ -44,6 +45,7 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	e.GET(RouteLLMServicesEdit, llmServicesHandler.EditLLMService)
 	e.POST(RouteLLMServicesEdit, llmServicesHandler.UpdateLLMService)
 	e.POST(RouteLLMServicesDelete, llmServicesHandler.DeleteLLMService)
+	e.GET(RouteLLMServicesModels, llmServicesHandler.GetModels)
 
 	// Settings
 	e.GET(RouteSettings, settingsHandler.Settings)
