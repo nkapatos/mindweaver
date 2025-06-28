@@ -23,15 +23,28 @@ func NewPromptsHandler(promptService *services.PromptService) *PromptsHandler {
 // Prompts handles GET /prompts - displays the prompts page with form and list
 func (h *PromptsHandler) Prompts(c echo.Context) error {
 	currentPath := c.Path()
-	// Get all prompts to display in the list
-	prompts, err := h.promptService.GetAllPrompts(c.Request().Context())
+
+	// Get all prompts with relations for display
+	promptsWithRelations, err := h.promptService.GetAllPromptsWithRelations(c.Request().Context())
 	if err != nil {
 		// For now, just log the error and continue with empty list
 		// In a real app, you might want to show an error message
-		prompts = []store.Prompt{}
+		promptsWithRelations = []struct {
+			Prompt store.Prompt
+			Actor  *store.Actor
+		}{}
 	}
 
-	return views.PromptsPage(prompts, nil, currentPath).Render(c.Request().Context(), c.Response().Writer)
+	// Convert to template format
+	var templatePrompts []views.PromptWithRelations
+	for _, p := range promptsWithRelations {
+		templatePrompts = append(templatePrompts, views.PromptWithRelations{
+			Prompt: p.Prompt,
+			Actor:  p.Actor,
+		})
+	}
+
+	return views.PromptsPage(templatePrompts, nil, currentPath).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // CreatePrompt handles POST /prompts - processes form submission
@@ -55,7 +68,7 @@ func (h *PromptsHandler) CreatePrompt(c echo.Context) error {
 	// Convert is_system checkbox to boolean
 	isSystem := isSystemStr == "1"
 
-	// Create the prompt (for now without user_id, we'll add that later with sessions)
+	// Create the prompt (for now without actor_id, we'll add that later with sessions)
 	if err := h.promptService.CreatePrompt(c.Request().Context(), nil, title, content, isSystem); err != nil {
 		// Redirect back with error
 		return c.Redirect(http.StatusSeeOther, "/prompts?error=Failed to create prompt")
@@ -111,13 +124,25 @@ func (h *PromptsHandler) EditPrompt(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/prompts?error=Prompt not found")
 	}
 
-	// Get all prompts to display in the list
-	prompts, err := h.promptService.GetAllPrompts(c.Request().Context())
+	// Get all prompts with relations for display
+	promptsWithRelations, err := h.promptService.GetAllPromptsWithRelations(c.Request().Context())
 	if err != nil {
-		prompts = []store.Prompt{}
+		promptsWithRelations = []struct {
+			Prompt store.Prompt
+			Actor  *store.Actor
+		}{}
 	}
 
-	return views.PromptsPage(prompts, &prompt, currentPath).Render(c.Request().Context(), c.Response().Writer)
+	// Convert to template format
+	var templatePrompts []views.PromptWithRelations
+	for _, p := range promptsWithRelations {
+		templatePrompts = append(templatePrompts, views.PromptWithRelations{
+			Prompt: p.Prompt,
+			Actor:  p.Actor,
+		})
+	}
+
+	return views.PromptsPage(templatePrompts, &prompt, currentPath).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // UpdatePrompt handles POST /prompts/edit/{id} - processes edit form submission
@@ -150,8 +175,8 @@ func (h *PromptsHandler) UpdatePrompt(c echo.Context) error {
 	// Convert is_system checkbox to boolean
 	isSystem := isSystemStr == "1"
 
-	// Update the prompt
-	if err := h.promptService.UpdatePrompt(c.Request().Context(), id, title, content, isSystem); err != nil {
+	// Update the prompt (for now without actor_id, we'll add that later with sessions)
+	if err := h.promptService.UpdatePrompt(c.Request().Context(), id, nil, title, content, isSystem); err != nil {
 		return c.Redirect(http.StatusSeeOther, "/prompts/edit/"+idStr+"?error=Failed to update prompt")
 	}
 

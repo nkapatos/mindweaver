@@ -29,12 +29,17 @@ func (r *Router) SetupRoutes(
 	homeHandler *web.HomeHandler,
 	promptsHandler *web.PromptsHandler,
 	providersHandler *web.ProvidersHandler,
+	llmServicesHandler *web.LLMServicesHandler,
 	settingsHandler *web.SettingsHandler,
 	conversationHandler *web.ConversationHandler,
 	notFoundHandler *web.NotFoundHandler,
 ) {
-	routes.SetupWebRoutes(r.echo, homeHandler, promptsHandler, providersHandler, settingsHandler, conversationHandler)
-	routes.SetupAPIRoutes(r.echo, actorHandler, promptHandler, llmHandler)
+	routes.SetupWebRoutes(r.echo, homeHandler, promptsHandler, providersHandler, llmServicesHandler, settingsHandler, conversationHandler)
+	if llmHandler != nil {
+		routes.SetupAPIRoutes(r.echo, actorHandler, promptHandler, llmHandler)
+	} else {
+		routes.SetupAPIRoutes(r.echo, actorHandler, promptHandler, nil)
+	}
 	routes.SetupStaticRoutes(r.echo)
 	r.setupErrorHandling(notFoundHandler)
 }
