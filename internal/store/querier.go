@@ -15,6 +15,7 @@ type Querier interface {
 	CreateLLMService(ctx context.Context, arg CreateLLMServiceParams) (LlmService, error)
 	CreateLLMServiceConfig(ctx context.Context, arg CreateLLMServiceConfigParams) (LlmServiceConfig, error)
 	CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error)
+	CreateModel(ctx context.Context, arg CreateModelParams) (Model, error)
 	CreatePrompt(ctx context.Context, arg CreatePromptParams) error
 	CreateProvider(ctx context.Context, arg CreateProviderParams) (Provider, error)
 	DeleteActor(ctx context.Context, id int64) error
@@ -22,6 +23,8 @@ type Querier interface {
 	DeleteLLMService(ctx context.Context, id int64) error
 	DeleteLLMServiceConfig(ctx context.Context, id int64) error
 	DeleteMessage(ctx context.Context, id int64) error
+	DeleteModel(ctx context.Context, id int64) error
+	DeleteModelsByLLMServiceID(ctx context.Context, llmServiceID int64) error
 	DeletePrompt(ctx context.Context, id int64) error
 	DeleteProvider(ctx context.Context, id int64) error
 	GetActorByID(ctx context.Context, id int64) (Actor, error)
@@ -43,6 +46,10 @@ type Querier interface {
 	GetMessageByUUID(ctx context.Context, uuid string) (Message, error)
 	GetMessagesByActorID(ctx context.Context, senderActorID int64) ([]Message, error)
 	GetMessagesByConversationID(ctx context.Context, conversationID int64) ([]Message, error)
+	GetModelByID(ctx context.Context, id int64) (Model, error)
+	GetModelByServiceAndModelID(ctx context.Context, arg GetModelByServiceAndModelIDParams) (Model, error)
+	GetModelsByLLMServiceID(ctx context.Context, llmServiceID int64) ([]Model, error)
+	GetModelsLastFetchedBefore(ctx context.Context, arg GetModelsLastFetchedBeforeParams) ([]Model, error)
 	GetPromptById(ctx context.Context, id int64) (Prompt, error)
 	GetPromptsByActorID(ctx context.Context, actorID sql.NullInt64) ([]Prompt, error)
 	GetProviderByID(ctx context.Context, id int64) (Provider, error)
@@ -54,7 +61,9 @@ type Querier interface {
 	UpdateConversation(ctx context.Context, arg UpdateConversationParams) error
 	UpdateLLMService(ctx context.Context, arg UpdateLLMServiceParams) error
 	UpdateLLMServiceConfig(ctx context.Context, arg UpdateLLMServiceConfigParams) error
+	UpdateLastFetched(ctx context.Context, id int64) error
 	UpdateMessage(ctx context.Context, arg UpdateMessageParams) error
+	UpdateModel(ctx context.Context, arg UpdateModelParams) (Model, error)
 	UpdatePrompt(ctx context.Context, arg UpdatePromptParams) error
 	UpdateProvider(ctx context.Context, arg UpdateProviderParams) error
 }

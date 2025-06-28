@@ -63,6 +63,18 @@ type Message struct {
 	CreatedAt      sql.NullTime   `json:"created_at"`
 }
 
+type Model struct {
+	ID            int64          `json:"id"`
+	LlmServiceID  int64          `json:"llm_service_id"`
+	ModelID       string         `json:"model_id"`
+	Name          string         `json:"name"`
+	Provider      string         `json:"provider"`
+	Description   sql.NullString `json:"description"`
+	CreatedAt     sql.NullInt64  `json:"created_at"`
+	OwnedBy       sql.NullString `json:"owned_by"`
+	LastFetchedAt sql.NullTime   `json:"last_fetched_at"`
+}
+
 type Prompt struct {
 	ID        int64          `json:"id"`
 	ActorID   sql.NullInt64  `json:"actor_id"`

@@ -30,11 +30,12 @@ func (r *Router) SetupRoutes(
 	promptsHandler *web.PromptsHandler,
 	providersHandler *web.ProvidersHandler,
 	llmServicesHandler *web.LLMServicesHandler,
+	llmServiceConfigsHandler *web.LLMServiceConfigsHandler,
 	settingsHandler *web.SettingsHandler,
 	conversationHandler *web.ConversationHandler,
 	notFoundHandler *web.NotFoundHandler,
 ) {
-	routes.SetupWebRoutes(r.echo, homeHandler, promptsHandler, providersHandler, llmServicesHandler, settingsHandler, conversationHandler)
+	routes.SetupWebRoutes(r.echo, homeHandler, promptsHandler, providersHandler, llmServicesHandler, llmServiceConfigsHandler, settingsHandler, conversationHandler)
 	if llmHandler != nil {
 		routes.SetupAPIRoutes(r.echo, actorHandler, promptHandler, llmHandler)
 	} else {

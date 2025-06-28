@@ -12,15 +12,17 @@ import (
 
 // LLMService handles LLM service operations
 type LLMService struct {
-	store  store.Querier
-	logger *slog.Logger
+	store      store.Querier
+	modelCache *modelCacheService
+	logger     *slog.Logger
 }
 
 // NewLLMService creates a new LLM service
 func NewLLMService(store store.Querier) *LLMService {
 	return &LLMService{
-		store:  store,
-		logger: slog.Default(),
+		store:      store,
+		modelCache: newModelCacheService(store),
+		logger:     slog.Default(),
 	}
 }
 
@@ -267,31 +269,30 @@ func (s *LLMService) DeleteLLMServiceConfig(ctx context.Context, id int64) error
 	return nil
 }
 
-// GetAvailableModels fetches available models for a specific adapter
+// GetAvailableModels gets available models for a service, using cache when possible
 func (s *LLMService) GetAvailableModels(ctx context.Context, adapter, apiKey, baseURL string) ([]adapters.Model, error) {
-	s.logger.Info("Fetching available models", "adapter", adapter)
-
-	// Create adapter config
-	config := adapters.AdapterConfig{
+	// For now, fall back to direct API call
+	// TODO: Implement proper service lookup and caching
+	adapterInstance, err := adapters.NewAdapter(adapters.AdapterConfig{
 		Name:    adapter,
 		BaseURL: baseURL,
 		APIKey:  apiKey,
-	}
-
-	// Get adapter
-	adapterInstance, err := adapters.NewAdapter(config)
+	})
 	if err != nil {
-		s.logger.Error("Failed to get adapter", "error", err, "adapter", adapter)
-		return nil, fmt.Errorf("failed to get adapter: %w", err)
+		return nil, err
 	}
 
-	// List models
-	models, err := adapterInstance.ListModels(ctx, apiKey, baseURL)
-	if err != nil {
-		s.logger.Error("Failed to list models", "error", err, "adapter", adapter)
-		return nil, fmt.Errorf("failed to list models: %w", err)
-	}
+	return adapterInstance.ListModels(ctx, apiKey, baseURL)
+}
 
-	s.logger.Info("Retrieved models", "adapter", adapter, "count", len(models))
-	return models, nil
+// GetAvailableModelsForService gets available models for a specific LLM service ID
+// This method handles caching internally - the caller doesn't need to know about caching
+func (s *LLMService) GetAvailableModelsForService(ctx context.Context, llmServiceID int64) ([]adapters.Model, error) {
+	return s.modelCache.GetCachedModels(ctx, llmServiceID, false)
+}
+
+// RefreshModelsForService forces a refresh of models for a specific service
+// This is useful for admin operations or when cache is known to be stale
+func (s *LLMService) RefreshModelsForService(ctx context.Context, llmServiceID int64) ([]adapters.Model, error) {
+	return s.modelCache.GetCachedModels(ctx, llmServiceID, true)
 }

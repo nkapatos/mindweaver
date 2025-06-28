@@ -6,23 +6,27 @@ import (
 )
 
 var (
-	RouteHome              = "/"
-	RoutePrompts           = "/prompts"
-	RoutePromptsEdit       = "/prompts/edit/:id"
-	RoutePromptsDelete     = "/prompts/delete"
-	RouteProviders         = "/providers"
-	RouteProvidersEdit     = "/providers/edit/:id"
-	RouteProvidersDelete   = "/providers/delete"
-	RouteLLMServices       = "/llm-services"
-	RouteLLMServicesEdit   = "/llm-services/edit/:id"
-	RouteLLMServicesDelete = "/llm-services/delete"
-	RouteLLMServicesModels = "/llm-services/models"
-	RouteSettings          = "/settings"
-	RouteConversations     = "/conversations"
+	RouteHome                    = "/"
+	RoutePrompts                 = "/prompts"
+	RoutePromptsEdit             = "/prompts/edit/:id"
+	RoutePromptsDelete           = "/prompts/delete"
+	RouteProviders               = "/providers"
+	RouteProvidersEdit           = "/providers/edit/:id"
+	RouteProvidersDelete         = "/providers/delete"
+	RouteLLMServices             = "/llm-services"
+	RouteLLMServicesEdit         = "/llm-services/edit/:id"
+	RouteLLMServicesDelete       = "/llm-services/delete"
+	RouteLLMServicesModels       = "/llm-services/models"
+	RouteLLMServiceConfigs       = "/llm-service-configs"
+	RouteLLMServiceConfigsEdit   = "/llm-service-configs/edit/:id"
+	RouteLLMServiceConfigsDelete = "/llm-service-configs/delete"
+	RouteLLMServiceConfigsModels = "/llm-service-configs/models"
+	RouteSettings                = "/settings"
+	RouteConversations           = "/conversations"
 )
 
 // SetupWebRoutes configures all web routes
-func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, llmServicesHandler *web.LLMServicesHandler, settingsHandler *web.SettingsHandler, conversationHandler *web.ConversationHandler) {
+func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, llmServicesHandler *web.LLMServicesHandler, llmServiceConfigsHandler *web.LLMServiceConfigsHandler, settingsHandler *web.SettingsHandler, conversationHandler *web.ConversationHandler) {
 	e.GET(RouteHome, homeHandler.Home)
 
 	// Prompts
@@ -46,6 +50,14 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	e.POST(RouteLLMServicesEdit, llmServicesHandler.UpdateLLMService)
 	e.POST(RouteLLMServicesDelete, llmServicesHandler.DeleteLLMService)
 	e.GET(RouteLLMServicesModels, llmServicesHandler.GetModels)
+
+	// LLM Service Configurations
+	e.GET(RouteLLMServiceConfigs, llmServiceConfigsHandler.LLMServiceConfigs)
+	e.POST(RouteLLMServiceConfigs, llmServiceConfigsHandler.CreateLLMServiceConfig)
+	e.GET(RouteLLMServiceConfigsEdit, llmServiceConfigsHandler.EditLLMServiceConfig)
+	e.POST(RouteLLMServiceConfigsEdit, llmServiceConfigsHandler.UpdateLLMServiceConfig)
+	e.POST(RouteLLMServiceConfigsDelete, llmServiceConfigsHandler.DeleteLLMServiceConfig)
+	e.GET(RouteLLMServiceConfigsModels, llmServiceConfigsHandler.GetModelsForService)
 
 	// Settings
 	e.GET(RouteSettings, settingsHandler.Settings)

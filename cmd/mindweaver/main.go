@@ -63,6 +63,7 @@ func main() {
 	promptsHandler := web.NewPromptsHandler(promptService)
 	providersHandler := web.NewProvidersHandler(providerService, llmService, promptService)
 	llmServicesHandler := web.NewLLMServicesHandler(llmService)
+	llmServiceConfigsHandler := web.NewLLMServiceConfigsHandler(llmService)
 	settingsHandler := web.NewSettingsHandler()
 	conversationHandler := web.NewConversationHandler()
 
@@ -80,6 +81,7 @@ func main() {
 		promptsHandler,
 		providersHandler,
 		llmServicesHandler,
+		llmServiceConfigsHandler,
 		settingsHandler,
 		conversationHandler,
 		notFoundHandler,
