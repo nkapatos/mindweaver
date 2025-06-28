@@ -9,12 +9,13 @@ import (
 
 // ProviderWithRelations represents a provider with its related data for display
 type ProviderWithRelations struct {
-	Provider     store.Provider
-	LLMService   store.LlmService
-	SystemPrompt *store.Prompt
+	Provider        store.Provider
+	LLMServiceConfig store.LlmServiceConfig
+	LLMService      store.LlmService
+	SystemPrompt    *store.Prompt
 }
 
-templ ProvidersPage(providersWithRelations []ProviderWithRelations, editingProvider *store.Provider, llmServices []store.LlmService, systemPrompts []store.Prompt, activePath string) {
+templ ProvidersPage(providersWithRelations []ProviderWithRelations, editingProvider *store.Provider, llmServiceConfigs []store.LlmServiceConfig, systemPrompts []store.Prompt, activePath string) {
 	@layouts.AppLayout("Mindweaver - Providers", "Manage your AI providers", activePath) {
 		<div class="container mx-auto px-4 py-8">
 			<div class="mb-8">
@@ -25,7 +26,7 @@ templ ProvidersPage(providersWithRelations []ProviderWithRelations, editingProvi
 				<!-- Create/Edit Provider Form -->
 				<div class="card bg-base-100 shadow-lg">
 					<div class="card-body">
-						@ProviderForm(editingProvider, llmServices, systemPrompts)
+						@ProviderForm(editingProvider, llmServiceConfigs, systemPrompts)
 					</div>
 				</div>
 				<!-- Existing Providers List -->
@@ -43,13 +44,19 @@ templ ProvidersPage(providersWithRelations []ProviderWithRelations, editingProvi
 										<div class="flex justify-between items-start mb-2">
 											<div>
 												<h3 class="font-semibold text-lg">{ providerData.Provider.Name }</h3>
-												<p class="text-sm text-base-content/70">{ providerData.Provider.Description }</p>
+												if providerData.Provider.Description.Valid {
+													<p class="text-sm text-base-content/70">{ providerData.Provider.Description.String }</p>
+												}
 											</div>
 										</div>
 										<div class="grid grid-cols-2 gap-2 text-xs text-base-content/50 mb-3">
 											<div>
 												<span class="font-medium">LLM Service:</span>
 												<p class="truncate">{ providerData.LLMService.Name }</p>
+											</div>
+											<div>
+												<span class="font-medium">Configuration:</span>
+												<p class="truncate">{ providerData.LLMServiceConfig.Name }</p>
 											</div>
 											if providerData.SystemPrompt != nil {
 												<div>
@@ -97,7 +104,7 @@ templ ProvidersPage(providersWithRelations []ProviderWithRelations, editingProvi
 	}
 }
 
-templ ProviderForm(editingProvider *store.Provider, llmServices []store.LlmService, systemPrompts []store.Prompt) {
+templ ProviderForm(editingProvider *store.Provider, llmServiceConfigs []store.LlmServiceConfig, systemPrompts []store.Prompt) {
 	if editingProvider != nil {
 		<div class="flex items-center gap-4 mb-4">
 			<h2 class="card-title text-xl">Edit Provider</h2>
@@ -106,7 +113,7 @@ templ ProviderForm(editingProvider *store.Provider, llmServices []store.LlmServi
 			</a>
 		</div>
 		<form action={ templ.SafeURL("/providers/edit/" + strconv.FormatInt(editingProvider.ID, 10)) } method="POST" class="space-y-4">
-			@ProviderFormFields(editingProvider, llmServices, systemPrompts)
+			@ProviderFormFields(editingProvider, llmServiceConfigs, systemPrompts)
 			<div class="flex gap-3">
 				<a href="/providers" class="btn btn-outline flex-1">
 					Cancel
@@ -119,7 +126,7 @@ templ ProviderForm(editingProvider *store.Provider, llmServices []store.LlmServi
 	} else {
 		<h2 class="card-title text-xl mb-4">Create New Provider</h2>
 		<form action="/providers" method="POST" class="space-y-4">
-			@ProviderFormFields(nil, llmServices, systemPrompts)
+			@ProviderFormFields(nil, llmServiceConfigs, systemPrompts)
 			<button type="submit" class="btn btn-primary w-full">
 				Create Provider
 			</button>
@@ -127,7 +134,7 @@ templ ProviderForm(editingProvider *store.Provider, llmServices []store.LlmServi
 	}
 }
 
-templ ProviderFormFields(editingProvider *store.Provider, llmServices []store.LlmService, systemPrompts []store.Prompt) {
+templ ProviderFormFields(editingProvider *store.Provider, llmServiceConfigs []store.LlmServiceConfig, systemPrompts []store.Prompt) {
 	<div>
 		<label class="label" for="name">
 			<span class="label-text font-medium">Provider Name</span>
@@ -145,20 +152,21 @@ templ ProviderFormFields(editingProvider *store.Provider, llmServices []store.Ll
 		/>
 	</div>
 	<div>
-		<label class="label" for="llm_service_id">
-			<span class="label-text font-medium">LLM Service</span>
+		<label class="label" for="llm_service_config_id">
+			<span class="label-text font-medium">LLM Service Configuration</span>
 		</label>
-		<select id="llm_service_id" name="llm_service_id" class="select select-bordered w-full" required>
-			<option value="">Select LLM service</option>
-			for _, service := range llmServices {
+		<select id="llm_service_config_id" name="llm_service_config_id" class="select select-bordered w-full" required>
+			<option value="">Select LLM service configuration</option>
+			for _, config := range llmServiceConfigs {
 				<option
-					value={ strconv.FormatInt(service.ID, 10) }
-					if editingProvider != nil && editingProvider.LlmServiceID == service.ID {
+					value={ strconv.FormatInt(config.ID, 10) }
+					if editingProvider != nil && editingProvider.LlmServiceConfigID == config.ID {
 						selected
 					}
-				>{ service.Name }</option>
+				>{ config.Name }</option>
 			}
 		</select>
+		<p class="text-xs text-base-content/60 mt-1">Choose a specific model configuration (e.g., "Creative GPT-4", "Analytical Claude")</p>
 	</div>
 	<div>
 		<label class="label" for="system_prompt_id">
@@ -187,8 +195,8 @@ templ ProviderFormFields(editingProvider *store.Provider, llmServices []store.Ll
 			placeholder="What this provider is used for"
 			required
 		>
-		if editingProvider != nil {
-			{editingProvider.Description}
+		if editingProvider != nil && editingProvider.Description.Valid {
+			{editingProvider.Description.String}
 		}
 		</textarea>
 	</div>

@@ -11,21 +11,21 @@ import (
 )
 
 const createProvider = `-- name: CreateProvider :one
-INSERT INTO providers (llm_service_id, system_prompt_id, name, description) 
+INSERT INTO providers (llm_service_config_id, system_prompt_id, name, description) 
 VALUES (?, ?, ?, ?) 
-RETURNING id, llm_service_id, system_prompt_id, name, description, created_at
+RETURNING id, llm_service_config_id, system_prompt_id, name, description, created_at
 `
 
 type CreateProviderParams struct {
-	LlmServiceID   int64         `json:"llm_service_id"`
-	SystemPromptID sql.NullInt64 `json:"system_prompt_id"`
-	Name           string        `json:"name"`
-	Description    string        `json:"description"`
+	LlmServiceConfigID int64          `json:"llm_service_config_id"`
+	SystemPromptID     sql.NullInt64  `json:"system_prompt_id"`
+	Name               string         `json:"name"`
+	Description        sql.NullString `json:"description"`
 }
 
 func (q *Queries) CreateProvider(ctx context.Context, arg CreateProviderParams) (Provider, error) {
 	row := q.db.QueryRowContext(ctx, createProvider,
-		arg.LlmServiceID,
+		arg.LlmServiceConfigID,
 		arg.SystemPromptID,
 		arg.Name,
 		arg.Description,
@@ -33,7 +33,7 @@ func (q *Queries) CreateProvider(ctx context.Context, arg CreateProviderParams) 
 	var i Provider
 	err := row.Scan(
 		&i.ID,
-		&i.LlmServiceID,
+		&i.LlmServiceConfigID,
 		&i.SystemPromptID,
 		&i.Name,
 		&i.Description,
@@ -53,7 +53,7 @@ func (q *Queries) DeleteProvider(ctx context.Context, id int64) error {
 }
 
 const getAllProviders = `-- name: GetAllProviders :many
-SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at
 FROM providers
 ORDER BY name
 `
@@ -69,7 +69,7 @@ func (q *Queries) GetAllProviders(ctx context.Context) ([]Provider, error) {
 		var i Provider
 		if err := rows.Scan(
 			&i.ID,
-			&i.LlmServiceID,
+			&i.LlmServiceConfigID,
 			&i.SystemPromptID,
 			&i.Name,
 			&i.Description,
@@ -89,7 +89,7 @@ func (q *Queries) GetAllProviders(ctx context.Context) ([]Provider, error) {
 }
 
 const getProviderByID = `-- name: GetProviderByID :one
-SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at
 FROM providers
 WHERE id = ?
 `
@@ -99,7 +99,7 @@ func (q *Queries) GetProviderByID(ctx context.Context, id int64) (Provider, erro
 	var i Provider
 	err := row.Scan(
 		&i.ID,
-		&i.LlmServiceID,
+		&i.LlmServiceConfigID,
 		&i.SystemPromptID,
 		&i.Name,
 		&i.Description,
@@ -109,7 +109,7 @@ func (q *Queries) GetProviderByID(ctx context.Context, id int64) (Provider, erro
 }
 
 const getProviderByName = `-- name: GetProviderByName :one
-SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at
 FROM providers
 WHERE name = ?
 LIMIT 1
@@ -120,7 +120,7 @@ func (q *Queries) GetProviderByName(ctx context.Context, name string) (Provider,
 	var i Provider
 	err := row.Scan(
 		&i.ID,
-		&i.LlmServiceID,
+		&i.LlmServiceConfigID,
 		&i.SystemPromptID,
 		&i.Name,
 		&i.Description,
@@ -129,15 +129,15 @@ func (q *Queries) GetProviderByName(ctx context.Context, name string) (Provider,
 	return i, err
 }
 
-const getProvidersByLLMService = `-- name: GetProvidersByLLMService :many
-SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+const getProvidersByLLMServiceConfig = `-- name: GetProvidersByLLMServiceConfig :many
+SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at
 FROM providers
-WHERE llm_service_id = ?
+WHERE llm_service_config_id = ?
 ORDER BY name
 `
 
-func (q *Queries) GetProvidersByLLMService(ctx context.Context, llmServiceID int64) ([]Provider, error) {
-	rows, err := q.db.QueryContext(ctx, getProvidersByLLMService, llmServiceID)
+func (q *Queries) GetProvidersByLLMServiceConfig(ctx context.Context, llmServiceConfigID int64) ([]Provider, error) {
+	rows, err := q.db.QueryContext(ctx, getProvidersByLLMServiceConfig, llmServiceConfigID)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (q *Queries) GetProvidersByLLMService(ctx context.Context, llmServiceID int
 		var i Provider
 		if err := rows.Scan(
 			&i.ID,
-			&i.LlmServiceID,
+			&i.LlmServiceConfigID,
 			&i.SystemPromptID,
 			&i.Name,
 			&i.Description,
@@ -167,7 +167,7 @@ func (q *Queries) GetProvidersByLLMService(ctx context.Context, llmServiceID int
 }
 
 const getProvidersBySystemPrompt = `-- name: GetProvidersBySystemPrompt :many
-SELECT id, llm_service_id, system_prompt_id, name, description, created_at
+SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at
 FROM providers
 WHERE system_prompt_id = ?
 ORDER BY name
@@ -184,7 +184,7 @@ func (q *Queries) GetProvidersBySystemPrompt(ctx context.Context, systemPromptID
 		var i Provider
 		if err := rows.Scan(
 			&i.ID,
-			&i.LlmServiceID,
+			&i.LlmServiceConfigID,
 			&i.SystemPromptID,
 			&i.Name,
 			&i.Description,
@@ -205,21 +205,21 @@ func (q *Queries) GetProvidersBySystemPrompt(ctx context.Context, systemPromptID
 
 const updateProvider = `-- name: UpdateProvider :exec
 UPDATE providers 
-SET llm_service_id = ?, system_prompt_id = ?, name = ?, description = ? 
+SET llm_service_config_id = ?, system_prompt_id = ?, name = ?, description = ? 
 WHERE id = ?
 `
 
 type UpdateProviderParams struct {
-	LlmServiceID   int64         `json:"llm_service_id"`
-	SystemPromptID sql.NullInt64 `json:"system_prompt_id"`
-	Name           string        `json:"name"`
-	Description    string        `json:"description"`
-	ID             int64         `json:"id"`
+	LlmServiceConfigID int64          `json:"llm_service_config_id"`
+	SystemPromptID     sql.NullInt64  `json:"system_prompt_id"`
+	Name               string         `json:"name"`
+	Description        sql.NullString `json:"description"`
+	ID                 int64          `json:"id"`
 }
 
 func (q *Queries) UpdateProvider(ctx context.Context, arg UpdateProviderParams) error {
 	_, err := q.db.ExecContext(ctx, updateProvider,
-		arg.LlmServiceID,
+		arg.LlmServiceConfigID,
 		arg.SystemPromptID,
 		arg.Name,
 		arg.Description,

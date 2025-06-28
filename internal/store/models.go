@@ -32,15 +32,24 @@ type Conversation struct {
 }
 
 type LlmService struct {
+	ID           int64          `json:"id"`
+	Name         string         `json:"name"`
+	Description  sql.NullString `json:"description"`
+	Adapter      string         `json:"adapter"`
+	ApiKey       string         `json:"api_key"`
+	BaseUrl      string         `json:"base_url"`
+	Organization sql.NullString `json:"organization"`
+	CreatedAt    sql.NullTime   `json:"created_at"`
+}
+
+type LlmServiceConfig struct {
 	ID            int64          `json:"id"`
+	LlmServiceID  int64          `json:"llm_service_id"`
 	Name          string         `json:"name"`
 	Description   sql.NullString `json:"description"`
-	Adapter       string         `json:"adapter"`
-	ApiKey        string         `json:"api_key"`
-	BaseUrl       string         `json:"base_url"`
-	Organization  sql.NullString `json:"organization"`
 	Configuration string         `json:"configuration"`
 	CreatedAt     sql.NullTime   `json:"created_at"`
+	UpdatedAt     sql.NullTime   `json:"updated_at"`
 }
 
 type Message struct {
@@ -65,10 +74,10 @@ type Prompt struct {
 }
 
 type Provider struct {
-	ID             int64         `json:"id"`
-	LlmServiceID   int64         `json:"llm_service_id"`
-	SystemPromptID sql.NullInt64 `json:"system_prompt_id"`
-	Name           string        `json:"name"`
-	Description    string        `json:"description"`
-	CreatedAt      sql.NullTime  `json:"created_at"`
+	ID                 int64          `json:"id"`
+	LlmServiceConfigID int64          `json:"llm_service_config_id"`
+	SystemPromptID     sql.NullInt64  `json:"system_prompt_id"`
+	Name               string         `json:"name"`
+	Description        sql.NullString `json:"description"`
+	CreatedAt          sql.NullTime   `json:"created_at"`
 }

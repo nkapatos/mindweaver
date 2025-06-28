@@ -24,38 +24,17 @@ func NewLLMService(store store.Querier) *LLMService {
 	}
 }
 
-// CreateLLMService creates a new LLM service with validated configuration
-func (s *LLMService) CreateLLMService(ctx context.Context, name, description, adapter, apiKey, baseURL, organization string, config *LLMConfiguration) (*store.LlmService, error) {
+// CreateLLMService creates a new LLM service (connection info only)
+func (s *LLMService) CreateLLMService(ctx context.Context, name, description, adapter, apiKey, baseURL, organization string) (*store.LlmService, error) {
 	s.logger.Info("Creating LLM service", "name", name, "adapter", adapter)
 
-	// Validate configuration
-	if config == nil {
-		return nil, fmt.Errorf("configuration is required")
-	}
-
-	if err := config.Validate(); err != nil {
-		s.logger.Error("Invalid LLM configuration", "error", err, "name", name)
-		return nil, fmt.Errorf("invalid configuration: %w", err)
-	}
-
-	// Convert configuration to JSON for storage
-	configJSON, err := config.ToJSON()
-	if err != nil {
-		s.logger.Error("Failed to serialize configuration", "error", err, "name", name)
-		return nil, fmt.Errorf("failed to serialize configuration: %w", err)
-	}
-
-	// Log configuration (without sensitive data)
-	config.LogConfiguration(s.logger)
-
 	params := store.CreateLLMServiceParams{
-		Name:          name,
-		Description:   sql.NullString{String: description, Valid: description != ""},
-		Adapter:       adapter,
-		ApiKey:        apiKey,
-		BaseUrl:       baseURL,
-		Organization:  sql.NullString{String: organization, Valid: organization != ""},
-		Configuration: configJSON,
+		Name:         name,
+		Description:  sql.NullString{String: description, Valid: description != ""},
+		Adapter:      adapter,
+		ApiKey:       apiKey,
+		BaseUrl:      baseURL,
+		Organization: sql.NullString{String: organization, Valid: organization != ""},
 	}
 
 	llmService, err := s.store.CreateLLMService(ctx, params)
@@ -68,53 +47,120 @@ func (s *LLMService) CreateLLMService(ctx context.Context, name, description, ad
 	return &llmService, nil
 }
 
-// CreateLLMServiceWithDefaults creates a new LLM service with default configuration
-func (s *LLMService) CreateLLMServiceWithDefaults(ctx context.Context, name, description, adapter, apiKey, baseURL, organization, model string) (*store.LlmService, error) {
-	config := DefaultConfiguration(model)
-	return s.CreateLLMService(ctx, name, description, adapter, apiKey, baseURL, organization, config)
+// CreateLLMServiceConfig creates a new configuration for an LLM service
+func (s *LLMService) CreateLLMServiceConfig(ctx context.Context, llmServiceID int64, name, description string, config *LLMConfiguration) (*store.LlmServiceConfig, error) {
+	s.logger.Info("Creating LLM service config", "service_id", llmServiceID, "name", name)
+
+	// Validate configuration
+	if config == nil {
+		return nil, fmt.Errorf("configuration is required")
+	}
+
+	if err := config.Validate(); err != nil {
+		s.logger.Error("Invalid LLM configuration", "error", err, "service_id", llmServiceID)
+		return nil, fmt.Errorf("invalid configuration: %w", err)
+	}
+
+	// Convert configuration to JSON for storage
+	configJSON, err := config.ToJSON()
+	if err != nil {
+		s.logger.Error("Failed to serialize configuration", "error", err, "service_id", llmServiceID)
+		return nil, fmt.Errorf("failed to serialize configuration: %w", err)
+	}
+
+	// Log configuration (without sensitive data)
+	config.LogConfiguration(s.logger)
+
+	params := store.CreateLLMServiceConfigParams{
+		LlmServiceID:  llmServiceID,
+		Name:          name,
+		Description:   sql.NullString{String: description, Valid: description != ""},
+		Configuration: configJSON,
+	}
+
+	llmServiceConfig, err := s.store.CreateLLMServiceConfig(ctx, params)
+	if err != nil {
+		s.logger.Error("Failed to create LLM service config", "error", err, "service_id", llmServiceID)
+		return nil, fmt.Errorf("failed to create LLM service config: %w", err)
+	}
+
+	s.logger.Info("LLM service config created successfully", "id", llmServiceConfig.ID, "name", name)
+	return &llmServiceConfig, nil
 }
 
-// GetLLMServiceByID retrieves an LLM service by ID with parsed configuration
-func (s *LLMService) GetLLMServiceByID(ctx context.Context, id int64) (*store.LlmService, *LLMConfiguration, error) {
+// CreateLLMServiceWithConfig creates a new LLM service with a default configuration
+func (s *LLMService) CreateLLMServiceWithConfig(ctx context.Context, name, description, adapter, apiKey, baseURL, organization, configName, configDescription, model string) (*store.LlmService, *store.LlmServiceConfig, error) {
+	// First create the LLM service
+	llmService, err := s.CreateLLMService(ctx, name, description, adapter, apiKey, baseURL, organization)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Create default configuration
+	config := DefaultConfiguration(model)
+
+	// Then create the configuration
+	llmServiceConfig, err := s.CreateLLMServiceConfig(ctx, llmService.ID, configName, configDescription, config)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return llmService, llmServiceConfig, nil
+}
+
+// GetLLMServiceByID retrieves an LLM service by ID
+func (s *LLMService) GetLLMServiceByID(ctx context.Context, id int64) (*store.LlmService, error) {
 	s.logger.Info("Getting LLM service by ID", "id", id)
 
 	llmService, err := s.store.GetLLMServiceByID(ctx, id)
 	if err != nil {
 		s.logger.Error("Failed to get LLM service by ID", "error", err, "id", id)
-		return nil, nil, fmt.Errorf("failed to get LLM service: %w", err)
+		return nil, fmt.Errorf("failed to get LLM service: %w", err)
 	}
 
-	// Parse configuration
-	config, err := FromJSON(llmService.Configuration)
-	if err != nil {
-		s.logger.Error("Failed to parse LLM service configuration", "error", err, "id", id)
-		return &llmService, nil, fmt.Errorf("failed to parse configuration: %w", err)
-	}
-
-	return &llmService, config, nil
+	return &llmService, nil
 }
 
-// GetLLMServiceByName retrieves an LLM service by name with parsed configuration
-func (s *LLMService) GetLLMServiceByName(ctx context.Context, name string) (*store.LlmService, *LLMConfiguration, error) {
+// GetLLMServiceByName retrieves an LLM service by name
+func (s *LLMService) GetLLMServiceByName(ctx context.Context, name string) (*store.LlmService, error) {
 	s.logger.Info("Getting LLM service by name", "name", name)
 
 	llmService, err := s.store.GetLLMServiceByName(ctx, name)
 	if err != nil {
 		s.logger.Error("Failed to get LLM service by name", "error", err, "name", name)
-		return nil, nil, fmt.Errorf("failed to get LLM service: %w", err)
+		return nil, fmt.Errorf("failed to get LLM service: %w", err)
 	}
 
-	// Parse configuration
-	config, err := FromJSON(llmService.Configuration)
-	if err != nil {
-		s.logger.Error("Failed to parse LLM service configuration", "error", err, "name", name)
-		return &llmService, nil, fmt.Errorf("failed to parse configuration: %w", err)
-	}
-
-	return &llmService, config, nil
+	return &llmService, nil
 }
 
-// GetAllLLMServices retrieves all LLM services with parsed configurations
+// GetLLMServiceConfigsByServiceID retrieves all configurations for an LLM service
+func (s *LLMService) GetLLMServiceConfigsByServiceID(ctx context.Context, llmServiceID int64) ([]store.LlmServiceConfig, error) {
+	s.logger.Info("Getting LLM service configs by service ID", "service_id", llmServiceID)
+
+	configs, err := s.store.GetLLMServiceConfigsByServiceID(ctx, llmServiceID)
+	if err != nil {
+		s.logger.Error("Failed to get LLM service configs", "error", err, "service_id", llmServiceID)
+		return nil, fmt.Errorf("failed to get LLM service configs: %w", err)
+	}
+
+	return configs, nil
+}
+
+// GetLLMServiceConfigByID retrieves a specific configuration by ID
+func (s *LLMService) GetLLMServiceConfigByID(ctx context.Context, id int64) (*store.LlmServiceConfig, error) {
+	s.logger.Info("Getting LLM service config by ID", "id", id)
+
+	config, err := s.store.GetLLMServiceConfigByID(ctx, id)
+	if err != nil {
+		s.logger.Error("Failed to get LLM service config by ID", "error", err, "id", id)
+		return nil, fmt.Errorf("failed to get LLM service config: %w", err)
+	}
+
+	return &config, nil
+}
+
+// GetAllLLMServices retrieves all LLM services
 func (s *LLMService) GetAllLLMServices(ctx context.Context) ([]store.LlmService, error) {
 	s.logger.Info("Getting all LLM services")
 
@@ -128,9 +174,33 @@ func (s *LLMService) GetAllLLMServices(ctx context.Context) ([]store.LlmService,
 	return llmServices, nil
 }
 
-// UpdateLLMService updates an existing LLM service with validated configuration
-func (s *LLMService) UpdateLLMService(ctx context.Context, id int64, name, description, adapter, apiKey, baseURL, organization string, config *LLMConfiguration) error {
+// UpdateLLMService updates an existing LLM service
+func (s *LLMService) UpdateLLMService(ctx context.Context, id int64, name, description, adapter, apiKey, baseURL, organization string) error {
 	s.logger.Info("Updating LLM service", "id", id, "name", name)
+
+	params := store.UpdateLLMServiceParams{
+		ID:           id,
+		Name:         name,
+		Description:  sql.NullString{String: description, Valid: description != ""},
+		Adapter:      adapter,
+		ApiKey:       apiKey,
+		BaseUrl:      baseURL,
+		Organization: sql.NullString{String: organization, Valid: organization != ""},
+	}
+
+	err := s.store.UpdateLLMService(ctx, params)
+	if err != nil {
+		s.logger.Error("Failed to update LLM service", "error", err, "id", id)
+		return fmt.Errorf("failed to update LLM service: %w", err)
+	}
+
+	s.logger.Info("LLM service updated successfully", "id", id)
+	return nil
+}
+
+// UpdateLLMServiceConfig updates an existing LLM service configuration
+func (s *LLMService) UpdateLLMServiceConfig(ctx context.Context, id int64, name, description string, config *LLMConfiguration) error {
+	s.logger.Info("Updating LLM service config", "id", id, "name", name)
 
 	// Validate configuration
 	if config == nil {
@@ -152,28 +222,24 @@ func (s *LLMService) UpdateLLMService(ctx context.Context, id int64, name, descr
 	// Log configuration (without sensitive data)
 	config.LogConfiguration(s.logger)
 
-	params := store.UpdateLLMServiceParams{
+	params := store.UpdateLLMServiceConfigParams{
 		ID:            id,
 		Name:          name,
 		Description:   sql.NullString{String: description, Valid: description != ""},
-		Adapter:       adapter,
-		ApiKey:        apiKey,
-		BaseUrl:       baseURL,
-		Organization:  sql.NullString{String: organization, Valid: organization != ""},
 		Configuration: configJSON,
 	}
 
-	err = s.store.UpdateLLMService(ctx, params)
+	err = s.store.UpdateLLMServiceConfig(ctx, params)
 	if err != nil {
-		s.logger.Error("Failed to update LLM service", "error", err, "id", id)
-		return fmt.Errorf("failed to update LLM service: %w", err)
+		s.logger.Error("Failed to update LLM service config", "error", err, "id", id)
+		return fmt.Errorf("failed to update LLM service config: %w", err)
 	}
 
-	s.logger.Info("LLM service updated successfully", "id", id)
+	s.logger.Info("LLM service config updated successfully", "id", id)
 	return nil
 }
 
-// DeleteLLMService deletes an LLM service
+// DeleteLLMService deletes an LLM service (and all its configurations via CASCADE)
 func (s *LLMService) DeleteLLMService(ctx context.Context, id int64) error {
 	s.logger.Info("Deleting LLM service", "id", id)
 
@@ -184,6 +250,20 @@ func (s *LLMService) DeleteLLMService(ctx context.Context, id int64) error {
 	}
 
 	s.logger.Info("LLM service deleted successfully", "id", id)
+	return nil
+}
+
+// DeleteLLMServiceConfig deletes a specific LLM service configuration
+func (s *LLMService) DeleteLLMServiceConfig(ctx context.Context, id int64) error {
+	s.logger.Info("Deleting LLM service config", "id", id)
+
+	err := s.store.DeleteLLMServiceConfig(ctx, id)
+	if err != nil {
+		s.logger.Error("Failed to delete LLM service config", "error", err, "id", id)
+		return fmt.Errorf("failed to delete LLM service config: %w", err)
+	}
+
+	s.logger.Info("LLM service config deleted successfully", "id", id)
 	return nil
 }
 
@@ -198,64 +278,20 @@ func (s *LLMService) GetAvailableModels(ctx context.Context, adapter, apiKey, ba
 		APIKey:  apiKey,
 	}
 
-	// Create adapter instance
+	// Get adapter
 	adapterInstance, err := adapters.NewAdapter(config)
 	if err != nil {
-		s.logger.Error("Failed to create adapter for model discovery", "adapter", adapter, "error", err)
-		return nil, fmt.Errorf("failed to create adapter: %w", err)
+		s.logger.Error("Failed to get adapter", "error", err, "adapter", adapter)
+		return nil, fmt.Errorf("failed to get adapter: %w", err)
 	}
 
-	// Fetch models from the adapter
+	// List models
 	models, err := adapterInstance.ListModels(ctx, apiKey, baseURL)
 	if err != nil {
-		s.logger.Error("Failed to fetch models from adapter", "adapter", adapter, "error", err)
-		return nil, fmt.Errorf("failed to fetch models: %w", err)
+		s.logger.Error("Failed to list models", "error", err, "adapter", adapter)
+		return nil, fmt.Errorf("failed to list models: %w", err)
 	}
 
-	s.logger.Info("Successfully fetched models", "adapter", adapter, "count", len(models))
+	s.logger.Info("Retrieved models", "adapter", adapter, "count", len(models))
 	return models, nil
-}
-
-// GetLLMServiceWithProviders retrieves an LLM service along with all providers that use it
-//
-// FUTURE OPTIMIZATION: If this becomes a performance bottleneck, consider:
-// 1. SQL JOIN approach: Single query with LEFT JOIN to providers table
-// 2. Stored procedure: Complex LLM service loading with provider counts/relationships
-// 3. Caching: Cache LLM service configurations and provider relationships
-// 4. Batch loading: Load multiple LLM services with their providers in one operation
-// 5. Aggregation: Include provider counts and usage statistics in the query
-func (s *LLMService) GetLLMServiceWithProviders(ctx context.Context, llmServiceID int64) (*store.LlmService, *LLMConfiguration, []store.Provider, error) {
-	s.logger.Debug("Getting LLM service with providers", "llm_service_id", llmServiceID)
-
-	// Get the LLM service
-	llmService, err := s.store.GetLLMServiceByID(ctx, llmServiceID)
-	if err != nil {
-		s.logger.Error("Failed to get LLM service", "llm_service_id", llmServiceID, "error", err)
-		return nil, nil, nil, err
-	}
-
-	// Parse configuration
-	config, err := FromJSON(llmService.Configuration)
-	if err != nil {
-		s.logger.Error("Failed to parse LLM service configuration", "error", err, "llm_service_id", llmServiceID)
-		return &llmService, nil, nil, fmt.Errorf("failed to parse configuration: %w", err)
-	}
-
-	// Get all providers and filter by LLM service ID
-	allProviders, err := s.store.GetAllProviders(ctx)
-	if err != nil {
-		s.logger.Error("Failed to get all providers for LLM service filtering", "llm_service_id", llmServiceID, "error", err)
-		return &llmService, config, nil, err
-	}
-
-	// Filter providers that use this LLM service
-	var filteredProviders []store.Provider
-	for _, provider := range allProviders {
-		if provider.LlmServiceID == llmServiceID {
-			filteredProviders = append(filteredProviders, provider)
-		}
-	}
-
-	s.logger.Debug("LLM service with providers retrieved successfully", "llm_service_id", llmServiceID, "provider_count", len(filteredProviders))
-	return &llmService, config, filteredProviders, nil
 }

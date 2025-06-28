@@ -35,17 +35,17 @@ func NewProviderService(providerStore store.Querier) *ProviderService {
 }
 
 // CreateProvider creates a new provider
-func (s *ProviderService) CreateProvider(ctx context.Context, name, description string, llmServiceID int64, systemPromptID *int64) (*store.Provider, error) {
+func (s *ProviderService) CreateProvider(ctx context.Context, name, description string, llmServiceConfigID int64, systemPromptID *int64) (*store.Provider, error) {
 	s.logger.Info("Creating new provider",
 		"name", name,
 		"description", description,
-		"llm_service_id", llmServiceID,
+		"llm_service_config_id", llmServiceConfigID,
 		"system_prompt_id", systemPromptID)
 
 	params := store.CreateProviderParams{
-		Name:         name,
-		Description:  description,
-		LlmServiceID: llmServiceID,
+		Name:               name,
+		Description:        sql.NullString{String: description, Valid: description != ""},
+		LlmServiceConfigID: llmServiceConfigID,
 	}
 
 	// Handle optional system_prompt_id
@@ -61,7 +61,7 @@ func (s *ProviderService) CreateProvider(ctx context.Context, name, description 
 		s.logger.Error("Failed to create provider",
 			"name", name,
 			"description", description,
-			"llm_service_id", llmServiceID,
+			"llm_service_config_id", llmServiceConfigID,
 			"system_prompt_id", systemPromptID,
 			"error", err)
 		return nil, err
@@ -113,65 +113,88 @@ func (s *ProviderService) GetAllProviders(ctx context.Context) ([]store.Provider
 	return providers, nil
 }
 
-// GetProvidersByLLMService retrieves all providers for a specific LLM service
-func (s *ProviderService) GetProvidersByLLMService(ctx context.Context, llmServiceID int64) ([]store.Provider, error) {
-	s.logger.Debug("Getting providers by LLM service", "llm_service_id", llmServiceID)
+// GetProvidersByLLMServiceConfig retrieves all providers for a specific LLM service configuration
+func (s *ProviderService) GetProvidersByLLMServiceConfig(ctx context.Context, llmServiceConfigID int64) ([]store.Provider, error) {
+	s.logger.Debug("Getting providers by LLM service config", "llm_service_config_id", llmServiceConfigID)
 
-	providers, err := s.providerStore.GetProvidersByLLMService(ctx, llmServiceID)
+	providers, err := s.providerStore.GetProvidersByLLMServiceConfig(ctx, llmServiceConfigID)
 	if err != nil {
-		s.logger.Error("Failed to get providers by LLM service", "llm_service_id", llmServiceID, "error", err)
+		s.logger.Error("Failed to get providers by LLM service config", "llm_service_config_id", llmServiceConfigID, "error", err)
 		return nil, err
 	}
 
-	s.logger.Debug("Providers retrieved successfully", "llm_service_id", llmServiceID, "count", len(providers))
+	s.logger.Debug("Providers retrieved successfully", "llm_service_config_id", llmServiceConfigID, "count", len(providers))
 	return providers, nil
+}
+
+// GetProvidersByLLMService retrieves all providers that use configurations from a specific LLM service
+func (s *ProviderService) GetProvidersByLLMService(ctx context.Context, llmServiceID int64) ([]store.Provider, error) {
+	s.logger.Debug("Getting providers by LLM service", "llm_service_id", llmServiceID)
+
+	// Get all providers
+	allProviders, err := s.providerStore.GetAllProviders(ctx)
+	if err != nil {
+		s.logger.Error("Failed to get all providers for LLM service filtering", "llm_service_id", llmServiceID, "error", err)
+		return nil, err
+	}
+
+	// Filter providers that use configurations from this LLM service
+	var filteredProviders []store.Provider
+	for _, provider := range allProviders {
+		// Get the LLM service config for this provider
+		llmServiceConfig, err := s.providerStore.GetLLMServiceConfigByID(ctx, provider.LlmServiceConfigID)
+		if err != nil {
+			s.logger.Error("Failed to get LLM service config for provider", "provider_id", provider.ID, "llm_service_config_id", provider.LlmServiceConfigID, "error", err)
+			continue
+		}
+
+		// Check if this config belongs to the target LLM service
+		if llmServiceConfig.LlmServiceID == llmServiceID {
+			filteredProviders = append(filteredProviders, provider)
+		}
+	}
+
+	s.logger.Debug("Providers retrieved successfully", "llm_service_id", llmServiceID, "count", len(filteredProviders))
+	return filteredProviders, nil
 }
 
 // GetProvidersBySystemPrompt retrieves all providers that use a specific system prompt
 func (s *ProviderService) GetProvidersBySystemPrompt(ctx context.Context, systemPromptID int64) ([]store.Provider, error) {
 	s.logger.Debug("Getting providers by system prompt", "system_prompt_id", systemPromptID)
 
-	// Get all providers and filter by system prompt ID
-	allProviders, err := s.providerStore.GetAllProviders(ctx)
+	providers, err := s.providerStore.GetProvidersBySystemPrompt(ctx, sql.NullInt64{Int64: systemPromptID, Valid: true})
 	if err != nil {
-		s.logger.Error("Failed to get all providers for system prompt filtering", "system_prompt_id", systemPromptID, "error", err)
+		s.logger.Error("Failed to get providers by system prompt", "system_prompt_id", systemPromptID, "error", err)
 		return nil, err
 	}
 
-	// Filter providers that use the specified system prompt
-	var filteredProviders []store.Provider
-	for _, provider := range allProviders {
-		if provider.SystemPromptID.Valid && provider.SystemPromptID.Int64 == systemPromptID {
-			filteredProviders = append(filteredProviders, provider)
-		}
-	}
-
-	s.logger.Debug("Providers retrieved successfully", "system_prompt_id", systemPromptID, "count", len(filteredProviders))
-	return filteredProviders, nil
+	s.logger.Debug("Providers retrieved successfully", "system_prompt_id", systemPromptID, "count", len(providers))
+	return providers, nil
 }
 
-// GetProviderWithRelations retrieves a provider along with its related LLM service and system prompt
-//
-// FUTURE OPTIMIZATION: If this becomes a performance bottleneck, consider:
-// 1. SQL JOIN approach: Single query with LEFT JOINs to llm_services and prompts
-// 2. Stored procedure: Complex business logic in database for frequently accessed data
-// 3. Caching: Cache provider relationships if they're accessed frequently
-// 4. Batch loading: Load multiple providers with relations in one operation
-func (s *ProviderService) GetProviderWithRelations(ctx context.Context, providerID int64) (*store.Provider, *store.LlmService, *store.Prompt, error) {
+// GetProviderWithRelations retrieves a provider along with its related LLM service config, LLM service, and system prompt
+func (s *ProviderService) GetProviderWithRelations(ctx context.Context, providerID int64) (*store.Provider, *store.LlmServiceConfig, *store.LlmService, *store.Prompt, error) {
 	s.logger.Debug("Getting provider with relations", "provider_id", providerID)
 
 	// Get the provider
 	provider, err := s.providerStore.GetProviderByID(ctx, providerID)
 	if err != nil {
 		s.logger.Error("Failed to get provider", "provider_id", providerID, "error", err)
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
+	}
+
+	// Get the related LLM service config
+	llmServiceConfig, err := s.providerStore.GetLLMServiceConfigByID(ctx, provider.LlmServiceConfigID)
+	if err != nil {
+		s.logger.Error("Failed to get LLM service config for provider", "provider_id", providerID, "llm_service_config_id", provider.LlmServiceConfigID, "error", err)
+		return &provider, nil, nil, nil, err
 	}
 
 	// Get the related LLM service
-	llmService, err := s.providerStore.GetLLMServiceByID(ctx, provider.LlmServiceID)
+	llmService, err := s.providerStore.GetLLMServiceByID(ctx, llmServiceConfig.LlmServiceID)
 	if err != nil {
-		s.logger.Error("Failed to get LLM service for provider", "provider_id", providerID, "llm_service_id", provider.LlmServiceID, "error", err)
-		return &provider, nil, nil, err
+		s.logger.Error("Failed to get LLM service for provider", "provider_id", providerID, "llm_service_id", llmServiceConfig.LlmServiceID, "error", err)
+		return &provider, &llmServiceConfig, nil, nil, err
 	}
 
 	// Get the related system prompt (if any)
@@ -187,23 +210,23 @@ func (s *ProviderService) GetProviderWithRelations(ctx context.Context, provider
 	}
 
 	s.logger.Debug("Provider with relations retrieved successfully", "provider_id", providerID)
-	return &provider, &llmService, systemPrompt, nil
+	return &provider, &llmServiceConfig, &llmService, systemPrompt, nil
 }
 
 // UpdateProvider updates a provider by its ID
-func (s *ProviderService) UpdateProvider(ctx context.Context, id int64, name, description string, llmServiceID int64, systemPromptID *int64) error {
+func (s *ProviderService) UpdateProvider(ctx context.Context, id int64, name, description string, llmServiceConfigID int64, systemPromptID *int64) error {
 	s.logger.Info("Updating provider",
 		"id", id,
 		"name", name,
 		"description", description,
-		"llm_service_id", llmServiceID,
+		"llm_service_config_id", llmServiceConfigID,
 		"system_prompt_id", systemPromptID)
 
 	params := store.UpdateProviderParams{
-		ID:           id,
-		Name:         name,
-		Description:  description,
-		LlmServiceID: llmServiceID,
+		ID:                 id,
+		Name:               name,
+		Description:        sql.NullString{String: description, Valid: description != ""},
+		LlmServiceConfigID: llmServiceConfigID,
 	}
 
 	// Handle optional system_prompt_id
@@ -212,18 +235,15 @@ func (s *ProviderService) UpdateProvider(ctx context.Context, id int64, name, de
 			Int64: *systemPromptID,
 			Valid: true,
 		}
-	} else {
-		params.SystemPromptID = sql.NullInt64{
-			Valid: false,
-		}
 	}
 
-	if err := s.providerStore.UpdateProvider(ctx, params); err != nil {
+	err := s.providerStore.UpdateProvider(ctx, params)
+	if err != nil {
 		s.logger.Error("Failed to update provider",
 			"id", id,
 			"name", name,
 			"description", description,
-			"llm_service_id", llmServiceID,
+			"llm_service_config_id", llmServiceConfigID,
 			"system_prompt_id", systemPromptID,
 			"error", err)
 		return err
@@ -237,7 +257,8 @@ func (s *ProviderService) UpdateProvider(ctx context.Context, id int64, name, de
 func (s *ProviderService) DeleteProvider(ctx context.Context, id int64) error {
 	s.logger.Info("Deleting provider", "id", id)
 
-	if err := s.providerStore.DeleteProvider(ctx, id); err != nil {
+	err := s.providerStore.DeleteProvider(ctx, id)
+	if err != nil {
 		s.logger.Error("Failed to delete provider", "id", id, "error", err)
 		return err
 	}
@@ -246,84 +267,70 @@ func (s *ProviderService) DeleteProvider(ctx context.Context, id int64) error {
 	return nil
 }
 
-// GetAllProvidersWithRelations retrieves all providers along with their related LLM services and system prompts
-// This is optimized for UI display where we need to show meaningful names instead of IDs
+// GetAllProvidersWithRelations retrieves all providers with their related LLM service configs, LLM services, and system prompts
 func (s *ProviderService) GetAllProvidersWithRelations(ctx context.Context) ([]struct {
-	Provider     store.Provider
-	LLMService   store.LlmService
-	SystemPrompt *store.Prompt
+	Provider         store.Provider
+	LLMServiceConfig store.LlmServiceConfig
+	LLMService       store.LlmService
+	SystemPrompt     *store.Prompt
 }, error) {
 	s.logger.Debug("Getting all providers with relations")
 
 	// Get all providers
 	providers, err := s.providerStore.GetAllProviders(ctx)
 	if err != nil {
-		s.logger.Error("Failed to get all providers for relations", "error", err)
+		s.logger.Error("Failed to get all providers", "error", err)
 		return nil, err
 	}
 
-	// Get all LLM services for efficient lookup
-	allLLMServices, err := s.providerStore.GetAllLLMServices(ctx)
-	if err != nil {
-		s.logger.Error("Failed to get all LLM services for provider relations", "error", err)
-		return nil, err
-	}
-
-	// Create a map for efficient LLM service lookup
-	llmServiceMap := make(map[int64]store.LlmService)
-	for _, service := range allLLMServices {
-		llmServiceMap[service.ID] = service
-	}
-
-	// Get all system prompts for efficient lookup
-	allPrompts, err := s.providerStore.GetAllPrompts(ctx)
-	if err != nil {
-		s.logger.Error("Failed to get all prompts for provider relations", "error", err)
-		return nil, err
-	}
-
-	// Create a map for efficient prompt lookup
-	promptMap := make(map[int64]store.Prompt)
-	for _, prompt := range allPrompts {
-		promptMap[prompt.ID] = prompt
-	}
-
-	// Build the result with relations
-	var result []struct {
-		Provider     store.Provider
-		LLMService   store.LlmService
-		SystemPrompt *store.Prompt
+	// Load relations for each provider
+	var providersWithRelations []struct {
+		Provider         store.Provider
+		LLMServiceConfig store.LlmServiceConfig
+		LLMService       store.LlmService
+		SystemPrompt     *store.Prompt
 	}
 
 	for _, provider := range providers {
-		// Get the LLM service
-		llmService, exists := llmServiceMap[provider.LlmServiceID]
-		if !exists {
-			s.logger.Warn("LLM service not found for provider", "provider_id", provider.ID, "llm_service_id", provider.LlmServiceID)
+		// Get LLM service config
+		llmServiceConfig, err := s.providerStore.GetLLMServiceConfigByID(ctx, provider.LlmServiceConfigID)
+		if err != nil {
+			s.logger.Error("Failed to get LLM service config for provider", "provider_id", provider.ID, "llm_service_config_id", provider.LlmServiceConfigID, "error", err)
 			continue
 		}
 
-		// Get the system prompt (if any)
+		// Get LLM service
+		llmService, err := s.providerStore.GetLLMServiceByID(ctx, llmServiceConfig.LlmServiceID)
+		if err != nil {
+			s.logger.Error("Failed to get LLM service for provider", "provider_id", provider.ID, "llm_service_id", llmServiceConfig.LlmServiceID, "error", err)
+			continue
+		}
+
+		// Get system prompt (if any)
 		var systemPrompt *store.Prompt
 		if provider.SystemPromptID.Valid {
-			if prompt, exists := promptMap[provider.SystemPromptID.Int64]; exists {
-				systemPrompt = &prompt
+			prompt, err := s.providerStore.GetPromptById(ctx, provider.SystemPromptID.Int64)
+			if err != nil {
+				s.logger.Error("Failed to get system prompt for provider", "provider_id", provider.ID, "system_prompt_id", provider.SystemPromptID.Int64, "error", err)
+				// Continue without system prompt
 			} else {
-				s.logger.Warn("System prompt not found for provider", "provider_id", provider.ID, "system_prompt_id", provider.SystemPromptID.Int64)
+				systemPrompt = &prompt
 			}
 		}
 
-		result = append(result, struct {
-			Provider     store.Provider
-			LLMService   store.LlmService
-			SystemPrompt *store.Prompt
+		providersWithRelations = append(providersWithRelations, struct {
+			Provider         store.Provider
+			LLMServiceConfig store.LlmServiceConfig
+			LLMService       store.LlmService
+			SystemPrompt     *store.Prompt
 		}{
-			Provider:     provider,
-			LLMService:   llmService,
-			SystemPrompt: systemPrompt,
+			Provider:         provider,
+			LLMServiceConfig: llmServiceConfig,
+			LLMService:       llmService,
+			SystemPrompt:     systemPrompt,
 		})
 	}
 
-	s.logger.Debug("All providers with relations retrieved successfully", "count", len(result))
-	return result, nil
+	s.logger.Debug("All providers with relations retrieved successfully", "count", len(providersWithRelations))
+	return providersWithRelations, nil
 }
