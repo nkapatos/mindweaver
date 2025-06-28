@@ -25,6 +25,11 @@ var WebRoutes = []RouteInfo{
 		Text: "LLM Services",
 	},
 	{
+		Href: "/llm-service-configs",
+		Icon: "settings-2",
+		Text: "Configurations",
+	},
+	{
 		Href: "/providers",
 		Icon: "server",
 		Text: "Providers",
