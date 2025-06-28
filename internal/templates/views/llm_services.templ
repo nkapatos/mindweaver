@@ -207,19 +207,21 @@ templ LLMServiceFormFields(editingService *store.LlmService, adapters []string) 
 		/>
 	</div>
 	<div>
-		<label class="label" for="configuration">
-			<span class="label-text font-medium">Configuration (JSON)</span>
+		<label class="label" for="model">
+			<span class="label-text font-medium">Model</span>
 		</label>
-		<textarea
-			id="configuration"
-			name="configuration"
-			class="textarea textarea-bordered w-full h-24"
-			placeholder='{"temperature": 0.7, "max_tokens": 1000}'
+		<input
+			type="text"
+			id="model"
+			name="model"
+			class="input input-bordered w-full"
+			placeholder="e.g., gpt-4, claude-3-opus, llama-3.1-8b"
 			required
-		>
-		if editingService != nil {
-			{editingService.Configuration}
-		}
-		</textarea>
+		/>
+		<label class="label">
+			<span class="label-text-alt text-base-content/60">
+				Default configuration will be applied (temperature: 0.7, max_tokens: 1000)
+			</span>
+		</label>
 	</div>
 } 

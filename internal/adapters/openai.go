@@ -49,6 +49,39 @@ func NewOpenAIAdapter(config AdapterConfig) (LLMProvider, error) {
 	}, nil
 }
 
+// ListModels fetches available models from OpenAI API
+func (a *OpenAIAdapter) ListModels(ctx context.Context, apiKey, baseURL string) ([]Model, error) {
+	// Create a temporary client with the provided credentials for model discovery
+	var opts []option.RequestOption
+	opts = append(opts, option.WithAPIKey(apiKey))
+	if baseURL != "" {
+		opts = append(opts, option.WithBaseURL(baseURL))
+	}
+
+	tempClient := openai.NewClient(opts...)
+
+	// Fetch models from OpenAI API
+	resp, err := tempClient.Models.List(ctx, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch models from OpenAI: %w", err)
+	}
+
+	// Convert OpenAI models to our unified Model struct
+	var models []Model
+	for _, openaiModel := range resp.Data {
+		model := Model{
+			ID:       openaiModel.ID,
+			Name:     openaiModel.ID, // Use ID as name for consistency
+			Provider: a.GetName(),
+			Created:  openaiModel.Created,
+			OwnedBy:  openaiModel.OwnedBy,
+		}
+		models = append(models, model)
+	}
+
+	return models, nil
+}
+
 func (a *OpenAIAdapter) Generate(ctx context.Context, prompt string, options GenerateOptions) (*GenerateResponse, error) {
 	// Set default model if not provided
 	model := options.Model

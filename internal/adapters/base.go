@@ -5,6 +5,16 @@ import (
 	"fmt"
 )
 
+// Model represents a unified model structure across all providers
+type Model struct {
+	ID          string `json:"id"`          // Model identifier (e.g., "gpt-4", "claude-3-opus")
+	Name        string `json:"name"`        // Human-readable name
+	Provider    string `json:"provider"`    // Provider name (e.g., "openai", "anthropic")
+	Description string `json:"description"` // Model description
+	Created     int64  `json:"created"`     // Unix timestamp when model was created
+	OwnedBy     string `json:"owned_by"`    // Organization that owns the model
+}
+
 // LLMProvider defines the core interface that all LLM adapters must implement
 type LLMProvider interface {
 	// For one shot prompts/responses independently of the model/provider and the media type, i.e. text, image, audio, video, etc.
@@ -15,6 +25,9 @@ type LLMProvider interface {
 
 	// GetName returns the provider's name
 	GetName() string
+
+	// ListModels returns available models for this provider
+	ListModels(ctx context.Context, apiKey, baseURL string) ([]Model, error)
 }
 
 // GenerateOptions represents common options for text generation
@@ -61,6 +74,12 @@ type BaseAdapter struct {
 // GetName implements LLMProvider.GetName
 func (b *BaseAdapter) GetName() string {
 	return b.Name
+}
+
+// ListModels provides a default implementation that returns an empty list
+// Individual adapters should override this method
+func (b *BaseAdapter) ListModels(ctx context.Context, apiKey, baseURL string) ([]Model, error) {
+	return []Model{}, nil
 }
 
 // AdapterConfig represents common configuration for all adapters
