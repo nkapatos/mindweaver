@@ -43,7 +43,7 @@ func AppLayout(title, description, activePath string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"drawer lg:drawer-open h-screen\"><input id=\"main-drawer\" type=\"checkbox\" class=\"drawer-toggle\"><!-- Main content area --><div class=\"drawer-content flex flex-col h-full\"><!-- Header - locked at top -->")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"drawer lg:drawer-open\"><input id=\"main-drawer\" type=\"checkbox\" class=\"drawer-toggle\"><!-- Main content area --><div class=\"drawer-content flex flex-col h-full\"><!-- Header - locked at top -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

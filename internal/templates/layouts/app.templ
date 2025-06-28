@@ -4,7 +4,7 @@ import "github.com/nkapatos/mindweaver/internal/templates/components"
 
 templ AppLayout(title, description, activePath string) {
 	@BaseLayout(title, description) {
-		<div class="drawer lg:drawer-open h-screen">
+		<div class="drawer lg:drawer-open">
 			<input id="main-drawer" type="checkbox" class="drawer-toggle"/>
 			<!-- Main content area -->
 			<div class="drawer-content flex flex-col h-full">

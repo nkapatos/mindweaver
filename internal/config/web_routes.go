@@ -40,8 +40,8 @@ var WebRoutes = []RouteInfo{
 		Text: "Settings",
 	},
 	{
-		Href: "/chats",
+		Href: "/conversations",
 		Icon: "message-square-more",
-		Text: "Chats",
+		Text: "Conversations",
 	},
 }
