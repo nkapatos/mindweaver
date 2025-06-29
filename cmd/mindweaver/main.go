@@ -52,7 +52,7 @@ func main() {
 	promptService := services.NewPromptService(querier)
 	providerService := services.NewProviderService(querier)
 	llmService := services.NewLLMService(querier)
-
+	conversationService := services.NewConversationService(querier)
 	// API handlers (only the ones that work with our services)
 	actorHandler := api.NewActorHandler(actorService)
 	promptHandler := api.NewPromptHandler(promptService)
@@ -65,7 +65,7 @@ func main() {
 	llmServicesHandler := web.NewLLMServicesHandler(llmService)
 	llmServiceConfigsHandler := web.NewLLMServiceConfigsHandler(llmService)
 	settingsHandler := web.NewSettingsHandler()
-	conversationHandler := web.NewConversationHandler()
+	conversationHandler := web.NewConversationHandler(conversationService, providerService)
 
 	logger.Info("Application dependencies initialized")
 

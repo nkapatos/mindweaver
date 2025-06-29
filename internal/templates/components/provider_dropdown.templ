@@ -1,0 +1,73 @@
+package components
+
+import (
+	"github.com/nkapatos/mindweaver/internal/store"
+	"github.com/nkapatos/mindweaver/internal/templates/elements"
+)
+
+// ProviderDropdownData contains all the data needed for the dropdown
+type ProviderDropdownData struct {
+	Providers       []store.Provider
+	SelectedProvider *store.Provider
+	DropdownID      string // Optional ID for multiple dropdowns on same page
+}
+
+templ ProviderDropdown(data ProviderDropdownData) {
+	<div class="dropdown dropdown-bottom">
+		<div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2">
+			<div class="avatar">
+				<div class="w-6 h-6 rounded-full bg-primary">
+					<span class="text-primary-content font-semibold text-xs">AI</span>
+				</div>
+			</div>
+			if data.SelectedProvider != nil {
+				<span class="text-sm font-medium">{ data.SelectedProvider.Name }</span>
+			} else {
+				<span class="text-sm font-medium">Select Provider</span>
+			}
+			@elements.Icon("chevron-down")
+		</div>
+		<ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-80 max-h-96 overflow-y-auto">
+			<!-- Search Input -->
+			<li class="menu-title">
+				<div class="form-control">
+					<input type="text" placeholder="Search providers..." class="input input-sm input-bordered" />
+				</div>
+			</li>
+			<li class="menu-title">
+				<span class="text-xs font-semibold text-base-content/60">Available Providers</span>
+			</li>
+			if len(data.Providers) == 0 {
+				<li class="menu-title">
+					<span class="text-xs text-base-content/40">No providers configured</span>
+				</li>
+				<li><a href="/providers" class="text-sm text-primary">Create Provider</a></li>
+			} else {
+				for _, provider := range data.Providers {
+					<li>
+						<button 
+							class="flex items-center gap-3 p-3 hover:bg-base-200 w-full text-left"
+							onclick="selectProvider(' + provider.Name + ')"
+						>
+							<div class="avatar">
+								<div class="w-8 h-8 rounded-full bg-secondary">
+									<span class="text-secondary-content font-semibold text-sm">{ provider.Name[:2] }</span>
+								</div>
+							</div>
+							<div class="flex-1 min-w-0">
+								<div class="font-medium text-sm truncate">{ provider.Name }</div>
+								if provider.Description.Valid {
+									<div class="text-xs text-base-content/60 truncate">{ provider.Description.String }</div>
+								}
+							</div>
+						</button>
+					</li>
+				}
+				<li class="menu-title">
+					<span class="text-xs text-base-content/40">or</span>
+				</li>
+				<li><a href="/providers" class="text-sm text-primary">Manage Providers</a></li>
+			}
+		</ul>
+	</div>
+} 

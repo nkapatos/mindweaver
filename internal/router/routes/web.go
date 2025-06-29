@@ -23,6 +23,9 @@ var (
 	RouteLLMServiceConfigsModels = "/llm-service-configs/models"
 	RouteSettings                = "/settings"
 	RouteConversations           = "/conversations"
+	RouteConversationsNew        = "/conversations/new"
+	RouteConversationsView       = "/conversations/:id"
+	RouteConversationsCreate     = "/conversations/create"
 )
 
 // SetupWebRoutes configures all web routes
@@ -62,6 +65,9 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	// Settings
 	e.GET(RouteSettings, settingsHandler.Settings)
 
-	// Conversation
+	// Conversations
 	e.GET(RouteConversations, conversationHandler.Conversation)
+	e.GET(RouteConversationsNew, conversationHandler.NewConversation)
+	e.POST(RouteConversationsCreate, conversationHandler.CreateConversation)
+	e.GET(RouteConversationsView, conversationHandler.ViewConversation)
 }
