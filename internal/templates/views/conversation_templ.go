@@ -8,9 +8,41 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/nkapatos/mindweaver/internal/templates/layouts"
+import (
+	"encoding/json"
 
-func Conversation(activePath string) templ.Component {
+	"github.com/nkapatos/mindweaver/internal/store"
+	"github.com/nkapatos/mindweaver/internal/templates/components"
+	"github.com/nkapatos/mindweaver/internal/templates/elements"
+	"github.com/nkapatos/mindweaver/internal/templates/layouts"
+)
+
+// ConversationMetadata represents the metadata structure for conversations
+type ConversationMetadata struct {
+	DefaultProviderID   int64  `json:"default_provider_id"`
+	DefaultProviderName string `json:"default_provider_name"`
+	ConversationType    string `json:"conversation_type,omitempty"`
+}
+
+// getDefaultProviderFromMetadata extracts provider info from conversation metadata
+func getDefaultProviderFromMetadata(conversation *store.Conversation) *store.Provider {
+	if conversation == nil || !conversation.Metadata.Valid {
+		return nil
+	}
+
+	var metadata ConversationMetadata
+	if err := json.Unmarshal([]byte(conversation.Metadata.String), &metadata); err != nil {
+		return nil
+	}
+
+	// Create a provider struct from metadata
+	return &store.Provider{
+		ID:   metadata.DefaultProviderID,
+		Name: metadata.DefaultProviderName,
+	}
+}
+
+func Conversation(activePath string, providerDropdownData components.ProviderDropdownData, messageInputData components.MessageInputData) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -43,13 +75,145 @@ func Conversation(activePath string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex flex-col h-screen bg-base-200\"><!-- Chat Header --><div class=\"bg-base-100 border-b border-base-300 px-6 py-4\"><div class=\"flex items-center justify-between\"><div class=\"flex items-center gap-3\"><div class=\"avatar\"><div class=\"w-10 h-10 rounded-full bg-primary\"><span class=\"text-primary-content font-semibold text-lg\">AI</span></div></div><div><h1 class=\"text-lg font-semibold text-base-content\">AI Assistant</h1><p class=\"text-sm text-base-content/60\">Ready to help you</p></div></div><div class=\"flex items-center gap-2\"><button class=\"btn btn-ghost btn-sm\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z\"></path></svg></button></div></div></div><div class=\"flex-1 overflow-y-auto p-6 space-y-4\" id=\"messages-container\"><!-- Welcome Message --><div class=\"chat chat-start\"><div class=\"chat-image avatar\"><div class=\"w-10 h-10 rounded-full bg-primary\"><span class=\"text-primary-content font-semibold\">AI</span></div></div><div class=\"chat-header text-sm opacity-70 mb-1\">AI Assistant <time class=\"text-xs opacity-50 ml-2\">Just now</time></div><div class=\"chat-bubble chat-bubble-primary\">Hello! I'm your AI assistant. How can I help you today? Feel free to ask me anything - I'm here to assist with your questions and tasks.</div></div><!-- User Message Example --><div class=\"chat chat-end\"><div class=\"chat-header text-sm opacity-70 mb-1\"><time class=\"text-xs opacity-50 mr-2\">Just now</time> You</div><div class=\"chat-bubble chat-bubble-neutral\">Hi! Can you help me with a coding problem?</div><div class=\"chat-image avatar\"><div class=\"w-10 h-10 rounded-full bg-secondary\"><span class=\"text-secondary-content font-semibold\">U</span></div></div></div><!-- AI Response Example --><div class=\"chat chat-start\"><div class=\"chat-image avatar\"><div class=\"w-10 h-10 rounded-full bg-primary\"><span class=\"text-primary-content font-semibold\">AI</span></div></div><div class=\"chat-header text-sm opacity-70 mb-1\">AI Assistant <time class=\"text-xs opacity-50 ml-2\">Just now</time></div><div class=\"chat-bubble chat-bubble-primary\">Of course! I'd be happy to help you with your coding problem. What language are you working with and what specific issue are you facing?</div></div><!-- User Message Example 2 --><div class=\"chat chat-end\"><div class=\"chat-header text-sm opacity-70 mb-1\"><time class=\"text-xs opacity-50 mr-2\">Just now</time> You</div><div class=\"chat-bubble chat-bubble-neutral\">I'm working on a Go project and I'm having trouble with error handling in my HTTP handlers.</div><div class=\"chat-image avatar\"><div class=\"w-10 h-10 rounded-full bg-secondary\"><span class=\"text-secondary-content font-semibold\">U</span></div></div></div><!-- AI Response Example 2 --><div class=\"chat chat-start\"><div class=\"chat-image avatar\"><div class=\"w-10 h-10 rounded-full bg-primary\"><span class=\"text-primary-content font-semibold\">AI</span></div></div><div class=\"chat-header text-sm opacity-70 mb-1\">AI Assistant <time class=\"text-xs opacity-50 ml-2\">Just now</time></div><div class=\"chat-bubble chat-bubble-primary\">Great! Go has excellent error handling patterns. Could you share the specific code you're working with? I can help you implement proper error handling using techniques like:<br><br>• Custom error types<br>• Error wrapping with `fmt.Errorf`<br>• Proper HTTP status codes<br>• Structured error responses</div></div></div><!-- Input Area - Fixed at Bottom --><div class=\"bg-base-100 border-t border-base-300 p-4\"><form class=\"flex gap-3\" onsubmit=\"event.preventDefault(); /* handle submit here */\"><div class=\"flex-1 relative\"><textarea class=\"textarea textarea-bordered w-full resize-none pr-12\" placeholder=\"Type your message here...\" rows=\"1\" autocomplete=\"off\" required oninput=\"this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';\"></textarea> <button type=\"button\" class=\"btn btn-ghost btn-sm absolute right-2 top-2\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13\"></path></svg></button></div><button type=\"submit\" class=\"btn btn-primary\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 19l9 2-9-18-9 18 9-2zm0 0v-8\"></path></svg></button></form></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex flex-col bg-base-200\"><!-- Smart Chat Header - Fixed height --><div class=\"bg-base-100 border-b border-base-300 px-6 py-4 flex-shrink-0\"><div class=\"flex items-center justify-between\"><div class=\"flex items-center gap-4 flex-1\"><!-- Provider Selection Dropdown -->")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = components.ProviderDropdown(providerDropdownData).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<!-- Conversation Title/Info --><div class=\"flex-1 min-w-0\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if providerDropdownData.SelectedProvider != nil {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<h1 class=\"text-lg font-semibold text-base-content\">New Conversation</h1><p class=\"text-sm text-base-content/60\">Using ")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var3 string
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(providerDropdownData.SelectedProvider.Name)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/conversation.templ`, Line: 51, Col: 98}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " - Ready to chat</p>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<h1 class=\"text-lg font-semibold text-base-content\">New Conversation</h1><p class=\"text-sm text-base-content/60\">Choose a provider to start chatting</p>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div></div><!-- Action Buttons --><div class=\"flex items-center gap-2\"><button class=\"btn btn-ghost btn-sm\" title=\"More options\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = elements.Icon("more-horizontal").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</button></div></div></div><!-- Messages Area - Takes remaining space --><div class=\"flex-1 overflow-y-auto p-6\" id=\"messages-container\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if providerDropdownData.SelectedProvider != nil {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<!-- Ready to chat state --> <div class=\"text-center text-base-content/60 py-12\"><div class=\"max-w-md mx-auto\"><div class=\"w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = elements.Icon("message-circle").Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div><h3 class=\"text-lg font-semibold mb-2\">Ready to Chat!</h3><p class=\"text-sm mb-6\">You're using <strong>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var4 string
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(providerDropdownData.SelectedProvider.Name)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/conversation.templ`, Line: 78, Col: 96}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</strong>. Type your message below to start the conversation.</p><div class=\"space-y-2 text-xs text-base-content/50\"><p>💡 You can switch providers anytime using the dropdown</p><p>💡 Use @ mentions to switch providers mid-conversation</p></div></div></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<!-- Welcome/Empty State --> <div class=\"text-center text-base-content/60 py-12\"><div class=\"max-w-md mx-auto\"><div class=\"w-16 h-16 bg-base-300 rounded-full flex items-center justify-center mx-auto mb-4\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = elements.Icon("message-circle").Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div><h3 class=\"text-lg font-semibold mb-2\">Start a New Conversation</h3><p class=\"text-sm mb-6\">Select a provider from the dropdown above to begin chatting with your AI assistant.</p><div class=\"space-y-2 text-xs text-base-content/50\"><p>💡 You can switch providers mid-conversation using @ mentions</p><p>💡 Each provider has different capabilities and costs</p></div></div></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div><!-- Input Area - Fixed height -->")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = components.MessageInput(messageInputData).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
 		templ_7745c5c3_Err = layouts.AppLayout("Conversation", "Chat with your AI assistant", activePath).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func NewConversationPage(providers []store.Provider, activePath string) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var5 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var5 == nil {
+			templ_7745c5c3_Var5 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = Conversation(activePath, components.ProviderDropdownData{
+			Providers:        providers,
+			SelectedProvider: nil,
+			DropdownID:       "new-conversation-provider-dropdown",
+		}, components.MessageInputData{
+			Placeholder: "Type your message here...",
+			IsDisabled:  true,
+		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

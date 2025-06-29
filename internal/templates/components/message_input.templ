@@ -1,0 +1,33 @@
+package components
+
+import "github.com/nkapatos/mindweaver/internal/templates/elements"
+
+// MessageInputData contains the data needed for the message input
+type MessageInputData struct {
+	Placeholder string
+	IsDisabled  bool
+}
+
+templ MessageInput(data MessageInputData) {
+	<div class="bg-base-100 border-t border-base-300 p-4 flex-shrink-0">
+		<form class="flex gap-3" onsubmit="event.preventDefault(); /* handle submit here */">
+			<div class="flex-1 relative">
+				<textarea
+					class="textarea textarea-bordered w-full resize-none pr-12"
+					placeholder={ data.Placeholder }
+					rows="1"
+					autocomplete="off"
+					required
+					disabled={ data.IsDisabled }
+					oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"
+				></textarea>
+				<button type="button" class="btn btn-ghost btn-sm absolute right-2 top-2">
+					@elements.Icon("paperclip")
+				</button>
+			</div>
+			<button type="submit" class="btn btn-primary" disabled={ data.IsDisabled }>
+				@elements.Icon("send")
+			</button>
+		</form>
+	</div>
+} 
