@@ -7,7 +7,7 @@ import (
 )
 
 templ NavigationMenu(activePath string) {
-	<ul class="menu">
+	<ul class="menu" hx-boost="true" hx-swap="innerHTML" hx-target="#main-content">
 		for _, route := range config.WebRoutes {
 			<li>
 				<a href={ route.Href } class={ templ.KV("menu-active", isActiveRoute(activePath, route.Href)) }>

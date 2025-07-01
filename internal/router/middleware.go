@@ -5,6 +5,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+// TODO: move them to the package middleware under the router package
+
 // Custom middleware functions can be added here
 // Example:
 // func ValidateJSON() echo.MiddlewareFunc {

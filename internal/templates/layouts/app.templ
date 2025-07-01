@@ -1,24 +1,31 @@
 package layouts
 
-import "github.com/nkapatos/mindweaver/internal/templates/components"
+import (
+	"github.com/nkapatos/mindweaver/internal/router/middleware"
+	"github.com/nkapatos/mindweaver/internal/templates/components"
+)
 
 templ AppLayout(title, description, activePath string) {
-	@BaseLayout(title, description) {
-		<div class="drawer lg:drawer-open">
-			<input id="main-drawer" type="checkbox" class="drawer-toggle"/>
-			<!-- Main content area -->
-			<div class="drawer-content flex flex-col h-full">
-				<!-- Header - locked at top -->
-				@components.Header()
-				<!-- Main content - fills remaining space and scrolls -->
-				<main class="flex-1 p-4 bg-base-200 overflow-auto">
-					{ children... }
-				</main>
-				<!-- Footer - locked at bottom -->
-				@components.Footer()
+	if middleware.IsHtmxRequest(ctx) {
+		{ children... }
+	} else {
+		@BaseLayout(title, description) {
+			<div class="drawer lg:drawer-open">
+				<input id="main-drawer" type="checkbox" class="drawer-toggle"/>
+				<!-- Main content area -->
+				<div class="drawer-content flex flex-col h-full">
+					<!-- Header - locked at top -->
+					@components.Header()
+					<!-- Main content - fills remaining space and scrolls -->
+					<main class="flex-1 p-4 bg-base-200 overflow-auto" id="main-content">
+						{ children... }
+					</main>
+					<!-- Footer - locked at bottom -->
+					@components.Footer()
+				</div>
+				<!-- Sidebar -->
+				@components.Sidebar(activePath)
 			</div>
-			<!-- Sidebar -->
-			@components.Sidebar(activePath)
-		</div>
+		}
 	}
 }

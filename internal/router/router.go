@@ -2,9 +2,10 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echoMiddleware "github.com/labstack/echo/v4/middleware"
 	"github.com/nkapatos/mindweaver/internal/handlers/api"
 	"github.com/nkapatos/mindweaver/internal/handlers/web"
+	"github.com/nkapatos/mindweaver/internal/router/middleware"
 	"github.com/nkapatos/mindweaver/internal/router/routes"
 )
 
@@ -15,9 +16,19 @@ type Router struct {
 func New() *Router {
 	e := echo.New()
 
+	// Configure logger to only show errors and important info
+	loggerConfig := echoMiddleware.LoggerConfig{
+		Format: "${time_rfc3339} ${method} ${uri} ${status} ${latency}\n",
+		Skipper: func(c echo.Context) bool {
+			// Skip logging successful requests (status < 400)
+			return c.Response().Status < 400
+		},
+	}
+
 	// Global middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	e.Use(echoMiddleware.LoggerWithConfig(loggerConfig))
+	e.Use(middleware.HTMXMiddleware())
+	e.Use(echoMiddleware.Recover())
 
 	return &Router{echo: e}
 }
