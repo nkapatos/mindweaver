@@ -3,6 +3,7 @@ package views
 import (
 	"strconv"
 
+	"github.com/nkapatos/mindweaver/internal/config"
 	"github.com/nkapatos/mindweaver/internal/store"
 	"github.com/nkapatos/mindweaver/internal/templates/layouts"
 )
@@ -77,16 +78,16 @@ templ ProvidersPage(providersWithRelations []ProviderWithRelations, editingProvi
 											}
 										</div>
 										<div class="mt-3 flex gap-2">
-											<a href={ templ.SafeURL("/providers/edit/" + strconv.FormatInt(providerData.Provider.ID, 10)) } class="btn btn-sm btn-outline">
+											<a href={ templ.SafeURL(config.RouteProvidersEdit + "/" + strconv.FormatInt(providerData.Provider.ID, 10)) } class="btn btn-sm btn-outline">
 												Edit
 											</a>
-											<a href={ templ.SafeURL("/providers/" + strconv.FormatInt(providerData.Provider.ID, 10) + "/settings") } class="btn btn-sm btn-outline">
+											<a href={ templ.SafeURL(config.RouteProviders + "/" + strconv.FormatInt(providerData.Provider.ID, 10) + "/settings") } class="btn btn-sm btn-outline">
 												Settings
 											</a>
-											<a href={ templ.SafeURL("/providers/" + strconv.FormatInt(providerData.Provider.ID, 10) + "/models") } class="btn btn-sm btn-outline">
+											<a href={ templ.SafeURL(config.RouteProviders + "/" + strconv.FormatInt(providerData.Provider.ID, 10) + "/models") } class="btn btn-sm btn-outline">
 												Models
 											</a>
-											<form action="/providers/delete" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this provider? This will also delete all associated settings and models.')">
+											<form action={ config.RouteProvidersDelete } method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this provider? This will also delete all associated settings and models.')">
 												<input type="hidden" name="id" value={ strconv.FormatInt(providerData.Provider.ID, 10) }/>
 												<button type="submit" class="btn btn-sm btn-error">
 													Delete
@@ -108,14 +109,14 @@ templ ProviderForm(editingProvider *store.Provider, llmServiceConfigs []store.Ll
 	if editingProvider != nil {
 		<div class="flex items-center gap-4 mb-4">
 			<h2 class="card-title text-xl">Edit Provider</h2>
-			<a href="/providers" class="btn btn-ghost btn-sm">
+			<a href={ config.RouteProviders } class="btn btn-ghost btn-sm">
 				← Back to Create
 			</a>
 		</div>
-		<form action={ templ.SafeURL("/providers/edit/" + strconv.FormatInt(editingProvider.ID, 10)) } method="POST" class="space-y-4">
+		<form action={ templ.SafeURL(config.RouteProvidersEdit + "/" + strconv.FormatInt(editingProvider.ID, 10)) } method="POST" class="space-y-4">
 			@ProviderFormFields(editingProvider, llmServiceConfigs, systemPrompts)
 			<div class="flex gap-3">
-				<a href="/providers" class="btn btn-outline flex-1">
+				<a href={ config.RouteProviders } class="btn btn-outline flex-1">
 					Cancel
 				</a>
 				<button type="submit" class="btn btn-primary flex-1">
@@ -125,7 +126,7 @@ templ ProviderForm(editingProvider *store.Provider, llmServiceConfigs []store.Ll
 		</form>
 	} else {
 		<h2 class="card-title text-xl mb-4">Create New Provider</h2>
-		<form action="/providers" method="POST" class="space-y-4">
+		<form action={ config.RouteProviders } method="POST" class="space-y-4">
 			@ProviderFormFields(nil, llmServiceConfigs, systemPrompts)
 			<button type="submit" class="btn btn-primary w-full">
 				Create Provider

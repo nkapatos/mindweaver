@@ -1,5 +1,7 @@
 package layouts
 
+import "github.com/nkapatos/mindweaver/internal/config"
+
 templ BaseLayout(title, description string) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme="light">
@@ -7,8 +9,8 @@ templ BaseLayout(title, description string) {
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>{ title }</title>
-			<link href="/assets/index.css" rel="stylesheet"/>
-			<script src="/assets/main.js"></script>
+			<link href={ config.RouteAssets + "/index.css" } rel="stylesheet"/>
+			<script src={ config.RouteAssets + "/main.js" }></script>
 		</head>
 		<body class="h-screen overflow-hidden">
 			{ children... }

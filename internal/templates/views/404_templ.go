@@ -8,7 +8,10 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/nkapatos/mindweaver/internal/templates/layouts"
+import (
+	"github.com/nkapatos/mindweaver/internal/config"
+	"github.com/nkapatos/mindweaver/internal/templates/layouts"
+)
 
 func NotFoundPage() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -43,7 +46,20 @@ func NotFoundPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"hero min-h-screen bg-base-200\"><div class=\"hero-content text-center\"><div class=\"max-w-md\"><h1 class=\"text-8xl font-bold text-error\">404</h1><h2 class=\"text-2xl font-bold mt-4\">Page Not Found</h2><p class=\"py-6 text-base-content/70\">The page you're looking for doesn't exist or has been moved.</p><div class=\"flex gap-4 justify-center\"><a href=\"/\" class=\"btn btn-primary\">Go Home</a> <button onclick=\"history.back()\" class=\"btn btn-outline\">Go Back</button></div></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"hero min-h-screen bg-base-200\"><div class=\"hero-content text-center\"><div class=\"max-w-md\"><h1 class=\"text-8xl font-bold text-error\">404</h1><h2 class=\"text-2xl font-bold mt-4\">Page Not Found</h2><p class=\"py-6 text-base-content/70\">The page you're looking for doesn't exist or has been moved.</p><div class=\"flex gap-4 justify-center\"><a href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 templ.SafeURL
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(config.RouteHome)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/404.templ`, Line: 19, Col: 32}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"btn btn-primary\">Go Home</a> <button onclick=\"history.back()\" class=\"btn btn-outline\">Go Back</button></div></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -2,72 +2,50 @@ package routes
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/nkapatos/mindweaver/internal/config"
 	"github.com/nkapatos/mindweaver/internal/handlers/web"
-)
-
-var (
-	RouteHome                    = "/"
-	RoutePrompts                 = "/prompts"
-	RoutePromptsEdit             = "/prompts/edit/:id"
-	RoutePromptsDelete           = "/prompts/delete"
-	RouteProviders               = "/providers"
-	RouteProvidersEdit           = "/providers/edit/:id"
-	RouteProvidersDelete         = "/providers/delete"
-	RouteLLMServices             = "/llm-services"
-	RouteLLMServicesEdit         = "/llm-services/edit/:id"
-	RouteLLMServicesDelete       = "/llm-services/delete"
-	RouteLLMServicesModels       = "/llm-services/models"
-	RouteLLMServiceConfigs       = "/llm-service-configs"
-	RouteLLMServiceConfigsEdit   = "/llm-service-configs/edit/:id"
-	RouteLLMServiceConfigsDelete = "/llm-service-configs/delete"
-	RouteLLMServiceConfigsModels = "/llm-service-configs/models"
-	RouteSettings                = "/settings"
-	RouteConversations           = "/conversations"
-	RouteConversationsNew        = "/conversations/new"
-	RouteConversationsView       = "/conversations/:id"
-	RouteConversationsCreate     = "/conversations/create"
 )
 
 // SetupWebRoutes configures all web routes
 func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, llmServicesHandler *web.LLMServicesHandler, llmServiceConfigsHandler *web.LLMServiceConfigsHandler, settingsHandler *web.SettingsHandler, conversationHandler *web.ConversationHandler) {
-	e.GET(RouteHome, homeHandler.Home)
+	e.GET(config.RouteHome, homeHandler.Home)
 
 	// Prompts
-	e.GET(RoutePrompts, promptsHandler.Prompts)
-	e.POST(RoutePrompts, promptsHandler.CreatePrompt)
-	e.GET(RoutePromptsEdit, promptsHandler.EditPrompt)
-	e.POST(RoutePromptsEdit, promptsHandler.UpdatePrompt)
-	e.POST(RoutePromptsDelete, promptsHandler.DeletePrompt)
+	e.GET(config.RoutePrompts, promptsHandler.Prompts)
+	e.POST(config.RoutePrompts, promptsHandler.CreatePrompt)
+	e.GET(config.RoutePromptsEdit, promptsHandler.EditPrompt)
+	e.POST(config.RoutePromptsEdit, promptsHandler.UpdatePrompt)
+	e.POST(config.RoutePromptsDelete, promptsHandler.DeletePrompt)
 
 	// Providers
-	e.GET(RouteProviders, providersHandler.Providers)
-	e.POST(RouteProviders, providersHandler.CreateProvider)
-	e.GET(RouteProvidersEdit, providersHandler.EditProvider)
-	e.POST(RouteProvidersEdit, providersHandler.UpdateProvider)
-	e.POST(RouteProvidersDelete, providersHandler.DeleteProvider)
+	e.GET(config.RouteProviders, providersHandler.Providers)
+	e.POST(config.RouteProviders, providersHandler.CreateProvider)
+	e.GET(config.RouteProvidersEdit, providersHandler.EditProvider)
+	e.POST(config.RouteProvidersEdit, providersHandler.UpdateProvider)
+	e.POST(config.RouteProvidersDelete, providersHandler.DeleteProvider)
 
 	// LLM Services
-	e.GET(RouteLLMServices, llmServicesHandler.LLMServices)
-	e.POST(RouteLLMServices, llmServicesHandler.CreateLLMService)
-	e.GET(RouteLLMServicesEdit, llmServicesHandler.EditLLMService)
-	e.POST(RouteLLMServicesEdit, llmServicesHandler.UpdateLLMService)
-	e.POST(RouteLLMServicesDelete, llmServicesHandler.DeleteLLMService)
-	e.GET(RouteLLMServicesModels, llmServicesHandler.GetModels)
+	e.GET(config.RouteLLMServices, llmServicesHandler.LLMServices)
+	e.POST(config.RouteLLMServices, llmServicesHandler.CreateLLMService)
+	e.GET(config.RouteLLMServicesEdit, llmServicesHandler.EditLLMService)
+	e.POST(config.RouteLLMServicesEdit, llmServicesHandler.UpdateLLMService)
+	e.POST(config.RouteLLMServicesDelete, llmServicesHandler.DeleteLLMService)
+	e.GET(config.RouteLLMServicesModels, llmServicesHandler.GetModels)
 
 	// LLM Service Configurations
-	e.GET(RouteLLMServiceConfigs, llmServiceConfigsHandler.LLMServiceConfigs)
-	e.POST(RouteLLMServiceConfigs, llmServiceConfigsHandler.CreateLLMServiceConfig)
-	e.GET(RouteLLMServiceConfigsEdit, llmServiceConfigsHandler.EditLLMServiceConfig)
-	e.POST(RouteLLMServiceConfigsEdit, llmServiceConfigsHandler.UpdateLLMServiceConfig)
-	e.POST(RouteLLMServiceConfigsDelete, llmServiceConfigsHandler.DeleteLLMServiceConfig)
-	e.GET(RouteLLMServiceConfigsModels, llmServiceConfigsHandler.GetModelsForService)
+	e.GET(config.RouteLLMServiceConfigs, llmServiceConfigsHandler.LLMServiceConfigs)
+	e.POST(config.RouteLLMServiceConfigs, llmServiceConfigsHandler.CreateLLMServiceConfig)
+	e.GET(config.RouteLLMServiceConfigsEdit, llmServiceConfigsHandler.EditLLMServiceConfig)
+	e.POST(config.RouteLLMServiceConfigsEdit, llmServiceConfigsHandler.UpdateLLMServiceConfig)
+	e.POST(config.RouteLLMServiceConfigsDelete, llmServiceConfigsHandler.DeleteLLMServiceConfig)
+	e.GET(config.RouteLLMServiceConfigsModels, llmServiceConfigsHandler.GetModelsForService)
 
 	// Settings
-	e.GET(RouteSettings, settingsHandler.Settings)
+	e.GET(config.RouteSettings, settingsHandler.Settings)
 
 	// Conversations
-	e.GET(RouteConversations, conversationHandler.Conversation)
-	e.GET(RouteConversationsNew, conversationHandler.NewConversation)
-	e.POST(RouteConversationsCreate, conversationHandler.CreateConversation)
-	e.GET(RouteConversationsView, conversationHandler.ViewConversation)
+	e.GET(config.RouteConversations, conversationHandler.Conversation)
+	e.GET(config.RouteConversationsNew, conversationHandler.NewConversation)
+	e.POST(config.RouteConversationsCreate, conversationHandler.CreateConversation)
+	e.GET(config.RouteConversationsView, conversationHandler.ViewConversation)
 }
