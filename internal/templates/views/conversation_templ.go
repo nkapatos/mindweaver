@@ -115,7 +115,7 @@ func Conversation(activePath string, providerDropdownData components.ProviderDro
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = elements.Icon("more-horizontal").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = elements.Icon("ellipsis-vertical").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -1,6 +1,9 @@
 package views
 
-import "github.com/nkapatos/mindweaver/internal/templates/layouts"
+import (
+	"github.com/nkapatos/mindweaver/internal/config"
+	"github.com/nkapatos/mindweaver/internal/templates/layouts"
+)
 
 templ NotFoundPage() {
 	@layouts.BaseLayout("404 - Page Not Found", "The page you're looking for doesn't exist") {
@@ -13,7 +16,7 @@ templ NotFoundPage() {
 						The page you're looking for doesn't exist or has been moved.
 					</p>
 					<div class="flex gap-4 justify-center">
-						<a href="/" class="btn btn-primary">Go Home</a>
+						<a href={ config.RouteHome } class="btn btn-primary">Go Home</a>
 						<button onclick="history.back()" class="btn btn-outline">Go Back</button>
 					</div>
 				</div>

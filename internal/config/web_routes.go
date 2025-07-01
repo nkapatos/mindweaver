@@ -10,37 +10,37 @@ type RouteInfo struct {
 // WebRoutes holds all web route information as a slice for iteration
 var WebRoutes = []RouteInfo{
 	{
-		Href: "/",
+		Href: RouteHome,
 		Icon: "house",
 		Text: "Home",
 	},
 	{
-		Href: "/prompts",
+		Href: RoutePrompts,
 		Icon: "terminal",
 		Text: "Prompts",
 	},
 	{
-		Href: "/llm-services",
+		Href: RouteLLMServices,
 		Icon: "zap",
 		Text: "LLM Services",
 	},
 	{
-		Href: "/llm-service-configs",
+		Href: RouteLLMServiceConfigs,
 		Icon: "settings-2",
 		Text: "Configurations",
 	},
 	{
-		Href: "/providers",
+		Href: RouteProviders,
 		Icon: "server",
 		Text: "Providers",
 	},
 	{
-		Href: "/settings",
+		Href: RouteSettings,
 		Icon: "settings",
 		Text: "Settings",
 	},
 	{
-		Href: "/conversations",
+		Href: RouteConversations,
 		Icon: "message-square-more",
 		Text: "Conversations",
 	},

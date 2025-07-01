@@ -1,6 +1,9 @@
 package views
 
-import "github.com/nkapatos/mindweaver/internal/templates/layouts"
+import (
+	"github.com/nkapatos/mindweaver/internal/config"
+	"github.com/nkapatos/mindweaver/internal/templates/layouts"
+)
 
 templ SignIn() {
 	@layouts.BaseLayout("Sign In - MindWeaver", "Sign in to your MindWeaver account") {
@@ -11,7 +14,7 @@ templ SignIn() {
 						<h1 class="text-3xl font-bold text-base-content">Welcome Back</h1>
 						<p class="text-base-content/70 mt-2">Sign in to your MindWeaver account</p>
 					</div>
-					<form action="/auth/signin" method="POST" class="space-y-4">
+					<form action={ config.RouteAuthSignIn } method="POST" class="space-y-4">
 						<div>
 							<label class="label" for="email">
 								<span class="label-text">Email</span>
@@ -38,7 +41,7 @@ templ SignIn() {
 								required
 							/>
 							<label class="label">
-								<a href="/auth/forgot-password" class="label-text-alt link link-primary">Forgot password?</a>
+								<a href={ config.RouteAuthForgotPassword } class="label-text-alt link link-primary">Forgot password?</a>
 							</label>
 						</div>
 						<label class="label cursor-pointer">
@@ -52,7 +55,7 @@ templ SignIn() {
 					<div class="text-center mt-6">
 						<p class="text-base-content/70">
 							Don't have an account? 
-							<a href="/auth/signup" class="link link-primary font-medium">Sign up</a>
+							<a href={ config.RouteAuthSignUp } class="link link-primary font-medium">Sign up</a>
 						</p>
 					</div>
 				</div>

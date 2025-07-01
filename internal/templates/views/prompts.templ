@@ -3,6 +3,7 @@ package views
 import (
 	"strconv"
 
+	"github.com/nkapatos/mindweaver/internal/config"
 	"github.com/nkapatos/mindweaver/internal/store"
 	"github.com/nkapatos/mindweaver/internal/templates/layouts"
 )
@@ -68,10 +69,10 @@ templ PromptsPage(promptsWithRelations []PromptWithRelations, editingPrompt *sto
 											}
 										</div>
 										<div class="mt-3 flex gap-2">
-											<a href={ templ.SafeURL("/prompts/edit/" + strconv.FormatInt(promptData.Prompt.ID, 10)) } class="btn btn-sm btn-outline">
+											<a href={ templ.SafeURL(config.RoutePromptsEdit + "/" + strconv.FormatInt(promptData.Prompt.ID, 10)) } class="btn btn-sm btn-outline">
 												Edit
 											</a>
-											<form action="/prompts/delete" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this prompt?')">
+											<form action={ config.RoutePromptsDelete } method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this prompt?')">
 												<input type="hidden" name="id" value={ strconv.FormatInt(promptData.Prompt.ID, 10) }/>
 												<button type="submit" class="btn btn-sm btn-error">
 													Delete
@@ -93,14 +94,14 @@ templ PromptForm(editingPrompt *store.Prompt) {
 	if editingPrompt != nil {
 		<div class="flex items-center gap-4 mb-4">
 			<h2 class="card-title text-xl">Edit Prompt</h2>
-			<a href="/prompts" class="btn btn-ghost btn-sm">
+			<a href={ config.RoutePrompts } class="btn btn-ghost btn-sm">
 				← Back to Create
 			</a>
 		</div>
-		<form action={ templ.SafeURL("/prompts/edit/" + strconv.FormatInt(editingPrompt.ID, 10)) } method="POST" class="space-y-4">
+		<form action={ templ.SafeURL(config.RoutePromptsEdit + "/" + strconv.FormatInt(editingPrompt.ID, 10)) } method="POST" class="space-y-4">
 			@PromptFormFields(editingPrompt)
 			<div class="flex gap-3">
-				<a href="/prompts" class="btn btn-outline flex-1">
+				<a href={ config.RoutePrompts } class="btn btn-outline flex-1">
 					Cancel
 				</a>
 				<button type="submit" class="btn btn-primary flex-1">
@@ -110,7 +111,7 @@ templ PromptForm(editingPrompt *store.Prompt) {
 		</form>
 	} else {
 		<h2 class="card-title text-xl mb-4">Create New Prompt</h2>
-		<form action="/prompts" method="POST" class="space-y-4">
+		<form action={ config.RoutePrompts } method="POST" class="space-y-4">
 			@PromptFormFields(nil)
 			<button type="submit" class="btn btn-primary w-full">
 				Create Prompt

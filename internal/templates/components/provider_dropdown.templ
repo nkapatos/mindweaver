@@ -1,6 +1,7 @@
 package components
 
 import (
+	"github.com/nkapatos/mindweaver/internal/config"
 	"github.com/nkapatos/mindweaver/internal/store"
 	"github.com/nkapatos/mindweaver/internal/templates/elements"
 )
@@ -41,7 +42,7 @@ templ ProviderDropdown(data ProviderDropdownData) {
 				<li class="menu-title">
 					<span class="text-xs text-base-content/40">No providers configured</span>
 				</li>
-				<li><a href="/providers" class="text-sm text-primary">Create Provider</a></li>
+				<li><a href={ config.RouteProviders } class="text-sm text-primary">Create Provider</a></li>
 			} else {
 				for _, provider := range data.Providers {
 					<li>
@@ -66,7 +67,7 @@ templ ProviderDropdown(data ProviderDropdownData) {
 				<li class="menu-title">
 					<span class="text-xs text-base-content/40">or</span>
 				</li>
-				<li><a href="/providers" class="text-sm text-primary">Manage Providers</a></li>
+				<li><a href={ config.RouteProviders } class="text-sm text-primary">Manage Providers</a></li>
 			}
 		</ul>
 	</div>

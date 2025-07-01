@@ -8,7 +8,10 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/nkapatos/mindweaver/internal/templates/layouts"
+import (
+	"github.com/nkapatos/mindweaver/internal/config"
+	"github.com/nkapatos/mindweaver/internal/templates/layouts"
+)
 
 func SignIn() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -43,7 +46,46 @@ func SignIn() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-base-200 flex items-center justify-center p-4\"><div class=\"card w-full max-w-md bg-base-100 shadow-xl\"><div class=\"card-body\"><div class=\"text-center mb-6\"><h1 class=\"text-3xl font-bold text-base-content\">Welcome Back</h1><p class=\"text-base-content/70 mt-2\">Sign in to your MindWeaver account</p></div><form action=\"/auth/signin\" method=\"POST\" class=\"space-y-4\"><div><label class=\"label\" for=\"email\"><span class=\"label-text\">Email</span></label> <input type=\"email\" id=\"email\" name=\"email\" placeholder=\"Enter your email\" class=\"input input-bordered w-full\" required></div><div><label class=\"label\" for=\"password\"><span class=\"label-text\">Password</span></label> <input type=\"password\" id=\"password\" name=\"password\" placeholder=\"Enter your password\" class=\"input input-bordered w-full\" required> <label class=\"label\"><a href=\"/auth/forgot-password\" class=\"label-text-alt link link-primary\">Forgot password?</a></label></div><label class=\"label cursor-pointer\"><span class=\"label-text\">Remember me</span> <input type=\"checkbox\" name=\"remember\" class=\"checkbox checkbox-primary\"></label> <button type=\"submit\" class=\"btn btn-primary w-full\">Sign In</button></form><div class=\"text-center mt-6\"><p class=\"text-base-content/70\">Don't have an account?  <a href=\"/auth/signup\" class=\"link link-primary font-medium\">Sign up</a></p></div></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"min-h-screen bg-base-200 flex items-center justify-center p-4\"><div class=\"card w-full max-w-md bg-base-100 shadow-xl\"><div class=\"card-body\"><div class=\"text-center mb-6\"><h1 class=\"text-3xl font-bold text-base-content\">Welcome Back</h1><p class=\"text-base-content/70 mt-2\">Sign in to your MindWeaver account</p></div><form action=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 templ.SafeURL
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(config.RouteAuthSignIn)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/signin.templ`, Line: 17, Col: 42}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" method=\"POST\" class=\"space-y-4\"><div><label class=\"label\" for=\"email\"><span class=\"label-text\">Email</span></label> <input type=\"email\" id=\"email\" name=\"email\" placeholder=\"Enter your email\" class=\"input input-bordered w-full\" required></div><div><label class=\"label\" for=\"password\"><span class=\"label-text\">Password</span></label> <input type=\"password\" id=\"password\" name=\"password\" placeholder=\"Enter your password\" class=\"input input-bordered w-full\" required> <label class=\"label\"><a href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var4 templ.SafeURL
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(config.RouteAuthForgotPassword)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/signin.templ`, Line: 44, Col: 48}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" class=\"label-text-alt link link-primary\">Forgot password?</a></label></div><label class=\"label cursor-pointer\"><span class=\"label-text\">Remember me</span> <input type=\"checkbox\" name=\"remember\" class=\"checkbox checkbox-primary\"></label> <button type=\"submit\" class=\"btn btn-primary w-full\">Sign In</button></form><div class=\"text-center mt-6\"><p class=\"text-base-content/70\">Don't have an account?  <a href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var5 templ.SafeURL
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(config.RouteAuthSignUp)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/signin.templ`, Line: 58, Col: 39}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"link link-primary font-medium\">Sign up</a></p></div></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
