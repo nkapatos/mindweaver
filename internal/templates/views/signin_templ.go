@@ -9,7 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/nkapatos/mindweaver/internal/config"
+	"github.com/nkapatos/mindweaver/config"
 	"github.com/nkapatos/mindweaver/internal/templates/layouts"
 )
 
@@ -72,7 +72,7 @@ func SignIn() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" class=\"label-text-alt link link-primary\">Forgot password?</a></label></div><label class=\"label cursor-pointer\"><span class=\"label-text\">Remember me</span> <input type=\"checkbox\" name=\"remember\" class=\"checkbox checkbox-primary\"></label> <button type=\"submit\" class=\"btn btn-primary w-full\">Sign In</button></form><div class=\"text-center mt-6\"><p class=\"text-base-content/70\">Don't have an account?  <a href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" class=\"label-text-alt link link-primary\">Forgot password?</a></label></div><label class=\"label cursor-pointer\"><span class=\"label-text\">Remember me</span> <input type=\"checkbox\" name=\"remember\" class=\"checkbox checkbox-primary\"></label> <button type=\"submit\" class=\"btn btn-primary w-full\">Sign In</button></form><div class=\"text-center mt-6\"><p class=\"text-base-content/70\">Don't have an account? <a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

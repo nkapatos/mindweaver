@@ -51,7 +51,7 @@ Services encapsulate business logic and coordinate between different components:
 - **Middleware Stack**: Logging and recovery middleware
 
 ### Configuration
-**Location**: `internal/config/`
+**Location**: `config/`
 
 - **Web Routes**: Route configuration and setup
 

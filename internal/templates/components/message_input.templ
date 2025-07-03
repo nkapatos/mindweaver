@@ -1,6 +1,9 @@
 package components
 
-import "github.com/nkapatos/mindweaver/internal/templates/elements"
+import (
+	"github.com/nkapatos/mindweaver/config"
+	"github.com/nkapatos/mindweaver/internal/templates/elements"
+)
 
 // MessageInputData contains the data needed for the message input
 type MessageInputData struct {
@@ -22,11 +25,11 @@ templ MessageInput(data MessageInputData) {
 					oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"
 				></textarea>
 				<button type="button" class="btn btn-ghost btn-sm absolute right-2 top-2">
-					@elements.Icon("paperclip")
+					@elements.Icon(config.GetSvgIconPath(config.IconAttachment))
 				</button>
 			</div>
 			<button type="submit" class="btn btn-primary" disabled={ data.IsDisabled }>
-				@elements.Icon("send")
+				@elements.Icon(config.GetSvgIconPath(config.IconSend))
 			</button>
 		</form>
 	</div>

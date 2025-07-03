@@ -1,5 +1,6 @@
 package components
 
+import "github.com/nkapatos/mindweaver/config"
 import "github.com/nkapatos/mindweaver/internal/templates/elements"
 
 templ Sidebar() {
@@ -15,7 +16,7 @@ templ Sidebar() {
 						onclick="toggleSidebar()"
 						title="Toggle compact mode"
 					>
-						@elements.Icon("chevron-left")
+						@elements.Icon(config.GetSvgIconPath(config.IconLeftArrow))
 					</button>
 				</div>
 				<h2 class="text-xl font-bold mb-4 sidebar-title">Navigation</h2>

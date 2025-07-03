@@ -1,7 +1,7 @@
 package components
 
 import (
-	"github.com/nkapatos/mindweaver/internal/config"
+	"github.com/nkapatos/mindweaver/config"
 	"github.com/nkapatos/mindweaver/internal/store"
 	"github.com/nkapatos/mindweaver/internal/templates/elements"
 )
@@ -26,7 +26,7 @@ templ ProviderDropdown(data ProviderDropdownData) {
 			} else {
 				<span class="text-sm font-medium">Select Provider</span>
 			}
-			@elements.Icon("chevron-down")
+			@elements.Icon(config.GetSvgIconPath(config.IconDownArrow))
 		</div>
 		<ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-80 max-h-96 overflow-y-auto">
 			<!-- Search Input -->

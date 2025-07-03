@@ -8,6 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "github.com/nkapatos/mindweaver/config"
 import "github.com/nkapatos/mindweaver/internal/templates/elements"
 
 func Header() templ.Component {
@@ -35,7 +36,7 @@ func Header() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = elements.Icon("menu").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = elements.Icon(config.GetSvgIconPath(config.IconMenu)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

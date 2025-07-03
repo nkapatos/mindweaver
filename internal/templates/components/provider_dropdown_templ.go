@@ -9,7 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/nkapatos/mindweaver/internal/config"
+	"github.com/nkapatos/mindweaver/config"
 	"github.com/nkapatos/mindweaver/internal/store"
 	"github.com/nkapatos/mindweaver/internal/templates/elements"
 )
@@ -70,7 +70,7 @@ func ProviderDropdown(data ProviderDropdownData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = elements.Icon("chevron-down").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = elements.Icon(config.GetSvgIconPath(config.IconDownArrow)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

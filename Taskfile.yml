@@ -27,8 +27,8 @@ tasks:
   live:esbuild:
     desc: Bundle and watch JS/TS files
     env:
-      APP_HOST: '{{.APP_HOST}}'
-      PROXY_PORT: '{{.PROXY_PORT}}'
+      APP_HOST: "{{.APP_HOST}}"
+      PROXY_PORT: "{{.PROXY_PORT}}"
     cmds:
       - node build.js dev
 
@@ -57,18 +57,14 @@ tasks:
   live:
     desc: Live reload the go code, templates, and assets
     deps:
-      - live:templ
-      - live:esbuild
-
-  live:
-    desc: Live reload the go code, templates, and assets
-    deps:
+      - build:utils
       - live:templ
       - live:esbuild
 
   build:
     desc: Build the go code, templates, and assets
     deps:
+      - build:utils
       - build:esbuild
       - format:templ
       - build:templ
@@ -78,3 +74,8 @@ tasks:
     desc: Format all templ files
     cmds:
       - templ fmt {{.TEMPL_DIR}}
+
+  build:utils:
+    desc: Build utilities for tasks like copying assets, validating routes, etc
+    cmds:
+      - go run ./cmd/build/svg-icons.go

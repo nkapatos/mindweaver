@@ -11,37 +11,37 @@ type RouteInfo struct {
 var WebRoutes = []RouteInfo{
 	{
 		Href: RouteHome,
-		Icon: "house",
+		Icon: GetSvgIconPath(IconHome),
 		Text: "Home",
 	},
 	{
 		Href: RoutePrompts,
-		Icon: "terminal",
+		Icon: GetSvgIconPath(IconPrompts),
 		Text: "Prompts",
 	},
 	{
 		Href: RouteLLMServices,
-		Icon: "zap",
+		Icon: GetSvgIconPath(IconLLMServices),
 		Text: "LLM Services",
 	},
 	{
 		Href: RouteLLMServiceConfigs,
-		Icon: "settings-2",
+		Icon: GetSvgIconPath(IconConfigurations),
 		Text: "Configurations",
 	},
 	{
 		Href: RouteProviders,
-		Icon: "server",
+		Icon: GetSvgIconPath(IconProviders),
 		Text: "Providers",
 	},
 	{
 		Href: RouteSettings,
-		Icon: "settings",
+		Icon: GetSvgIconPath(IconSettings),
 		Text: "Settings",
 	},
 	{
 		Href: RouteConversations,
-		Icon: "message-square-more",
+		Icon: GetSvgIconPath(IconConversations),
 		Text: "Conversations",
 	},
 }
