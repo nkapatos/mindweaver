@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"context"
-	"github.com/nkapatos/mindweaver/internal/config"
+	"github.com/nkapatos/mindweaver/config"
 	"github.com/nkapatos/mindweaver/internal/router/middleware"
 	"github.com/nkapatos/mindweaver/internal/templates/elements"
 	"strings"

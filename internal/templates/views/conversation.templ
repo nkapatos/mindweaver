@@ -3,6 +3,7 @@ package views
 import (
 	"encoding/json"
 
+	"github.com/nkapatos/mindweaver/config"
 	"github.com/nkapatos/mindweaver/internal/store"
 	"github.com/nkapatos/mindweaver/internal/templates/components"
 	"github.com/nkapatos/mindweaver/internal/templates/elements"
@@ -57,7 +58,7 @@ templ Conversation(providerDropdownData components.ProviderDropdownData, message
 					<!-- Action Buttons -->
 					<div class="flex items-center gap-2">
 						<button class="btn btn-ghost btn-sm" title="More options">
-							@elements.Icon("ellipsis-vertical")
+							@elements.Icon(config.GetSvgIconPath(config.IconMoreOptsVertical))
 						</button>
 					</div>
 				</div>
@@ -69,7 +70,7 @@ templ Conversation(providerDropdownData components.ProviderDropdownData, message
 					<div class="text-center text-base-content/60 py-12">
 						<div class="max-w-md mx-auto">
 							<div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-								@elements.Icon("message-circle")
+								@elements.Icon(config.GetSvgIconPath(config.IconMsgBubble))
 							</div>
 							<h3 class="text-lg font-semibold mb-2">Ready to Chat!</h3>
 							<p class="text-sm mb-6">You're using <strong>{ providerDropdownData.SelectedProvider.Name }</strong>. Type your message below to start the conversation.</p>
@@ -84,7 +85,7 @@ templ Conversation(providerDropdownData components.ProviderDropdownData, message
 					<div class="text-center text-base-content/60 py-12">
 						<div class="max-w-md mx-auto">
 							<div class="w-16 h-16 bg-base-300 rounded-full flex items-center justify-center mx-auto mb-4">
-								@elements.Icon("message-circle")
+								@elements.Icon(config.GetSvgIconPath(config.IconMsgBubble))
 							</div>
 							<h3 class="text-lg font-semibold mb-2">Start a New Conversation</h3>
 							<p class="text-sm mb-6">Select a provider from the dropdown above to begin chatting with your AI assistant.</p>

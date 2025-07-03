@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/nkapatos/mindweaver/internal/config"
+	"github.com/nkapatos/mindweaver/config"
 	"github.com/nkapatos/mindweaver/internal/handlers/web"
 )
 

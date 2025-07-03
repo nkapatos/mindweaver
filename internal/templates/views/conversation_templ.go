@@ -11,6 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"encoding/json"
 
+	"github.com/nkapatos/mindweaver/config"
 	"github.com/nkapatos/mindweaver/internal/store"
 	"github.com/nkapatos/mindweaver/internal/templates/components"
 	"github.com/nkapatos/mindweaver/internal/templates/elements"
@@ -95,7 +96,7 @@ func Conversation(providerDropdownData components.ProviderDropdownData, messageI
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(providerDropdownData.SelectedProvider.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/conversation.templ`, Line: 50, Col: 98}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/conversation.templ`, Line: 51, Col: 98}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -115,7 +116,7 @@ func Conversation(providerDropdownData components.ProviderDropdownData, messageI
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = elements.Icon("ellipsis-vertical").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = elements.Icon(config.GetSvgIconPath(config.IconMoreOptsVertical)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -128,7 +129,7 @@ func Conversation(providerDropdownData components.ProviderDropdownData, messageI
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = elements.Icon("message-circle").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = elements.Icon(config.GetSvgIconPath(config.IconMsgBubble)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -139,7 +140,7 @@ func Conversation(providerDropdownData components.ProviderDropdownData, messageI
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(providerDropdownData.SelectedProvider.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/conversation.templ`, Line: 75, Col: 96}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/conversation.templ`, Line: 76, Col: 96}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -154,7 +155,7 @@ func Conversation(providerDropdownData components.ProviderDropdownData, messageI
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = elements.Icon("message-circle").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = elements.Icon(config.GetSvgIconPath(config.IconMsgBubble)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

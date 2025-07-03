@@ -8,13 +8,10 @@ package elements
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import (
-	"fmt"
-	"os"
-)
+import "os"
 
 func readIconFromStatic(name string) string {
-	icon, err := os.ReadFile(fmt.Sprintf("node_modules/lucide-static/icons/%s.svg", name))
+	icon, err := os.ReadFile(name)
 	if err != nil {
 		panic(err)
 	}
