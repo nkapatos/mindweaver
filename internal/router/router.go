@@ -27,7 +27,8 @@ func New() *Router {
 
 	// Global middleware
 	e.Use(echoMiddleware.LoggerWithConfig(loggerConfig))
-	e.Use(middleware.HTMXMiddleware())
+	// e.Use(middleware.HTMXMiddleware())
+	e.Use(middleware.RouterPathMiddleware())
 	e.Use(echoMiddleware.Recover())
 
 	return &Router{echo: e}
