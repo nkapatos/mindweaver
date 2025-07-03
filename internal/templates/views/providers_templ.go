@@ -24,7 +24,7 @@ type ProviderWithRelations struct {
 	SystemPrompt     *store.Prompt
 }
 
-func ProvidersPage(providersWithRelations []ProviderWithRelations, editingProvider *store.Provider, llmServiceConfigs []store.LlmServiceConfig, systemPrompts []store.Prompt, activePath string) templ.Component {
+func ProvidersPage(providersWithRelations []ProviderWithRelations, editingProvider *store.Provider, llmServiceConfigs []store.LlmServiceConfig, systemPrompts []store.Prompt) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -287,7 +287,7 @@ func ProvidersPage(providersWithRelations []ProviderWithRelations, editingProvid
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layouts.AppLayout("Mindweaver - Providers", "Manage your AI providers", activePath).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.AppLayout("Mindweaver - Providers", "Manage your AI providers").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -543,7 +543,7 @@ func ProviderFormFields(editingProvider *store.Provider, llmServiceConfigs []sto
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(editingProvider.Description.String)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 200, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/providers.templ`, Line: 200, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {

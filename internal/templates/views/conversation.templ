@@ -34,8 +34,8 @@ func getDefaultProviderFromMetadata(conversation *store.Conversation) *store.Pro
 	}
 }
 
-templ Conversation(activePath string, providerDropdownData components.ProviderDropdownData, messageInputData components.MessageInputData) {
-	@layouts.AppLayout("Conversation", "Chat with your AI assistant", activePath) {
+templ Conversation(providerDropdownData components.ProviderDropdownData, messageInputData components.MessageInputData) {
+	@layouts.AppLayout("Conversation", "Chat with your AI assistant") {
 		<div class="flex flex-col bg-base-200">
 			<!-- Smart Chat Header - Fixed height -->
 			<div class="bg-base-100 border-b border-base-300 px-6 py-4 flex-shrink-0">
@@ -43,7 +43,6 @@ templ Conversation(activePath string, providerDropdownData components.ProviderDr
 					<div class="flex items-center gap-4 flex-1">
 						<!-- Provider Selection Dropdown -->
 						@components.ProviderDropdown(providerDropdownData)
-
 						<!-- Conversation Title/Info -->
 						<div class="flex-1 min-w-0">
 							if providerDropdownData.SelectedProvider != nil {
@@ -55,7 +54,6 @@ templ Conversation(activePath string, providerDropdownData components.ProviderDr
 							}
 						</div>
 					</div>
-
 					<!-- Action Buttons -->
 					<div class="flex items-center gap-2">
 						<button class="btn btn-ghost btn-sm" title="More options">
@@ -64,8 +62,7 @@ templ Conversation(activePath string, providerDropdownData components.ProviderDr
 					</div>
 				</div>
 			</div>
-
-			<!-- Messages Area - Takes remaining space -->
+			<!-- Messages Area -->
 			<div class="flex-1 overflow-y-auto p-6" id="messages-container">
 				if providerDropdownData.SelectedProvider != nil {
 					<!-- Ready to chat state -->
@@ -99,7 +96,6 @@ templ Conversation(activePath string, providerDropdownData components.ProviderDr
 					</div>
 				}
 			</div>
-
 			<!-- Input Area - Fixed height -->
 			@components.MessageInput(messageInputData)
 		</div>
@@ -107,7 +103,7 @@ templ Conversation(activePath string, providerDropdownData components.ProviderDr
 }
 
 templ NewConversationPage(providers []store.Provider, activePath string) {
-	@Conversation(activePath, components.ProviderDropdownData{
+	@Conversation(components.ProviderDropdownData{
 		Providers:        providers,
 		SelectedProvider: nil,
 		DropdownID:       "new-conversation-provider-dropdown",

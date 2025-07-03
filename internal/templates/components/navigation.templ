@@ -1,16 +1,18 @@
 package components
 
 import (
+	"context"
 	"github.com/nkapatos/mindweaver/internal/config"
+	"github.com/nkapatos/mindweaver/internal/router/middleware"
 	"github.com/nkapatos/mindweaver/internal/templates/elements"
 	"strings"
 )
 
-templ NavigationMenu(activePath string) {
-	<ul class="menu" hx-boost="true" hx-swap="innerHTML" hx-target="#main-content">
+templ NavigationMenu() {
+	<ul class="menu" hx-boost="true">
 		for _, route := range config.WebRoutes {
 			<li>
-				<a href={ route.Href } class={ templ.KV("menu-active", isActiveRoute(activePath, route.Href)) }>
+				<a href={ route.Href } class={ templ.KV("menu-active", isActiveRoute(route.Href, ctx)) }>
 					@elements.Icon(route.Icon)
 					{ route.Text }
 				</a>
@@ -20,7 +22,9 @@ templ NavigationMenu(activePath string) {
 }
 
 // Helper function to determine if a route is active
-func isActiveRoute(currentPath, routePath string) bool {
+func isActiveRoute(routePath string, ctx context.Context) bool {
+	currentPath := middleware.ActivedRoute(ctx)
+	// slog.Info("currentPath", "path", currentPath)
 	// Handle exact matches
 	if currentPath == routePath {
 		return true

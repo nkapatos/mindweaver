@@ -8,9 +8,9 @@ import (
 
 // ProviderDropdownData contains all the data needed for the dropdown
 type ProviderDropdownData struct {
-	Providers       []store.Provider
+	Providers        []store.Provider
 	SelectedProvider *store.Provider
-	DropdownID      string // Optional ID for multiple dropdowns on same page
+	DropdownID       string // Optional ID for multiple dropdowns on same page
 }
 
 templ ProviderDropdown(data ProviderDropdownData) {
@@ -32,7 +32,7 @@ templ ProviderDropdown(data ProviderDropdownData) {
 			<!-- Search Input -->
 			<li class="menu-title">
 				<div class="form-control">
-					<input type="text" placeholder="Search providers..." class="input input-sm input-bordered" />
+					<input type="text" placeholder="Search providers..." class="input input-sm input-bordered"/>
 				</div>
 			</li>
 			<li class="menu-title">
@@ -46,7 +46,7 @@ templ ProviderDropdown(data ProviderDropdownData) {
 			} else {
 				for _, provider := range data.Providers {
 					<li>
-						<button 
+						<button
 							class="flex items-center gap-3 p-3 hover:bg-base-200 w-full text-left"
 							onclick="selectProvider(' + provider.Name + ')"
 						>
@@ -71,4 +71,4 @@ templ ProviderDropdown(data ProviderDropdownData) {
 			}
 		</ul>
 	</div>
-} 
+}

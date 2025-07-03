@@ -22,7 +22,6 @@ func NewLLMServiceConfigsHandler(llmService *services.LLMService) *LLMServiceCon
 
 // LLMServiceConfigs handles GET /llm-service-configs - displays the configurations page
 func (h *LLMServiceConfigsHandler) LLMServiceConfigs(c echo.Context) error {
-	currentPath := c.Path()
 
 	// Get all LLM services for the service selection dropdown
 	llmServices, err := h.llmService.GetAllLLMServices(c.Request().Context())
@@ -68,7 +67,7 @@ func (h *LLMServiceConfigsHandler) LLMServiceConfigs(c echo.Context) error {
 		}
 	}
 
-	return views.LLMServiceConfigsPage(configsWithServices, nil, llmServices, selectedServiceID, availableModels, currentPath).Render(c.Request().Context(), c.Response().Writer)
+	return views.LLMServiceConfigsPage(configsWithServices, nil, llmServices, selectedServiceID, availableModels).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // CreateLLMServiceConfig handles POST /llm-service-configs - creates a new configuration
@@ -181,7 +180,6 @@ func (h *LLMServiceConfigsHandler) GetModelsForService(c echo.Context) error {
 
 // EditLLMServiceConfig handles GET /llm-service-configs/edit/{id} - shows edit form
 func (h *LLMServiceConfigsHandler) EditLLMServiceConfig(c echo.Context) error {
-	currentPath := c.Path()
 	idStr := c.Param("id")
 	if idStr == "" {
 		return c.Redirect(http.StatusSeeOther, "/llm-service-configs?error=Configuration ID is required")
@@ -232,7 +230,7 @@ func (h *LLMServiceConfigsHandler) EditLLMServiceConfig(c echo.Context) error {
 		}
 	}
 
-	return views.LLMServiceConfigsPage(configsWithServices, config, llmServices, config.LlmServiceID, availableModels, currentPath).Render(c.Request().Context(), c.Response().Writer)
+	return views.LLMServiceConfigsPage(configsWithServices, config, llmServices, config.LlmServiceID, availableModels).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // UpdateLLMServiceConfig handles POST /llm-service-configs/edit/{id} - updates a configuration

@@ -10,14 +10,14 @@ import (
 
 // ProviderWithRelations represents a provider with its related data for display
 type ProviderWithRelations struct {
-	Provider        store.Provider
+	Provider         store.Provider
 	LLMServiceConfig store.LlmServiceConfig
-	LLMService      store.LlmService
-	SystemPrompt    *store.Prompt
+	LLMService       store.LlmService
+	SystemPrompt     *store.Prompt
 }
 
-templ ProvidersPage(providersWithRelations []ProviderWithRelations, editingProvider *store.Provider, llmServiceConfigs []store.LlmServiceConfig, systemPrompts []store.Prompt, activePath string) {
-	@layouts.AppLayout("Mindweaver - Providers", "Manage your AI providers", activePath) {
+templ ProvidersPage(providersWithRelations []ProviderWithRelations, editingProvider *store.Provider, llmServiceConfigs []store.LlmServiceConfig, systemPrompts []store.Prompt) {
+	@layouts.AppLayout("Mindweaver - Providers", "Manage your AI providers") {
 		<div class="container mx-auto px-4 py-8">
 			<div class="mb-8">
 				<h1 class="text-3xl font-bold text-base-content mb-2">Providers</h1>
@@ -196,9 +196,9 @@ templ ProviderFormFields(editingProvider *store.Provider, llmServiceConfigs []st
 			placeholder="What this provider is used for"
 			required
 		>
-		if editingProvider != nil && editingProvider.Description.Valid {
-			{editingProvider.Description.String}
-		}
+			if editingProvider != nil && editingProvider.Description.Valid {
+				{ editingProvider.Description.String }
+			}
 		</textarea>
 	</div>
 }

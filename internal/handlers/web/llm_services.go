@@ -22,7 +22,6 @@ func NewLLMServicesHandler(llmService *services.LLMService) *LLMServicesHandler 
 
 // LLMServices handles GET /llm-services - displays the LLM services page with form and list
 func (h *LLMServicesHandler) LLMServices(c echo.Context) error {
-	currentPath := c.Path()
 
 	// Get all LLM services for display
 	llmServices, err := h.llmService.GetAllLLMServices(c.Request().Context())
@@ -34,7 +33,7 @@ func (h *LLMServicesHandler) LLMServices(c echo.Context) error {
 	// Get available adapters for the form dropdown
 	adapters := []string{"openai", "anthropic", "openrouter", "lmstudio", "ollama"}
 
-	return views.LLMServicesPage(llmServices, nil, adapters, currentPath).Render(c.Request().Context(), c.Response().Writer)
+	return views.LLMServicesPage(llmServices, nil, adapters).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // CreateLLMService handles POST /llm-services - processes form submission
@@ -104,7 +103,6 @@ func (h *LLMServicesHandler) DeleteLLMService(c echo.Context) error {
 
 // EditLLMService handles GET /llm-services/edit/{id} - shows edit form
 func (h *LLMServicesHandler) EditLLMService(c echo.Context) error {
-	currentPath := c.Path()
 	idStr := c.Param("id")
 	if idStr == "" {
 		return c.Redirect(http.StatusSeeOther, "/llm-services?error=LLM service ID is required")
@@ -130,7 +128,7 @@ func (h *LLMServicesHandler) EditLLMService(c echo.Context) error {
 	// Get available adapters for the form dropdown
 	adapters := []string{"openai", "anthropic", "openrouter", "lmstudio", "ollama"}
 
-	return views.LLMServicesPage(llmServices, llmService, adapters, currentPath).Render(c.Request().Context(), c.Response().Writer)
+	return views.LLMServicesPage(llmServices, llmService, adapters).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // GetModels handles GET /llm-services/models - fetches available models for an adapter

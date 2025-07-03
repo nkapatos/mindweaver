@@ -26,7 +26,6 @@ func NewProvidersHandler(providerService *services.ProviderService, llmService *
 
 // Providers handles GET /providers - displays the providers page with form and list
 func (h *ProvidersHandler) Providers(c echo.Context) error {
-	currentPath := c.Path()
 
 	// Get all providers with relations for display
 	providersWithRelations, err := h.providerService.GetAllProvidersWithRelations(c.Request().Context())
@@ -74,7 +73,7 @@ func (h *ProvidersHandler) Providers(c echo.Context) error {
 		})
 	}
 
-	return views.ProvidersPage(templateProviders, nil, allConfigs, systemPrompts, currentPath).Render(c.Request().Context(), c.Response().Writer)
+	return views.ProvidersPage(templateProviders, nil, allConfigs, systemPrompts).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // CreateProvider handles POST /providers - processes form submission
@@ -150,7 +149,6 @@ func (h *ProvidersHandler) DeleteProvider(c echo.Context) error {
 
 // EditProvider handles GET /providers/edit/{id} - shows edit form
 func (h *ProvidersHandler) EditProvider(c echo.Context) error {
-	currentPath := c.Path()
 	idStr := c.Param("id")
 	if idStr == "" {
 		return c.Redirect(http.StatusSeeOther, "/providers?error=Provider ID is required")
@@ -211,7 +209,7 @@ func (h *ProvidersHandler) EditProvider(c echo.Context) error {
 		})
 	}
 
-	return views.ProvidersPage(templateProviders, provider, allConfigs, systemPrompts, currentPath).Render(c.Request().Context(), c.Response().Writer)
+	return views.ProvidersPage(templateProviders, provider, allConfigs, systemPrompts).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // UpdateProvider handles POST /providers/edit/{id} - processes edit form submission
