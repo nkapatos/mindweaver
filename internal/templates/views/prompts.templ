@@ -14,8 +14,8 @@ type PromptWithRelations struct {
 	Actor  *store.Actor
 }
 
-templ PromptsPage(promptsWithRelations []PromptWithRelations, editingPrompt *store.Prompt, activePath string) {
-	@layouts.AppLayout("Mindweaver - Prompts", "Manage your prompts", activePath) {
+templ PromptsPage(promptsWithRelations []PromptWithRelations, editingPrompt *store.Prompt) {
+	@layouts.AppLayout("Mindweaver - Prompts", "Manage your prompts") {
 		<div class="container mx-auto px-4 py-8">
 			<div class="mb-8">
 				<h1 class="text-3xl font-bold text-base-content mb-2">Prompts</h1>
@@ -148,11 +148,11 @@ templ PromptFormFields(editingPrompt *store.Prompt) {
 			placeholder="Enter prompt content"
 			required
 		>
-		if editingPrompt != nil {
-			{editingPrompt.Content}
-		} else {
-			"Enter prompt content"
-		}
+			if editingPrompt != nil {
+				{ editingPrompt.Content }
+			} else {
+				"Enter prompt content"
+			}
 		</textarea>
 	</div>
 	<label class="label cursor-pointer">

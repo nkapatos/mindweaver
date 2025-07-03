@@ -53,7 +53,6 @@ func NewConversationHandler(conversationService *services.ConversationService, p
 }
 
 func (h *ConversationHandler) Conversation(c echo.Context) error {
-	currentPath := c.Path()
 	providers, err := h.providerService.GetAllProviders(c.Request().Context())
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to load providers")
@@ -73,7 +72,7 @@ func (h *ConversationHandler) Conversation(c echo.Context) error {
 	}
 
 	// For the main conversation page, no conversation is selected yet
-	return views.Conversation(currentPath, providerDropdownData, messageInputData).Render(c.Request().Context(), c.Response().Writer)
+	return views.Conversation(providerDropdownData, messageInputData).Render(c.Request().Context(), c.Response().Writer)
 }
 
 func (h *ConversationHandler) NewConversation(c echo.Context) error {
@@ -177,6 +176,5 @@ func (h *ConversationHandler) ViewConversation(c echo.Context) error {
 		IsDisabled:  defaultProvider == nil,
 	}
 
-	currentPath := c.Path()
-	return views.Conversation(currentPath, providerDropdownData, messageInputData).Render(c.Request().Context(), c.Response().Writer)
+	return views.Conversation(providerDropdownData, messageInputData).Render(c.Request().Context(), c.Response().Writer)
 }

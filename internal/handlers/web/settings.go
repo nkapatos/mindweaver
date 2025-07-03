@@ -12,6 +12,5 @@ func NewSettingsHandler() *SettingsHandler {
 }
 
 func (h *SettingsHandler) Settings(c echo.Context) error {
-	currentPath := c.Path()
-	return views.SettingsPage(currentPath).Render(c.Request().Context(), c.Response().Writer)
+	return views.SettingsPage().Render(c.Request().Context(), c.Response().Writer)
 }

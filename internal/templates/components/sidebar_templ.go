@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/nkapatos/mindweaver/internal/templates/elements"
 
-func Sidebar(activePath string) templ.Component {
+func Sidebar() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -43,11 +43,11 @@ func Sidebar(activePath string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = NavigationMenu(activePath).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = NavigationMenu().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></aside></div><style>\n\t\t#sidebar {\n\t\t\twidth: 20rem; /* w-80 equivalent */\n\t\t}\n\t\t\n\t\t#sidebar.compact {\n\t\t\twidth: 4rem; /* w-16 equivalent */\n\t\t}\n\t\t\n\t\t#sidebar.compact .sidebar-title {\n\t\t\tdisplay: none;\n\t\t}\n\t\t\n\t\t#sidebar.compact .nav-text {\n\t\t\tdisplay: none;\n\t\t}\n\t\t\n\t\t#sidebar.compact li a {\n\t\t\tjustify-content: center;\n\t\t\tpadding: 0.75rem;\n\t\t}\n\t\t\n\t\t#sidebar.compact li a svg {\n\t\t\tmargin: 0;\n\t\t}\n\t\t\n\t\t#sidebar.compact #sidebar-toggle svg {\n\t\t\ttransform: rotate(180deg);\n\t\t}\n\t</style><script>\n\t\tfunction toggleSidebar() {\n\t\t\tconst sidebar = document.getElementById('sidebar');\n\t\t\tsidebar.classList.toggle('compact');\n\t\t\t\n\t\t\t// Save state\n\t\t\tlocalStorage.setItem('sidebar-compact', sidebar.classList.contains('compact'));\n\t\t}\n\t\t\n\t\t// Restore state on load\n\t\tdocument.addEventListener('DOMContentLoaded', function() {\n\t\t\tconst isCompact = localStorage.getItem('sidebar-compact') === 'true';\n\t\t\tif (isCompact) {\n\t\t\t\tdocument.getElementById('sidebar').classList.add('compact');\n\t\t\t}\n\t\t});\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></aside></div><style>\n\t\t#sidebar {\n\t\t\twidth: 20rem; /* w-80 equivalent */\n\t\t}\n\n\t\t#sidebar.compact {\n\t\t\twidth: 4rem; /* w-16 equivalent */\n\t\t}\n\n\t\t#sidebar.compact .sidebar-title {\n\t\t\tdisplay: none;\n\t\t}\n\n\t\t#sidebar.compact .nav-text {\n\t\t\tdisplay: none;\n\t\t}\n\n\t\t#sidebar.compact li a {\n\t\t\tjustify-content: center;\n\t\t\tpadding: 0.75rem;\n\t\t}\n\n\t\t#sidebar.compact li a svg {\n\t\t\tmargin: 0;\n\t\t}\n\n\t\t#sidebar.compact #sidebar-toggle svg {\n\t\t\ttransform: rotate(180deg);\n\t\t}\n\t</style><script>\n\t\tfunction toggleSidebar() {\n\t\t\tconst sidebar = document.getElementById('sidebar');\n\t\t\tsidebar.classList.toggle('compact');\n\n\t\t\t// Save state\n\t\t\tlocalStorage.setItem('sidebar-compact', sidebar.classList.contains('compact'));\n\t\t}\n\n\t\t// Restore state on load\n\t\tdocument.addEventListener('DOMContentLoaded', function() {\n\t\t\tconst isCompact = localStorage.getItem('sidebar-compact') === 'true';\n\t\t\tif (isCompact) {\n\t\t\t\tdocument.getElementById('sidebar').classList.add('compact');\n\t\t\t}\n\t\t});\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

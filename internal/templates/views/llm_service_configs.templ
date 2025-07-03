@@ -20,8 +20,9 @@ type Model struct {
 	Name string
 }
 
-templ LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, editingConfig *store.LlmServiceConfig, llmServices []store.LlmService, selectedServiceID int64, availableModels []Model, activePath string) {
-	@layouts.AppLayout("Mindweaver - LLM Service Configurations", "Manage your AI model configurations", activePath) {
+// TODO: I don't like how I need to pass the deps here, revisit
+templ LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, editingConfig *store.LlmServiceConfig, llmServices []store.LlmService, selectedServiceID int64, availableModels []Model) {
+	@layouts.AppLayout("Mindweaver - LLM Service Configurations", "Manage your AI model configurations") {
 		<div class="container mx-auto px-4 py-8">
 			<div class="mb-8">
 				<h1 class="text-3xl font-bold text-base-content mb-2">LLM Service Configurations</h1>
@@ -226,9 +227,9 @@ templ LLMServiceConfigFormFields(editingConfig *store.LlmServiceConfig, llmServi
 			class="textarea textarea-bordered w-full h-20"
 			placeholder="What this configuration is used for"
 		>
-		if editingConfig != nil && editingConfig.Description.Valid {
-			{editingConfig.Description.String}
-		}
+			if editingConfig != nil && editingConfig.Description.Valid {
+				{ editingConfig.Description.String }
+			}
 		</textarea>
 	</div>
-} 
+}

@@ -28,7 +28,8 @@ type Model struct {
 	Name string
 }
 
-func LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, editingConfig *store.LlmServiceConfig, llmServices []store.LlmService, selectedServiceID int64, availableModels []Model, activePath string) templ.Component {
+// TODO: I don't like how I need to pass the deps here, revisit
+func LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, editingConfig *store.LlmServiceConfig, llmServices []store.LlmService, selectedServiceID int64, availableModels []Model) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -91,7 +92,7 @@ func LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, ed
 					var templ_7745c5c3_Var3 string
 					templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(configData.LLMServiceConfig.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 51, Col: 80}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 52, Col: 80}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 					if templ_7745c5c3_Err != nil {
@@ -109,7 +110,7 @@ func LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, ed
 						var templ_7745c5c3_Var4 string
 						templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(configData.LLMServiceConfig.Description.String)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 53, Col: 101}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 54, Col: 101}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 						if templ_7745c5c3_Err != nil {
@@ -127,7 +128,7 @@ func LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, ed
 					var templ_7745c5c3_Var5 string
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(configData.LLMService.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 60, Col: 60}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 61, Col: 60}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
@@ -140,7 +141,7 @@ func LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, ed
 					var templ_7745c5c3_Var6 string
 					templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(configData.LLMServiceConfig.Configuration)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 64, Col: 75}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 65, Col: 75}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 					if templ_7745c5c3_Err != nil {
@@ -153,7 +154,7 @@ func LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, ed
 					var templ_7745c5c3_Var7 string
 					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(configData.LLMServiceConfig.ID, 10))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 68, Col: 76}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 69, Col: 76}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 					if templ_7745c5c3_Err != nil {
@@ -171,7 +172,7 @@ func LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, ed
 						var templ_7745c5c3_Var8 string
 						templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(configData.LLMServiceConfig.CreatedAt.Time.Format("2006-01-02 15:04:05"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 70, Col: 101}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 71, Col: 101}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 						if templ_7745c5c3_Err != nil {
@@ -189,7 +190,7 @@ func LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, ed
 					var templ_7745c5c3_Var9 templ.SafeURL
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(config.RouteLLMServiceConfigsEdit + "/" + strconv.FormatInt(configData.LLMServiceConfig.ID, 10)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 74, Col: 131}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 75, Col: 131}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
@@ -202,7 +203,7 @@ func LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, ed
 					var templ_7745c5c3_Var10 templ.SafeURL
 					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(config.RouteLLMServiceConfigsDelete)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 77, Col: 61}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 78, Col: 61}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 					if templ_7745c5c3_Err != nil {
@@ -215,7 +216,7 @@ func LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, ed
 					var templ_7745c5c3_Var11 string
 					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(configData.LLMServiceConfig.ID, 10))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 78, Col: 104}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 79, Col: 104}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 					if templ_7745c5c3_Err != nil {
@@ -237,7 +238,7 @@ func LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, ed
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layouts.AppLayout("Mindweaver - LLM Service Configurations", "Manage your AI model configurations", activePath).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.AppLayout("Mindweaver - LLM Service Configurations", "Manage your AI model configurations").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -274,7 +275,7 @@ func LLMServiceConfigForm(editingConfig *store.LlmServiceConfig, llmServices []s
 			var templ_7745c5c3_Var13 templ.SafeURL
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs(config.RouteLLMServiceConfigs)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 99, Col: 42}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 100, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -287,7 +288,7 @@ func LLMServiceConfigForm(editingConfig *store.LlmServiceConfig, llmServices []s
 			var templ_7745c5c3_Var14 templ.SafeURL
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(config.RouteLLMServiceConfigsEdit + "/" + strconv.FormatInt(editingConfig.ID, 10)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 103, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 104, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -308,7 +309,7 @@ func LLMServiceConfigForm(editingConfig *store.LlmServiceConfig, llmServices []s
 			var templ_7745c5c3_Var15 templ.SafeURL
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinURLErrs(config.RouteLLMServiceConfigs)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 106, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 107, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -326,7 +327,7 @@ func LLMServiceConfigForm(editingConfig *store.LlmServiceConfig, llmServices []s
 			var templ_7745c5c3_Var16 templ.SafeURL
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinURLErrs(config.RouteLLMServiceConfigs)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 116, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 117, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -382,7 +383,7 @@ func LLMServiceConfigFormFields(editingConfig *store.LlmServiceConfig, llmServic
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(service.ID, 10))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 134, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 135, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -405,7 +406,7 @@ func LLMServiceConfigFormFields(editingConfig *store.LlmServiceConfig, llmServic
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(service.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 138, Col: 19}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 139, Col: 19}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -428,7 +429,7 @@ func LLMServiceConfigFormFields(editingConfig *store.LlmServiceConfig, llmServic
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(editingConfig.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 154, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 155, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -457,7 +458,7 @@ func LLMServiceConfigFormFields(editingConfig *store.LlmServiceConfig, llmServic
 					var templ_7745c5c3_Var21 string
 					templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(model.ID)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 168, Col: 30}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 169, Col: 30}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 					if templ_7745c5c3_Err != nil {
@@ -470,7 +471,7 @@ func LLMServiceConfigFormFields(editingConfig *store.LlmServiceConfig, llmServic
 					var templ_7745c5c3_Var22 string
 					templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(model.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 168, Col: 45}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 169, Col: 45}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 					if templ_7745c5c3_Err != nil {
@@ -505,7 +506,7 @@ func LLMServiceConfigFormFields(editingConfig *store.LlmServiceConfig, llmServic
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(editingConfig.Description.String)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 230, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_service_configs.templ`, Line: 231, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {

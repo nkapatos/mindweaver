@@ -19,7 +19,6 @@ templ ConversationHeader(data ConversationHeaderData) {
 					SelectedProvider: data.SelectedProvider,
 					DropdownID:       "conversation-provider-dropdown",
 				})
-
 				<!-- Conversation Title/Info -->
 				<div class="flex-1 min-w-0">
 					if data.Conversation != nil {
@@ -40,7 +39,6 @@ templ ConversationHeader(data ConversationHeaderData) {
 					}
 				</div>
 			</div>
-
 			<!-- Action Buttons -->
 			<div class="flex items-center gap-2">
 				if data.Conversation != nil {
@@ -59,4 +57,4 @@ templ ConversationHeader(data ConversationHeaderData) {
 			</div>
 		</div>
 	</div>
-} 
+}

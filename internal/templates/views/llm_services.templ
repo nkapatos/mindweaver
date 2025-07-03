@@ -8,8 +8,8 @@ import (
 	"github.com/nkapatos/mindweaver/internal/templates/layouts"
 )
 
-templ LLMServicesPage(llmServices []store.LlmService, editingService *store.LlmService, adapters []string, activePath string) {
-	@layouts.AppLayout("Mindweaver - LLM Services", "Manage your LLM services", activePath) {
+templ LLMServicesPage(llmServices []store.LlmService, editingService *store.LlmService, adapters []string) {
+	@layouts.AppLayout("Mindweaver - LLM Services", "Manage your LLM services") {
 		<div class="container mx-auto px-4 py-8">
 			<div class="mb-8">
 				<h1 class="text-3xl font-bold text-base-content mb-2">LLM Services</h1>
@@ -225,4 +225,4 @@ templ LLMServiceFormFields(editingService *store.LlmService, adapters []string) 
 			</span>
 		</label>
 	</div>
-} 
+}
