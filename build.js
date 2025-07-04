@@ -44,11 +44,14 @@ function getBuildConfig(host, port, isProduction = false) {
     entryPoints: {
       'main': 'assets/ts/main.ts',
       'index': 'assets/css/index.css',
+      'vendor': 'assets/ts/vendor.ts',
     },
     bundle: true,
     outdir: 'dist',
     loader: { '.css': 'css' },
     sourcemap: !isProduction,
+    splitting: true,
+    format: 'esm',
   };
 
   if (isProduction) {
@@ -109,3 +112,6 @@ if (command === 'dev') {
   console.log('  build - Build for production');
   process.exit(1);
 }
+
+// Note: Create assets/ts/vendor.ts to import htmx, alpinejs, etc.
+

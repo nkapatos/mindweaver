@@ -4,16 +4,16 @@ import "github.com/nkapatos/mindweaver/config"
 import "github.com/nkapatos/mindweaver/internal/templates/elements"
 
 templ Sidebar() {
-	<div class="drawer-side">
+	<div x-data="{ compact: localStorage.getItem('sidebar-compact') === 'true' }" :class="{'compact': compact}" class="drawer-side">
 		<label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-		<aside class="min-h-full bg-base-100 border-r border-base-300 transition-all duration-300" id="sidebar">
+		<aside x-bind:class="{'compact': compact}" class="min-h-full bg-base-100 border-r border-base-300 transition-all duration-300" id="sidebar">
 			<div class="p-4">
 				<!-- Toggle button -->
 				<div class="flex justify-end mb-4">
 					<button
 						id="sidebar-toggle"
 						class="btn btn-sm btn-ghost btn-square"
-						onclick="toggleSidebar()"
+						@click="compact = !compact; localStorage.setItem('sidebar-compact', compact)"
 						title="Toggle compact mode"
 					>
 						@elements.Icon(config.GetSvgIconPath(config.IconLeftArrow))
@@ -24,7 +24,6 @@ templ Sidebar() {
 			</div>
 		</aside>
 	</div>
-	// TODO: Move to a css module
 	<style>
 		#sidebar {
 			width: 20rem; /* w-80 equivalent */
@@ -55,22 +54,4 @@ templ Sidebar() {
 			transform: rotate(180deg);
 		}
 	</style>
-	// TODO: update with htmx script
-	<script>
-		function toggleSidebar() {
-			const sidebar = document.getElementById('sidebar');
-			sidebar.classList.toggle('compact');
-
-			// Save state
-			localStorage.setItem('sidebar-compact', sidebar.classList.contains('compact'));
-		}
-
-		// Restore state on load
-		document.addEventListener('DOMContentLoaded', function() {
-			const isCompact = localStorage.getItem('sidebar-compact') === 'true';
-			if (isCompact) {
-				document.getElementById('sidebar').classList.add('compact');
-			}
-		});
-	</script>
 }

@@ -1,12 +1,14 @@
 {
 	"dependencies": {
 		"@tailwindcss/postcss": "^4.1.8",
+		"alpinejs": "^3.14.9",
 		"htmx.org": "2.0.6",
 		"lucide-static": "^0.523.0",
 		"postcss": "^8.5.4",
 		"tailwindcss": "^4.1.8"
 	},
 	"devDependencies": {
+		"@types/alpinejs": "^3.13.11",
 		"daisyui": "^5.0.43",
 		"esbuild": "^0.25.5"
 	}
