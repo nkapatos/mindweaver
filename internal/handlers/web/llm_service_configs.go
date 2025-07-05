@@ -29,29 +29,6 @@ func (h *LLMServiceConfigsHandler) LLMServiceConfigs(c echo.Context) error {
 		llmServices = []store.LlmService{}
 	}
 
-	// Get selected service ID from query params (for form submission)
-	selectedServiceIDStr := c.QueryParam("llm_service_id")
-	var selectedServiceID int64
-	var availableModels []views.Model
-
-	if selectedServiceIDStr != "" {
-		if serviceID, err := strconv.ParseInt(selectedServiceIDStr, 10, 64); err == nil {
-			selectedServiceID = serviceID
-
-			// Get models for the selected service (caching handled internally)
-			models, err := h.llmService.GetAvailableModelsForService(c.Request().Context(), serviceID)
-			if err == nil {
-				// Convert to views.Model format
-				for _, model := range models {
-					availableModels = append(availableModels, views.Model{
-						ID:   model.ID,
-						Name: model.Name,
-					})
-				}
-			}
-		}
-	}
-
 	// Get all configurations with their service info for display
 	var configsWithServices []views.LLMServiceConfigWithService
 	for _, service := range llmServices {
@@ -67,7 +44,7 @@ func (h *LLMServiceConfigsHandler) LLMServiceConfigs(c echo.Context) error {
 		}
 	}
 
-	return views.LLMServiceConfigsPage(configsWithServices, nil, llmServices, selectedServiceID, availableModels).Render(c.Request().Context(), c.Response().Writer)
+	return views.LLMServiceConfigsList(configsWithServices).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // CreateLLMServiceConfig handles POST /llm-service-configs - creates a new configuration
@@ -178,7 +155,7 @@ func (h *LLMServiceConfigsHandler) GetModelsForService(c echo.Context) error {
 	})
 }
 
-// EditLLMServiceConfig handles GET /llm-service-configs/edit/{id} - shows edit form
+// EditLLMServiceConfig handles GET /llm-service-configs/{id}/edit - shows edit form
 func (h *LLMServiceConfigsHandler) EditLLMServiceConfig(c echo.Context) error {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -230,10 +207,10 @@ func (h *LLMServiceConfigsHandler) EditLLMServiceConfig(c echo.Context) error {
 		}
 	}
 
-	return views.LLMServiceConfigsPage(configsWithServices, config, llmServices, config.LlmServiceID, availableModels).Render(c.Request().Context(), c.Response().Writer)
+	return views.LLMServiceConfigDetailsForm(config, llmServices, config.LlmServiceID, availableModels).Render(c.Request().Context(), c.Response().Writer)
 }
 
-// UpdateLLMServiceConfig handles POST /llm-service-configs/edit/{id} - updates a configuration
+// UpdateLLMServiceConfig handles POST /llm-service-configs/{id}/edit - updates a configuration
 func (h *LLMServiceConfigsHandler) UpdateLLMServiceConfig(c echo.Context) error {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -259,7 +236,7 @@ func (h *LLMServiceConfigsHandler) UpdateLLMServiceConfig(c echo.Context) error 
 
 	// Validate required fields
 	if name == "" || model == "" {
-		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/edit/"+idStr+"?error=Name and model are required")
+		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/"+idStr+"/edit?error=Name and model are required")
 	}
 
 	// Parse temperature (optional, default to 0.7)
@@ -289,7 +266,7 @@ func (h *LLMServiceConfigsHandler) UpdateLLMServiceConfig(c echo.Context) error 
 
 	// Update the configuration
 	if err := h.llmService.UpdateLLMServiceConfig(c.Request().Context(), id, name, description, config); err != nil {
-		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/edit/"+idStr+"?error=Failed to update configuration: "+err.Error())
+		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/"+idStr+"/edit?error=Failed to update configuration: "+err.Error())
 	}
 
 	// Redirect back with success message

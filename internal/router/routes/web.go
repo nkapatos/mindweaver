@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"fmt"
+
 	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/config"
 	"github.com/nkapatos/mindweaver/internal/handlers/web"
@@ -8,44 +10,49 @@ import (
 
 // SetupWebRoutes configures all web routes
 func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, llmServicesHandler *web.LLMServicesHandler, llmServiceConfigsHandler *web.LLMServiceConfigsHandler, settingsHandler *web.SettingsHandler, conversationHandler *web.ConversationHandler) {
+	// Home
 	e.GET(config.RouteHome, homeHandler.Home)
 
-	// Prompts
-	e.GET(config.RoutePrompts, promptsHandler.Prompts)
-	e.POST(config.RoutePrompts, promptsHandler.CreatePrompt)
-	e.GET(config.RoutePromptsEdit, promptsHandler.EditPrompt)
-	e.POST(config.RoutePromptsEdit, promptsHandler.UpdatePrompt)
-	e.POST(config.RoutePromptsDelete, promptsHandler.DeletePrompt)
+	// Prompts group
+	prompts := e.Group(config.RoutePrompts)
+	prompts.GET("", promptsHandler.Prompts)
+	prompts.POST("", promptsHandler.CreatePrompt)
+	prompts.GET(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), promptsHandler.EditPrompt)
+	prompts.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), promptsHandler.UpdatePrompt)
+	prompts.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionDelete), promptsHandler.DeletePrompt)
 
-	// Providers
-	e.GET(config.RouteProviders, providersHandler.Providers)
-	e.POST(config.RouteProviders, providersHandler.CreateProvider)
-	e.GET(config.RouteProvidersEdit, providersHandler.EditProvider)
-	e.POST(config.RouteProvidersEdit, providersHandler.UpdateProvider)
-	e.POST(config.RouteProvidersDelete, providersHandler.DeleteProvider)
+	// Providers group
+	providers := e.Group(config.RouteProviders)
+	providers.GET("", providersHandler.Providers)
+	providers.POST("", providersHandler.CreateProvider)
+	providers.GET(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), providersHandler.EditProvider)
+	providers.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), providersHandler.UpdateProvider)
+	providers.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionDelete), providersHandler.DeleteProvider)
 
-	// LLM Services
-	e.GET(config.RouteLLMServices, llmServicesHandler.LLMServices)
-	e.POST(config.RouteLLMServices, llmServicesHandler.CreateLLMService)
-	e.GET(config.RouteLLMServicesEdit, llmServicesHandler.EditLLMService)
-	e.POST(config.RouteLLMServicesEdit, llmServicesHandler.UpdateLLMService)
-	e.POST(config.RouteLLMServicesDelete, llmServicesHandler.DeleteLLMService)
-	e.GET(config.RouteLLMServicesModels, llmServicesHandler.GetModels)
+	// LLM Services group
+	llmServices := e.Group(config.RouteLLMServices)
+	llmServices.GET("", llmServicesHandler.LLMServices)
+	llmServices.POST("", llmServicesHandler.CreateLLMService)
+	llmServices.GET(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), llmServicesHandler.EditLLMService)
+	llmServices.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), llmServicesHandler.UpdateLLMService)
+	llmServices.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionDelete), llmServicesHandler.DeleteLLMService)
+	llmServices.GET("/:service-id/models", llmServicesHandler.GetModels)
 
-	// LLM Service Configurations
-	e.GET(config.RouteLLMServiceConfigs, llmServiceConfigsHandler.LLMServiceConfigs)
-	e.POST(config.RouteLLMServiceConfigs, llmServiceConfigsHandler.CreateLLMServiceConfig)
-	e.GET(config.RouteLLMServiceConfigsEdit, llmServiceConfigsHandler.EditLLMServiceConfig)
-	e.POST(config.RouteLLMServiceConfigsEdit, llmServiceConfigsHandler.UpdateLLMServiceConfig)
-	e.POST(config.RouteLLMServiceConfigsDelete, llmServiceConfigsHandler.DeleteLLMServiceConfig)
-	e.GET(config.RouteLLMServiceConfigsModels, llmServiceConfigsHandler.GetModelsForService)
+	// LLM Service Configurations group
+	configs := e.Group(config.RouteLLMServiceConfigs)
+	configs.GET("", llmServiceConfigsHandler.LLMServiceConfigs)
+	configs.POST("", llmServiceConfigsHandler.CreateLLMServiceConfig)
+	configs.GET(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), llmServiceConfigsHandler.EditLLMServiceConfig)
+	configs.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), llmServiceConfigsHandler.UpdateLLMServiceConfig)
+	configs.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionDelete), llmServiceConfigsHandler.DeleteLLMServiceConfig)
+	configs.GET(fmt.Sprintf("/%s/models", ":id"), llmServiceConfigsHandler.GetModelsForService)
 
 	// Settings
 	e.GET(config.RouteSettings, settingsHandler.Settings)
 
-	// Conversations
-	e.GET(config.RouteConversations, conversationHandler.Conversation)
-	e.GET(config.RouteConversationsNew, conversationHandler.NewConversation)
-	e.POST(config.RouteConversationsCreate, conversationHandler.CreateConversation)
-	e.GET(config.RouteConversationsView, conversationHandler.ViewConversation)
+	// Conversations group
+	conversations := e.Group(config.RouteConversations)
+	conversations.GET("", conversationHandler.Conversation)
+	conversations.POST(fmt.Sprintf("/%s", config.RESTActionNew), conversationHandler.CreateConversation)
+	conversations.GET(fmt.Sprintf("/%s", ":id"), conversationHandler.ViewConversation)
 }

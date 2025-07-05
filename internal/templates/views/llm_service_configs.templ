@@ -20,106 +20,111 @@ type Model struct {
 	Name string
 }
 
-// TODO: I don't like how I need to pass the deps here, revisit
-templ LLMServiceConfigsPage(configsWithServices []LLMServiceConfigWithService, editingConfig *store.LlmServiceConfig, llmServices []store.LlmService, selectedServiceID int64, availableModels []Model) {
-	@layouts.AppLayout("Mindweaver - LLM Service Configurations", "Manage your AI model configurations") {
+templ LLMServiceConfigsPage(title, description string) {
+	@layouts.AppLayout(title, description) {
 		<div class="container mx-auto px-4 py-8">
 			<div class="mb-8">
 				<h1 class="text-3xl font-bold text-base-content mb-2">LLM Service Configurations</h1>
-				<p class="text-base-content/70">Create and manage model configurations for your AI services.</p>
+				<p class="text-base-content/70">Configure and manage your AI model configurations.</p>
 			</div>
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-				<!-- Create/Edit Configuration Form -->
-				<div class="card bg-base-100 shadow-lg">
-					<div class="card-body">
-						@LLMServiceConfigForm(editingConfig, llmServices, selectedServiceID, availableModels)
-					</div>
-				</div>
-				<!-- Existing Configurations List -->
-				<div class="card bg-base-100 shadow-lg">
-					<div class="card-body">
-						<h2 class="card-title text-xl mb-4">Your Configurations</h2>
-						if len(configsWithServices) == 0 {
-							<div class="text-center py-8">
-								<p class="text-base-content/60">No configurations created yet. Create your first configuration using the form.</p>
-							</div>
-						} else {
-							<div class="space-y-4">
-								for _, configData := range configsWithServices {
-									<div class="border border-base-300 rounded-lg p-4">
-										<div class="flex justify-between items-start mb-2">
-											<div>
-												<h3 class="font-semibold text-lg">{ configData.LLMServiceConfig.Name }</h3>
-												if configData.LLMServiceConfig.Description.Valid {
-													<p class="text-sm text-base-content/70">{ configData.LLMServiceConfig.Description.String }</p>
-												}
-											</div>
-										</div>
-										<div class="grid grid-cols-2 gap-2 text-xs text-base-content/50 mb-3">
-											<div>
-												<span class="font-medium">Service:</span>
-												<p class="truncate">{ configData.LLMService.Name }</p>
-											</div>
-											<div>
-												<span class="font-medium">Model:</span>
-												<p class="truncate">{ configData.LLMServiceConfig.Configuration }</p>
-											</div>
-										</div>
-										<div class="flex justify-between items-center text-xs text-base-content/50 mb-3">
-											<span>ID: { strconv.FormatInt(configData.LLMServiceConfig.ID, 10) }</span>
-											if configData.LLMServiceConfig.CreatedAt.Valid {
-												<span>Created: { configData.LLMServiceConfig.CreatedAt.Time.Format("2006-01-02 15:04:05") }</span>
-											}
-										</div>
-										<div class="mt-3 flex gap-2">
-											<a href={ templ.SafeURL(config.RouteLLMServiceConfigsEdit + "/" + strconv.FormatInt(configData.LLMServiceConfig.ID, 10)) } class="btn btn-sm btn-outline">
-												Edit
-											</a>
-											<form action={ config.RouteLLMServiceConfigsDelete } method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this configuration? This will also delete all providers that use it.')">
-												<input type="hidden" name="id" value={ strconv.FormatInt(configData.LLMServiceConfig.ID, 10) }/>
-												<button type="submit" class="btn btn-sm btn-error">
-													Delete
-												</button>
-											</form>
-										</div>
-									</div>
-								}
-							</div>
-						}
-					</div>
-				</div>
+				{ children... }
 			</div>
 		</div>
 	}
 }
 
-templ LLMServiceConfigForm(editingConfig *store.LlmServiceConfig, llmServices []store.LlmService, selectedServiceID int64, availableModels []Model) {
-	if editingConfig != nil {
-		<div class="flex items-center gap-4 mb-4">
-			<h2 class="card-title text-xl">Edit Configuration</h2>
-			<a href={ config.RouteLLMServiceConfigs } class="btn btn-ghost btn-sm">
-				← Back to Create
-			</a>
-		</div>
-		<form action={ templ.SafeURL(config.RouteLLMServiceConfigsEdit + "/" + strconv.FormatInt(editingConfig.ID, 10)) } method="POST" class="space-y-4">
-			@LLMServiceConfigFormFields(editingConfig, llmServices, selectedServiceID, availableModels)
-			<div class="flex gap-3">
-				<a href={ config.RouteLLMServiceConfigs } class="btn btn-outline flex-1">
-					Cancel
-				</a>
-				<button type="submit" class="btn btn-primary flex-1">
-					Update Configuration
-				</button>
+templ LLMServiceConfigsList(configsWithServices []LLMServiceConfigWithService) {
+	@LLMServiceConfigsPage("LLM Service Configurations", "Configure and manage your AI model configurations.") {
+		<div class="card bg-base-100 shadow-lg">
+			<div class="card-body">
+				<h2 class="card-title text-xl mb-4">Your Configurations</h2>
+				if len(configsWithServices) == 0 {
+					<div class="text-center py-8">
+						<p class="text-base-content/60">No configurations created yet. Create your first configuration using the form.</p>
+					</div>
+				} else {
+					<div class="space-y-4">
+						for _, configData := range configsWithServices {
+							<div class="border border-base-300 rounded-lg p-4">
+								<div class="flex justify-between items-start mb-2">
+									<div>
+										<h3 class="font-semibold text-lg">{ configData.LLMServiceConfig.Name }</h3>
+										if configData.LLMServiceConfig.Description.Valid {
+											<p class="text-sm text-base-content/70">{ configData.LLMServiceConfig.Description.String }</p>
+										}
+									</div>
+									<div class="badge badge-outline">{ configData.LLMService.Adapter }</div>
+								</div>
+								<div class="grid grid-cols-2 gap-2 text-xs text-base-content/50 mb-3">
+									<div>
+										<span class="font-medium">Service:</span>
+										<p class="truncate">{ configData.LLMService.Name }</p>
+									</div>
+									<div>
+										<span class="font-medium">Configuration:</span>
+										<p class="truncate">JSON Config</p>
+									</div>
+								</div>
+								<div class="flex justify-between items-center text-xs text-base-content/50 mb-3">
+									<span>ID: { strconv.FormatInt(configData.LLMServiceConfig.ID, 10) }</span>
+									if configData.LLMServiceConfig.CreatedAt.Valid {
+										<span>Created: { configData.LLMServiceConfig.CreatedAt.Time.Format("2006-01-02 15:04:05") }</span>
+									}
+								</div>
+								<div class="mt-3 flex gap-2">
+									<a href={ templ.SafeURL(config.RouteLLMServiceConfigs + "/" + strconv.FormatInt(configData.LLMServiceConfig.ID, 10) + "/" + config.RESTActionEdit) } class="btn btn-sm btn-outline">
+										Edit
+									</a>
+									<form action={ config.RouteLLMServiceConfigs + "/" + strconv.FormatInt(configData.LLMServiceConfig.ID, 10) + "/" + config.RESTActionDelete } method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this configuration? This will also delete all providers that use it.')">
+										<input type="hidden" name="id" value={ strconv.FormatInt(configData.LLMServiceConfig.ID, 10) }/>
+										<button type="submit" class="btn btn-sm btn-error">
+											Delete
+										</button>
+									</form>
+								</div>
+							</div>
+						}
+					</div>
+				}
 			</div>
-		</form>
-	} else {
-		<h2 class="card-title text-xl mb-4">Create New Configuration</h2>
-		<form action={ config.RouteLLMServiceConfigs } method="POST" class="space-y-4">
-			@LLMServiceConfigFormFields(nil, llmServices, selectedServiceID, availableModels)
-			<button type="submit" class="btn btn-primary w-full">
-				Create Configuration
-			</button>
-		</form>
+		</div>
+	}
+}
+
+templ LLMServiceConfigDetailsForm(editingConfig *store.LlmServiceConfig, llmServices []store.LlmService, selectedServiceID int64, availableModels []Model) {
+	@LLMServiceConfigsPage("LLM Service Configurations", "Configure and manage your AI model configurations.") {
+		<div class="card bg-base-100 shadow-lg">
+			<div class="card-body">
+				if editingConfig != nil {
+					<div class="flex items-center gap-4 mb-4">
+						<h2 class="card-title text-xl">Edit Configuration</h2>
+						<a href={ config.RouteLLMServiceConfigs } class="btn btn-ghost btn-sm">
+							← Back to Create
+						</a>
+					</div>
+					<form action={ templ.SafeURL(config.RouteLLMServiceConfigs + "/" + strconv.FormatInt(editingConfig.ID, 10) + "/" + config.RESTActionEdit) } method="POST" class="space-y-4">
+						@LLMServiceConfigFormFields(editingConfig, llmServices, selectedServiceID, availableModels)
+						<div class="flex gap-3">
+							<a href={ config.RouteLLMServiceConfigs } class="btn btn-outline flex-1">
+								Cancel
+							</a>
+							<button type="submit" class="btn btn-primary flex-1">
+								Update Configuration
+							</button>
+						</div>
+					</form>
+				} else {
+					<h2 class="card-title text-xl mb-4">Create New Configuration</h2>
+					<form action={ config.RouteLLMServiceConfigs } method="POST" class="space-y-4">
+						@LLMServiceConfigFormFields(nil, llmServices, selectedServiceID, availableModels)
+						<button type="submit" class="btn btn-primary w-full">
+							Create Configuration
+						</button>
+					</form>
+				}
+			</div>
+		</div>
 	}
 }
 
@@ -128,7 +133,7 @@ templ LLMServiceConfigFormFields(editingConfig *store.LlmServiceConfig, llmServi
 		<label class="label" for="llm_service_id">
 			<span class="label-text font-medium">LLM Service</span>
 		</label>
-		<select id="llm_service_id" name="llm_service_id" class="select select-bordered w-full" required onchange="this.form.submit()">
+		<select id="llm_service_id" name="llm_service_id" class="select select-bordered w-full" required>
 			<option value="">Select LLM service</option>
 			for _, service := range llmServices {
 				<option
@@ -136,10 +141,9 @@ templ LLMServiceConfigFormFields(editingConfig *store.LlmServiceConfig, llmServi
 					if selectedServiceID == service.ID {
 						selected
 					}
-				>{ service.Name }</option>
+				>{ service.Name } ({ service.Adapter })</option>
 			}
 		</select>
-		<p class="text-xs text-base-content/60 mt-1">Choose the service you want to configure</p>
 	</div>
 	<div>
 		<label class="label" for="name">
@@ -158,68 +162,8 @@ templ LLMServiceConfigFormFields(editingConfig *store.LlmServiceConfig, llmServi
 		/>
 	</div>
 	<div>
-		<label class="label" for="model">
-			<span class="label-text font-medium">Model</span>
-		</label>
-		if selectedServiceID > 0 {
-			if len(availableModels) > 0 {
-				<select id="model" name="model" class="select select-bordered w-full" required>
-					<option value="">Select a model</option>
-					for _, model := range availableModels {
-						<option value={ model.ID }>{ model.Name }</option>
-					}
-				</select>
-			} else {
-				<select id="model" name="model" class="select select-bordered w-full" disabled>
-					<option value="">Loading models...</option>
-				</select>
-				<p class="text-xs text-warning mt-1">Loading models from service...</p>
-			}
-		} else {
-			<select id="model" name="model" class="select select-bordered w-full" disabled>
-				<option value="">Select a service first</option>
-			</select>
-			<p class="text-xs text-base-content/60 mt-1">Choose a service above to see available models</p>
-		}
-	</div>
-	<div class="grid grid-cols-2 gap-4">
-		<div>
-			<label class="label" for="temperature">
-				<span class="label-text font-medium">Temperature</span>
-			</label>
-			<input
-				type="number"
-				id="temperature"
-				name="temperature"
-				class="input input-bordered w-full"
-				step="0.1"
-				min="0.0"
-				max="2.0"
-				value="0.7"
-				placeholder="0.7"
-			/>
-			<p class="text-xs text-base-content/60 mt-1">0.0 = focused, 2.0 = creative</p>
-		</div>
-		<div>
-			<label class="label" for="max_tokens">
-				<span class="label-text font-medium">Max Tokens</span>
-			</label>
-			<input
-				type="number"
-				id="max_tokens"
-				name="max_tokens"
-				class="input input-bordered w-full"
-				min="1"
-				max="100000"
-				value="2000"
-				placeholder="2000"
-			/>
-			<p class="text-xs text-base-content/60 mt-1">Maximum response length</p>
-		</div>
-	</div>
-	<div>
 		<label class="label" for="description">
-			<span class="label-text font-medium">Description</span>
+			<span class="label-text font-medium">Description (Optional)</span>
 		</label>
 		<textarea
 			id="description"
@@ -231,5 +175,52 @@ templ LLMServiceConfigFormFields(editingConfig *store.LlmServiceConfig, llmServi
 				{ editingConfig.Description.String }
 			}
 		</textarea>
+	</div>
+	<div>
+		<label class="label" for="model">
+			<span class="label-text font-medium">Model</span>
+		</label>
+		<select id="model" name="model" class="select select-bordered w-full" required>
+			<option value="">Select a model</option>
+			for _, model := range availableModels {
+				<option value={ model.ID }>{ model.Name }</option>
+			}
+		</select>
+		<p class="text-xs text-base-content/60 mt-1">Choose a model from the selected LLM service</p>
+	</div>
+	<div>
+		<label class="label" for="temperature">
+			<span class="label-text font-medium">Temperature</span>
+		</label>
+		<input
+			type="range"
+			id="temperature"
+			name="temperature"
+			class="range range-primary"
+			min="0"
+			max="2"
+			step="0.1"
+			value="0.7"
+		/>
+		<div class="flex justify-between text-xs text-base-content/50">
+			<span>0.0 (Deterministic)</span>
+			<span>0.7 (Balanced)</span>
+			<span>2.0 (Creative)</span>
+		</div>
+	</div>
+	<div>
+		<label class="label" for="max_tokens">
+			<span class="label-text font-medium">Max Tokens</span>
+		</label>
+		<input
+			type="number"
+			id="max_tokens"
+			name="max_tokens"
+			class="input input-bordered w-full"
+			placeholder="1000"
+			value="1000"
+			min="1"
+			max="4000"
+		/>
 	</div>
 }

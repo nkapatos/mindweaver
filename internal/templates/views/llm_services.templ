@@ -8,110 +8,118 @@ import (
 	"github.com/nkapatos/mindweaver/internal/templates/layouts"
 )
 
-templ LLMServicesPage(llmServices []store.LlmService, editingService *store.LlmService, adapters []string) {
-	@layouts.AppLayout("Mindweaver - LLM Services", "Manage your LLM services") {
+// LLMServiceWithRelations represents an LLM service with its related data for display
+type LLMServiceWithRelations struct {
+	LLMService store.LlmService
+	Configs    []store.LlmServiceConfig
+}
+
+templ LLMServicesPage(title, description string) {
+	@layouts.AppLayout(title, description) {
 		<div class="container mx-auto px-4 py-8">
 			<div class="mb-8">
 				<h1 class="text-3xl font-bold text-base-content mb-2">LLM Services</h1>
-				<p class="text-base-content/70">Configure external LLM services like OpenAI, Anthropic, and others.</p>
+				<p class="text-base-content/70">Configure and manage your LLM service connections.</p>
 			</div>
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-				<!-- Create/Edit LLM Service Form -->
-				<div class="card bg-base-100 shadow-lg">
-					<div class="card-body">
-						@LLMServiceForm(editingService, adapters)
+				{ children... }
+			</div>
+		</div>
+	}
+}
+
+templ LLMServicesList(llmServicesWithRelations []LLMServiceWithRelations) {
+	@LLMServicesPage("LLM Services", "Configure and manage your LLM service connections.") {
+		<div class="card bg-base-100 shadow-lg">
+			<div class="card-body">
+				<h2 class="card-title text-xl mb-4">Your LLM Services</h2>
+				if len(llmServicesWithRelations) == 0 {
+					<div class="text-center py-8">
+						<p class="text-base-content/60">No LLM services configured yet. Create your first service using the form.</p>
 					</div>
-				</div>
-				<!-- Existing LLM Services List -->
-				<div class="card bg-base-100 shadow-lg">
-					<div class="card-body">
-						<h2 class="card-title text-xl mb-4">Your LLM Services</h2>
-						if len(llmServices) == 0 {
-							<div class="text-center py-8">
-								<p class="text-base-content/60">No LLM services configured yet. Create your first service using the form.</p>
-							</div>
-						} else {
-							<div class="space-y-4">
-								for _, service := range llmServices {
-									<div class="border border-base-300 rounded-lg p-4">
-										<div class="flex justify-between items-start mb-2">
-											<h3 class="font-semibold text-lg">{ service.Name }</h3>
-											<span class="badge badge-secondary badge-sm">{ service.Adapter }</span>
-										</div>
-										if service.Description.Valid {
-											<p class="text-base-content/70 text-sm mb-3">{ service.Description.String }</p>
-										}
-										<div class="grid grid-cols-2 gap-2 text-xs text-base-content/50 mb-3">
-											<div>
-												<span class="font-medium">Base URL:</span>
-												<p class="truncate">{ service.BaseUrl }</p>
-											</div>
-											if service.Organization.Valid {
-												<div>
-													<span class="font-medium">Organization:</span>
-													<p class="truncate">{ service.Organization.String }</p>
-												</div>
-											}
-										</div>
-										<div class="flex justify-between items-center text-xs text-base-content/50">
-											<span>ID: { strconv.FormatInt(service.ID, 10) }</span>
-											if service.CreatedAt.Valid {
-												<span>Created: { service.CreatedAt.Time.Format("2006-01-02 15:04") }</span>
-											}
-										</div>
-										<div class="mt-3 flex gap-2">
-											<a href={ templ.SafeURL(config.RouteLLMServicesEdit + "/" + strconv.FormatInt(service.ID, 10)) } class="btn btn-sm btn-outline">
-												Edit
-											</a>
-											<form action={ config.RouteLLMServicesDelete } method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this LLM service?')">
-												<input type="hidden" name="id" value={ strconv.FormatInt(service.ID, 10) }/>
-												<button type="submit" class="btn btn-sm btn-error">
-													Delete
-												</button>
-											</form>
-										</div>
+				} else {
+					<div class="space-y-4">
+						for _, serviceData := range llmServicesWithRelations {
+							<div class="border border-base-300 rounded-lg p-4">
+								<div class="flex justify-between items-start mb-2">
+									<div>
+										<h3 class="font-semibold text-lg">{ serviceData.LLMService.Name }</h3>
+										<p class="text-sm text-base-content/70">{ serviceData.LLMService.Adapter }</p>
 									</div>
-								}
+								</div>
+								<div class="grid grid-cols-2 gap-2 text-xs text-base-content/50 mb-3">
+									<div>
+										<span class="font-medium">Configurations:</span>
+										<p class="truncate">{ strconv.FormatInt(int64(len(serviceData.Configs)), 10) }</p>
+									</div>
+									<div>
+										<span class="font-medium">API Key:</span>
+										<p class="truncate">••••••••</p>
+									</div>
+								</div>
+								<div class="flex justify-between items-center text-xs text-base-content/50 mb-3">
+									<span>ID: { strconv.FormatInt(serviceData.LLMService.ID, 10) }</span>
+									if serviceData.LLMService.CreatedAt.Valid {
+										<span>Created: { serviceData.LLMService.CreatedAt.Time.Format("2006-01-02 15:04:05") }</span>
+									}
+								</div>
+								<div class="mt-3 flex gap-2">
+									<a href={ templ.SafeURL(config.RouteLLMServices + "/" + strconv.FormatInt(serviceData.LLMService.ID, 10) + "/" + config.RESTActionEdit) } class="btn btn-sm btn-outline">
+										Edit
+									</a>
+									<form action={ config.RouteLLMServices + "/" + strconv.FormatInt(serviceData.LLMService.ID, 10) + "/" + config.RESTActionDelete } method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this LLM service?')">
+										<input type="hidden" name="id" value={ strconv.FormatInt(serviceData.LLMService.ID, 10) }/>
+										<button type="submit" class="btn btn-sm btn-error">
+											Delete
+										</button>
+									</form>
+								</div>
 							</div>
 						}
 					</div>
-				</div>
+				}
 			</div>
 		</div>
 	}
 }
 
-templ LLMServiceForm(editingService *store.LlmService, adapters []string) {
-	if editingService != nil {
-		<div class="flex items-center gap-4 mb-4">
-			<h2 class="card-title text-xl">Edit LLM Service</h2>
-			<a href={ config.RouteLLMServices } class="btn btn-ghost btn-sm">
-				← Back to Create
-			</a>
-		</div>
-		<form action={ templ.SafeURL(config.RouteLLMServicesEdit + "/" + strconv.FormatInt(editingService.ID, 10)) } method="POST" class="space-y-4">
-			@LLMServiceFormFields(editingService, adapters)
-			<div class="flex gap-3">
-				<a href={ config.RouteLLMServices } class="btn btn-outline flex-1">
-					Cancel
-				</a>
-				<button type="submit" class="btn btn-primary flex-1">
-					Update Service
-				</button>
+templ LLMServiceDetailsForm(editingService *store.LlmService) {
+	@LLMServicesPage("LLM Services", "Configure and manage your LLM service connections.") {
+		<div class="card bg-base-100 shadow-lg">
+			<div class="card-body">
+				if editingService != nil {
+					<div class="flex items-center gap-4 mb-4">
+						<h2 class="card-title text-xl">Edit LLM Service</h2>
+						<a href={ config.RouteLLMServices } class="btn btn-ghost btn-sm">
+							← Back to Create
+						</a>
+					</div>
+					<form action={ templ.SafeURL(config.RouteLLMServices + "/" + strconv.FormatInt(editingService.ID, 10) + "/" + config.RESTActionEdit) } method="POST" class="space-y-4">
+						@LLMServiceFormFields(editingService)
+						<div class="flex gap-3">
+							<a href={ config.RouteLLMServices } class="btn btn-outline flex-1">
+								Cancel
+							</a>
+							<button type="submit" class="btn btn-primary flex-1">
+								Update LLM Service
+							</button>
+						</div>
+					</form>
+				} else {
+					<h2 class="card-title text-xl mb-4">Create New LLM Service</h2>
+					<form action={ config.RouteLLMServices } method="POST" class="space-y-4">
+						@LLMServiceFormFields(nil)
+						<button type="submit" class="btn btn-primary w-full">
+							Create LLM Service
+						</button>
+					</form>
+				}
 			</div>
-		</form>
-	} else {
-		<h2 class="card-title text-xl mb-4">Create New LLM Service</h2>
-		<form action={ config.RouteLLMServices } method="POST" class="space-y-4">
-			@LLMServiceFormFields(nil, adapters)
-			<button type="submit" class="btn btn-primary w-full">
-				Create Service
-			</button>
-		</form>
+		</div>
 	}
 }
 
-templ LLMServiceFormFields(editingService *store.LlmService, adapters []string) {
+templ LLMServiceFormFields(editingService *store.LlmService) {
 	<div>
 		<label class="label" for="name">
 			<span class="label-text font-medium">Service Name</span>
@@ -121,7 +129,7 @@ templ LLMServiceFormFields(editingService *store.LlmService, adapters []string) 
 			id="name"
 			name="name"
 			class="input input-bordered w-full"
-			placeholder="e.g., OpenAI, Anthropic, Local"
+			placeholder="e.g., OpenAI, Anthropic, Google AI"
 			if editingService != nil {
 				value={ editingService.Name }
 			}
@@ -129,36 +137,20 @@ templ LLMServiceFormFields(editingService *store.LlmService, adapters []string) 
 		/>
 	</div>
 	<div>
-		<label class="label" for="description">
-			<span class="label-text font-medium">Description</span>
-		</label>
-		<input
-			type="text"
-			id="description"
-			name="description"
-			class="input input-bordered w-full"
-			placeholder="Brief description of the service"
-			if editingService != nil && editingService.Description.Valid {
-				value={ editingService.Description.String }
-			}
-		/>
-	</div>
-	<div>
 		<label class="label" for="adapter">
 			<span class="label-text font-medium">Adapter</span>
 		</label>
-		<select id="adapter" name="adapter" class="select select-bordered w-full" required>
-			<option value="">Select an adapter</option>
-			<!-- TODO: Update this to use dynamic adapter discovery from the service layer when we implement adapter registration -->
-			for _, adapter := range adapters {
-				<option
-					value={ adapter }
-					if editingService != nil && editingService.Adapter == adapter {
-						selected
-					}
-				>{ adapter }</option>
+		<input
+			type="text"
+			id="adapter"
+			name="adapter"
+			class="input input-bordered w-full"
+			placeholder="e.g., openai, anthropic, openrouter"
+			if editingService != nil {
+				value={ editingService.Adapter }
 			}
-		</select>
+			required
+		/>
 	</div>
 	<div>
 		<label class="label" for="api_key">
@@ -170,15 +162,13 @@ templ LLMServiceFormFields(editingService *store.LlmService, adapters []string) 
 			name="api_key"
 			class="input input-bordered w-full"
 			placeholder="Enter your API key"
-			if editingService != nil {
-				value={ editingService.ApiKey }
-			}
 			required
 		/>
+		<p class="text-xs text-base-content/60 mt-1">Your API key will be encrypted and stored securely</p>
 	</div>
 	<div>
 		<label class="label" for="base_url">
-			<span class="label-text font-medium">Base URL</span>
+			<span class="label-text font-medium">Base URL (Optional)</span>
 		</label>
 		<input
 			type="url"
@@ -189,40 +179,7 @@ templ LLMServiceFormFields(editingService *store.LlmService, adapters []string) 
 			if editingService != nil {
 				value={ editingService.BaseUrl }
 			}
-			required
 		/>
-	</div>
-	<div>
-		<label class="label" for="organization">
-			<span class="label-text font-medium">Organization (Optional)</span>
-		</label>
-		<input
-			type="text"
-			id="organization"
-			name="organization"
-			class="input input-bordered w-full"
-			placeholder="Organization ID or name"
-			if editingService != nil && editingService.Organization.Valid {
-				value={ editingService.Organization.String }
-			}
-		/>
-	</div>
-	<div>
-		<label class="label" for="model">
-			<span class="label-text font-medium">Model</span>
-		</label>
-		<input
-			type="text"
-			id="model"
-			name="model"
-			class="input input-bordered w-full"
-			placeholder="e.g., gpt-4, claude-3-opus, llama-3.1-8b"
-			required
-		/>
-		<label class="label">
-			<span class="label-text-alt text-base-content/60">
-				Default configuration will be applied (temperature: 0.7, max_tokens: 1000)
-			</span>
-		</label>
+		<p class="text-xs text-base-content/60 mt-1">Leave empty to use the default provider URL</p>
 	</div>
 }

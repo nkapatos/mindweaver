@@ -43,7 +43,7 @@ func (h *PromptsHandler) Prompts(c echo.Context) error {
 		})
 	}
 
-	return views.PromptsPage(templatePrompts, nil).Render(c.Request().Context(), c.Response().Writer)
+	return views.PromptsList(templatePrompts).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // CreatePrompt handles POST /prompts - processes form submission
@@ -140,7 +140,7 @@ func (h *PromptsHandler) EditPrompt(c echo.Context) error {
 		})
 	}
 
-	return views.PromptsPage(templatePrompts, &prompt).Render(c.Request().Context(), c.Response().Writer)
+	return views.PromptDetailsForm(&prompt).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // UpdatePrompt handles POST /prompts/edit/{id} - processes edit form submission
