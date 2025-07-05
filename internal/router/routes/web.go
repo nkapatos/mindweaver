@@ -16,7 +16,8 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	// Prompts group
 	prompts := e.Group(config.RoutePrompts)
 	prompts.GET("", promptsHandler.Prompts)
-	prompts.POST("", promptsHandler.CreatePrompt)
+	prompts.GET(fmt.Sprintf("/%s", config.RESTActionNew), promptsHandler.NewPrompt)
+	prompts.POST(fmt.Sprintf("/%s", config.RESTActionCreate), promptsHandler.CreatePrompt)
 	prompts.GET(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), promptsHandler.EditPrompt)
 	prompts.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), promptsHandler.UpdatePrompt)
 	prompts.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionDelete), promptsHandler.DeletePrompt)
@@ -24,7 +25,8 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	// Providers group
 	providers := e.Group(config.RouteProviders)
 	providers.GET("", providersHandler.Providers)
-	providers.POST("", providersHandler.CreateProvider)
+	providers.GET(fmt.Sprintf("/%s", config.RESTActionNew), providersHandler.NewProvider)
+	providers.POST(fmt.Sprintf("/%s", config.RESTActionCreate), providersHandler.CreateProvider)
 	providers.GET(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), providersHandler.EditProvider)
 	providers.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), providersHandler.UpdateProvider)
 	providers.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionDelete), providersHandler.DeleteProvider)
@@ -32,7 +34,8 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	// LLM Services group
 	llmServices := e.Group(config.RouteLLMServices)
 	llmServices.GET("", llmServicesHandler.LLMServices)
-	llmServices.POST("", llmServicesHandler.CreateLLMService)
+	llmServices.GET(fmt.Sprintf("/%s", config.RESTActionNew), llmServicesHandler.NewLLMService)
+	llmServices.POST(fmt.Sprintf("/%s", config.RESTActionCreate), llmServicesHandler.CreateLLMService)
 	llmServices.GET(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), llmServicesHandler.EditLLMService)
 	llmServices.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), llmServicesHandler.UpdateLLMService)
 	llmServices.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionDelete), llmServicesHandler.DeleteLLMService)
@@ -41,7 +44,8 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	// LLM Service Configurations group
 	configs := e.Group(config.RouteLLMServiceConfigs)
 	configs.GET("", llmServiceConfigsHandler.LLMServiceConfigs)
-	configs.POST("", llmServiceConfigsHandler.CreateLLMServiceConfig)
+	configs.GET(fmt.Sprintf("/%s", config.RESTActionNew), llmServiceConfigsHandler.NewLLMServiceConfig)
+	configs.POST(fmt.Sprintf("/%s", config.RESTActionCreate), llmServiceConfigsHandler.CreateLLMServiceConfig)
 	configs.GET(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), llmServiceConfigsHandler.EditLLMServiceConfig)
 	configs.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), llmServiceConfigsHandler.UpdateLLMServiceConfig)
 	configs.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionDelete), llmServiceConfigsHandler.DeleteLLMServiceConfig)
@@ -53,6 +57,7 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	// Conversations group
 	conversations := e.Group(config.RouteConversations)
 	conversations.GET("", conversationHandler.Conversation)
-	conversations.POST(fmt.Sprintf("/%s", config.RESTActionNew), conversationHandler.CreateConversation)
+	conversations.GET(fmt.Sprintf("/%s", config.RESTActionNew), conversationHandler.NewConversation)
+	conversations.POST(fmt.Sprintf("/%s", config.RESTActionCreate), conversationHandler.CreateConversation)
 	conversations.GET(fmt.Sprintf("/%s", ":id"), conversationHandler.ViewConversation)
 }

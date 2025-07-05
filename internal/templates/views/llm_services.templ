@@ -32,7 +32,12 @@ templ LLMServicesList(llmServicesWithRelations []LLMServiceWithRelations) {
 	@LLMServicesPage("LLM Services", "Configure and manage your LLM service connections.") {
 		<div class="card bg-base-100 shadow-lg">
 			<div class="card-body">
-				<h2 class="card-title text-xl mb-4">Your LLM Services</h2>
+				<div class="flex justify-between items-center mb-4">
+					<h2 class="card-title text-xl">Your LLM Services</h2>
+					<a href={ templ.SafeURL(config.RouteLLMServices + "/" + config.RESTActionNew) } class="btn btn-primary btn-sm">
+						Create New LLM Service
+					</a>
+				</div>
 				if len(llmServicesWithRelations) == 0 {
 					<div class="text-center py-8">
 						<p class="text-base-content/60">No LLM services configured yet. Create your first service using the form.</p>
@@ -91,7 +96,7 @@ templ LLMServiceDetailsForm(editingService *store.LlmService) {
 					<div class="flex items-center gap-4 mb-4">
 						<h2 class="card-title text-xl">Edit LLM Service</h2>
 						<a href={ config.RouteLLMServices } class="btn btn-ghost btn-sm">
-							← Back to Create
+							← Back to List
 						</a>
 					</div>
 					<form action={ templ.SafeURL(config.RouteLLMServices + "/" + strconv.FormatInt(editingService.ID, 10) + "/" + config.RESTActionEdit) } method="POST" class="space-y-4">
@@ -106,8 +111,13 @@ templ LLMServiceDetailsForm(editingService *store.LlmService) {
 						</div>
 					</form>
 				} else {
-					<h2 class="card-title text-xl mb-4">Create New LLM Service</h2>
-					<form action={ config.RouteLLMServices } method="POST" class="space-y-4">
+					<div class="flex items-center gap-4 mb-4">
+						<h2 class="card-title text-xl">Create New LLM Service</h2>
+						<a href={ config.RouteLLMServices } class="btn btn-ghost btn-sm">
+							← Back to List
+						</a>
+					</div>
+					<form action={ templ.SafeURL(config.RouteLLMServices + "/" + config.RESTActionCreate) } method="POST" class="space-y-4">
 						@LLMServiceFormFields(nil)
 						<button type="submit" class="btn btn-primary w-full">
 							Create LLM Service

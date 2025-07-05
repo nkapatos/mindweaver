@@ -47,7 +47,33 @@ func (h *LLMServiceConfigsHandler) LLMServiceConfigs(c echo.Context) error {
 	return views.LLMServiceConfigsList(configsWithServices).Render(c.Request().Context(), c.Response().Writer)
 }
 
-// CreateLLMServiceConfig handles POST /llm-service-configs - creates a new configuration
+// NewLLMServiceConfig handles GET /llm-service-configs/new - shows create form
+func (h *LLMServiceConfigsHandler) NewLLMServiceConfig(c echo.Context) error {
+	// Get all LLM services for the service selection dropdown
+	llmServices, err := h.llmService.GetAllLLMServices(c.Request().Context())
+	if err != nil {
+		llmServices = []store.LlmService{}
+	}
+
+	// Get all configurations with their service info for display
+	var configsWithServices []views.LLMServiceConfigWithService
+	for _, service := range llmServices {
+		configs, err := h.llmService.GetLLMServiceConfigsByServiceID(c.Request().Context(), service.ID)
+		if err != nil {
+			continue // Skip this service if we can't get its configs
+		}
+		for _, config := range configs {
+			configsWithServices = append(configsWithServices, views.LLMServiceConfigWithService{
+				LLMServiceConfig: config,
+				LLMService:       service,
+			})
+		}
+	}
+
+	return views.LLMServiceConfigsList(configsWithServices).Render(c.Request().Context(), c.Response().Writer)
+}
+
+// CreateLLMServiceConfig handles POST /llm-service-configs/create - creates a new configuration
 func (h *LLMServiceConfigsHandler) CreateLLMServiceConfig(c echo.Context) error {
 	// Parse form data
 	if err := c.Request().ParseForm(); err != nil {
@@ -64,18 +90,18 @@ func (h *LLMServiceConfigsHandler) CreateLLMServiceConfig(c echo.Context) error 
 
 	// If this is just a service selection (no name/model), redirect back with service ID
 	if llmServiceIDStr != "" && (name == "" || model == "") {
-		return c.Redirect(http.StatusSeeOther, "/llm-service-configs?llm_service_id="+llmServiceIDStr)
+		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/new?llm_service_id="+llmServiceIDStr)
 	}
 
 	// Validate required fields
 	if llmServiceIDStr == "" || name == "" || model == "" {
-		return c.Redirect(http.StatusSeeOther, "/llm-service-configs?error=Service, name, and model are required")
+		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/new?error=Service, name, and model are required")
 	}
 
 	// Parse LLM service ID
 	llmServiceID, err := strconv.ParseInt(llmServiceIDStr, 10, 64)
 	if err != nil {
-		return c.Redirect(http.StatusSeeOther, "/llm-service-configs?error=Invalid LLM service ID")
+		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/new?error=Invalid LLM service ID")
 	}
 
 	// Parse temperature (optional, default to 0.7)
@@ -106,7 +132,7 @@ func (h *LLMServiceConfigsHandler) CreateLLMServiceConfig(c echo.Context) error 
 	// Create the LLM service configuration
 	_, err = h.llmService.CreateLLMServiceConfig(c.Request().Context(), llmServiceID, name, description, config)
 	if err != nil {
-		return c.Redirect(http.StatusSeeOther, "/llm-service-configs?error=Failed to create configuration: "+err.Error())
+		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/new?error=Failed to create configuration: "+err.Error())
 	}
 
 	// Redirect back with success message

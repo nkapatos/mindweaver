@@ -46,7 +46,12 @@ func (h *LLMServicesHandler) LLMServices(c echo.Context) error {
 	return views.LLMServicesList(llmServicesWithRelations).Render(c.Request().Context(), c.Response().Writer)
 }
 
-// CreateLLMService handles POST /llm-services - processes form submission
+// NewLLMService handles GET /llm-services/new - shows create form
+func (h *LLMServicesHandler) NewLLMService(c echo.Context) error {
+	return views.LLMServiceDetailsForm(nil).Render(c.Request().Context(), c.Response().Writer)
+}
+
+// CreateLLMService handles POST /llm-services/create - processes form submission
 func (h *LLMServicesHandler) CreateLLMService(c echo.Context) error {
 	// Parse form data
 	if err := c.Request().ParseForm(); err != nil {
@@ -66,7 +71,7 @@ func (h *LLMServicesHandler) CreateLLMService(c echo.Context) error {
 
 	// Validate required fields
 	if name == "" || adapter == "" || apiKey == "" || baseURL == "" || model == "" {
-		return c.Redirect(http.StatusSeeOther, "/llm-services?error=Name, adapter, API key, base URL and model are required")
+		return c.Redirect(http.StatusSeeOther, "/llm-services/new?error=Name, adapter, API key, base URL and model are required")
 	}
 
 	// Use default config name if not provided
@@ -77,7 +82,7 @@ func (h *LLMServicesHandler) CreateLLMService(c echo.Context) error {
 	// Create the LLM service with a default configuration
 	_, _, err := h.llmService.CreateLLMServiceWithConfig(c.Request().Context(), name, description, adapter, apiKey, baseURL, organization, configName, configDescription, model)
 	if err != nil {
-		return c.Redirect(http.StatusSeeOther, "/llm-services?error=Failed to create LLM service: "+err.Error())
+		return c.Redirect(http.StatusSeeOther, "/llm-services/new?error=Failed to create LLM service: "+err.Error())
 	}
 
 	// Redirect back to LLM services page with success message

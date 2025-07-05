@@ -38,7 +38,12 @@ templ LLMServiceConfigsList(configsWithServices []LLMServiceConfigWithService) {
 	@LLMServiceConfigsPage("LLM Service Configurations", "Configure and manage your AI model configurations.") {
 		<div class="card bg-base-100 shadow-lg">
 			<div class="card-body">
-				<h2 class="card-title text-xl mb-4">Your Configurations</h2>
+				<div class="flex justify-between items-center mb-4">
+					<h2 class="card-title text-xl">Your Configurations</h2>
+					<a href={ templ.SafeURL(config.RouteLLMServiceConfigs + "/" + config.RESTActionNew) } class="btn btn-primary btn-sm">
+						Create New Configuration
+					</a>
+				</div>
 				if len(configsWithServices) == 0 {
 					<div class="text-center py-8">
 						<p class="text-base-content/60">No configurations created yet. Create your first configuration using the form.</p>
@@ -100,7 +105,7 @@ templ LLMServiceConfigDetailsForm(editingConfig *store.LlmServiceConfig, llmServ
 					<div class="flex items-center gap-4 mb-4">
 						<h2 class="card-title text-xl">Edit Configuration</h2>
 						<a href={ config.RouteLLMServiceConfigs } class="btn btn-ghost btn-sm">
-							← Back to Create
+							← Back to List
 						</a>
 					</div>
 					<form action={ templ.SafeURL(config.RouteLLMServiceConfigs + "/" + strconv.FormatInt(editingConfig.ID, 10) + "/" + config.RESTActionEdit) } method="POST" class="space-y-4">
@@ -115,8 +120,13 @@ templ LLMServiceConfigDetailsForm(editingConfig *store.LlmServiceConfig, llmServ
 						</div>
 					</form>
 				} else {
-					<h2 class="card-title text-xl mb-4">Create New Configuration</h2>
-					<form action={ config.RouteLLMServiceConfigs } method="POST" class="space-y-4">
+					<div class="flex items-center gap-4 mb-4">
+						<h2 class="card-title text-xl">Create New Configuration</h2>
+						<a href={ config.RouteLLMServiceConfigs } class="btn btn-ghost btn-sm">
+							← Back to List
+						</a>
+					</div>
+					<form action={ templ.SafeURL(config.RouteLLMServiceConfigs + "/" + config.RESTActionCreate) } method="POST" class="space-y-4">
 						@LLMServiceConfigFormFields(nil, llmServices, selectedServiceID, availableModels)
 						<button type="submit" class="btn btn-primary w-full">
 							Create Configuration

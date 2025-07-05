@@ -46,7 +46,12 @@ func (h *PromptsHandler) Prompts(c echo.Context) error {
 	return views.PromptsList(templatePrompts).Render(c.Request().Context(), c.Response().Writer)
 }
 
-// CreatePrompt handles POST /prompts - processes form submission
+// NewPrompt handles GET /prompts/new - shows create form
+func (h *PromptsHandler) NewPrompt(c echo.Context) error {
+	return views.PromptDetailsForm(nil).Render(c.Request().Context(), c.Response().Writer)
+}
+
+// CreatePrompt handles POST /prompts/create - processes form submission
 func (h *PromptsHandler) CreatePrompt(c echo.Context) error {
 	// Parse form data
 	if err := c.Request().ParseForm(); err != nil {
@@ -61,7 +66,7 @@ func (h *PromptsHandler) CreatePrompt(c echo.Context) error {
 	// Validate required fields
 	if title == "" || content == "" {
 		// Redirect back to prompts page with error
-		return c.Redirect(http.StatusSeeOther, "/prompts?error=Title and content are required")
+		return c.Redirect(http.StatusSeeOther, "/prompts/new?error=Title and content are required")
 	}
 
 	// Convert is_system checkbox to boolean
@@ -70,7 +75,7 @@ func (h *PromptsHandler) CreatePrompt(c echo.Context) error {
 	// Create the prompt (for now without actor_id, we'll add that later with sessions)
 	if err := h.promptService.CreatePrompt(c.Request().Context(), nil, title, content, isSystem); err != nil {
 		// Redirect back with error
-		return c.Redirect(http.StatusSeeOther, "/prompts?error=Failed to create prompt")
+		return c.Redirect(http.StatusSeeOther, "/prompts/new?error=Failed to create prompt")
 	}
 
 	// Redirect back to prompts page with success message

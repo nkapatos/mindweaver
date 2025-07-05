@@ -76,7 +76,16 @@ func (h *ProvidersHandler) Providers(c echo.Context) error {
 	return views.ProvidersList(providersWithRelations).Render(c.Request().Context(), c.Response().Writer)
 }
 
-// CreateProvider handles POST /providers - processes form submission
+// NewProvider handles GET /providers/new - shows create form
+func (h *ProvidersHandler) NewProvider(c echo.Context) error {
+	// Get form data
+	allConfigs := h.getAllLLMServiceConfigs(c)
+	systemPrompts := h.getSystemPrompts(c)
+
+	return views.ProviderDetailsForm(nil, allConfigs, systemPrompts).Render(c.Request().Context(), c.Response().Writer)
+}
+
+// CreateProvider handles POST /providers/create - processes form submission
 func (h *ProvidersHandler) CreateProvider(c echo.Context) error {
 	// Parse form data
 	if err := c.Request().ParseForm(); err != nil {
@@ -91,13 +100,13 @@ func (h *ProvidersHandler) CreateProvider(c echo.Context) error {
 
 	// Validate required fields
 	if name == "" || description == "" || llmServiceConfigIDStr == "" {
-		return c.Redirect(http.StatusSeeOther, "/providers?error=Name, description and LLM service configuration are required")
+		return c.Redirect(http.StatusSeeOther, "/providers/new?error=Name, description and LLM service configuration are required")
 	}
 
 	// Parse LLM service config ID
 	llmServiceConfigID, err := strconv.ParseInt(llmServiceConfigIDStr, 10, 64)
 	if err != nil {
-		return c.Redirect(http.StatusSeeOther, "/providers?error=Invalid LLM service configuration ID")
+		return c.Redirect(http.StatusSeeOther, "/providers/new?error=Invalid LLM service configuration ID")
 	}
 
 	// Parse optional system prompt ID
@@ -105,7 +114,7 @@ func (h *ProvidersHandler) CreateProvider(c echo.Context) error {
 	if systemPromptIDStr != "" {
 		id, err := strconv.ParseInt(systemPromptIDStr, 10, 64)
 		if err != nil {
-			return c.Redirect(http.StatusSeeOther, "/providers?error=Invalid system prompt ID")
+			return c.Redirect(http.StatusSeeOther, "/providers/new?error=Invalid system prompt ID")
 		}
 		systemPromptID = &id
 	}
@@ -113,7 +122,7 @@ func (h *ProvidersHandler) CreateProvider(c echo.Context) error {
 	// Create the provider
 	_, err = h.providerService.CreateProvider(c.Request().Context(), name, description, llmServiceConfigID, systemPromptID)
 	if err != nil {
-		return c.Redirect(http.StatusSeeOther, "/providers?error=Failed to create provider")
+		return c.Redirect(http.StatusSeeOther, "/providers/new?error=Failed to create provider")
 	}
 
 	// Redirect back to providers page with success message
