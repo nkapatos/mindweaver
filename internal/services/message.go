@@ -38,24 +38,26 @@ func NewMessageService(messageStore store.Querier) *MessageService {
 
 // CreateMessage creates a new message with an automatically generated UUID v7
 // UUID v7 provides both uniqueness and timestamp-based ordering for optimal message sequencing
-func (s *MessageService) CreateMessage(ctx context.Context, conversationID, senderActorID int64, content, messageType, metadata string) (*store.Message, error) {
+func (s *MessageService) CreateMessage(ctx context.Context, conversationID, actorID int64, content, messageType, metadata string, createdBy, updatedBy int64) (*store.Message, error) {
 	// Generate UUID v7 for optimal message ordering and uniqueness
 	messageUUID := uuid.Must(uuid.NewV7())
 
-	s.logger.Info("Creating new message", "conversation_id", conversationID, "sender_actor_id", senderActorID, "uuid", messageUUID)
+	s.logger.Info("Creating new message", "conversation_id", conversationID, "actor_id", actorID, "uuid", messageUUID)
 
 	params := store.CreateMessageParams{
 		ConversationID: conversationID,
-		SenderActorID:  senderActorID,
+		ActorID:        actorID,
 		Uuid:           messageUUID.String(),
 		Content:        content,
 		MessageType:    sql.NullString{String: messageType, Valid: messageType != ""},
 		Metadata:       sql.NullString{String: metadata, Valid: metadata != ""},
+		CreatedBy:      createdBy,
+		UpdatedBy:      updatedBy,
 	}
 
 	message, err := s.messageStore.CreateMessage(ctx, params)
 	if err != nil {
-		s.logger.Error("Failed to create message", "conversation_id", conversationID, "sender_actor_id", senderActorID, "uuid", messageUUID, "error", err)
+		s.logger.Error("Failed to create message", "conversation_id", conversationID, "actor_id", actorID, "uuid", messageUUID, "error", err)
 		return nil, err
 	}
 
@@ -106,21 +108,21 @@ func (s *MessageService) GetMessagesByConversationID(ctx context.Context, conver
 }
 
 // GetMessagesByActorID retrieves all messages sent by a specific actor
-func (s *MessageService) GetMessagesByActorID(ctx context.Context, senderActorID int64) ([]store.Message, error) {
-	s.logger.Debug("Getting messages by actor ID", "sender_actor_id", senderActorID)
+func (s *MessageService) GetMessagesByActorID(ctx context.Context, actorID int64) ([]store.Message, error) {
+	s.logger.Debug("Getting messages by actor ID", "actor_id", actorID)
 
-	messages, err := s.messageStore.GetMessagesByActorID(ctx, senderActorID)
+	messages, err := s.messageStore.GetMessagesByActorID(ctx, actorID)
 	if err != nil {
-		s.logger.Error("Failed to get messages by actor ID", "sender_actor_id", senderActorID, "error", err)
+		s.logger.Error("Failed to get messages by actor ID", "actor_id", actorID, "error", err)
 		return nil, err
 	}
 
-	s.logger.Debug("Messages retrieved successfully", "sender_actor_id", senderActorID, "count", len(messages))
+	s.logger.Debug("Messages retrieved successfully", "actor_id", actorID, "count", len(messages))
 	return messages, nil
 }
 
 // UpdateMessage updates a message by its ID
-func (s *MessageService) UpdateMessage(ctx context.Context, id int64, content, messageType, metadata string) error {
+func (s *MessageService) UpdateMessage(ctx context.Context, id int64, content, messageType, metadata string, updatedBy int64) error {
 	s.logger.Info("Updating message", "id", id)
 
 	params := store.UpdateMessageParams{
@@ -128,6 +130,7 @@ func (s *MessageService) UpdateMessage(ctx context.Context, id int64, content, m
 		Content:     content,
 		MessageType: sql.NullString{String: messageType, Valid: messageType != ""},
 		Metadata:    sql.NullString{String: metadata, Valid: metadata != ""},
+		UpdatedBy:   updatedBy,
 	}
 
 	if err := s.messageStore.UpdateMessage(ctx, params); err != nil {
@@ -174,9 +177,9 @@ func (s *MessageService) GetMessageWithConversation(ctx context.Context, message
 	return &message, &conversation, nil
 }
 
-// GetMessageWithSender retrieves a message along with its sender actor
-func (s *MessageService) GetMessageWithSender(ctx context.Context, messageID int64) (*store.Message, *store.Actor, error) {
-	s.logger.Debug("Getting message with sender", "message_id", messageID)
+// GetMessageWithActor retrieves a message along with its actor
+func (s *MessageService) GetMessageWithActor(ctx context.Context, messageID int64) (*store.Message, *store.Actor, error) {
+	s.logger.Debug("Getting message with actor", "message_id", messageID)
 
 	// Get the message
 	message, err := s.messageStore.GetMessageByID(ctx, messageID)
@@ -185,18 +188,18 @@ func (s *MessageService) GetMessageWithSender(ctx context.Context, messageID int
 		return nil, nil, err
 	}
 
-	// Get the related sender actor
-	actor, err := s.messageStore.GetActorByID(ctx, message.SenderActorID)
+	// Get the related actor
+	actor, err := s.messageStore.GetActorByID(ctx, message.ActorID)
 	if err != nil {
-		s.logger.Error("Failed to get sender actor for message", "message_id", messageID, "sender_actor_id", message.SenderActorID, "error", err)
+		s.logger.Error("Failed to get actor for message", "message_id", messageID, "actor_id", message.ActorID, "error", err)
 		return &message, nil, err
 	}
 
-	s.logger.Debug("Message with sender retrieved successfully", "message_id", messageID)
+	s.logger.Debug("Message with actor retrieved successfully", "message_id", messageID)
 	return &message, &actor, nil
 }
 
-// GetMessageWithRelations retrieves a message along with both its conversation and sender actor
+// GetMessageWithRelations retrieves a message along with both its conversation and actor
 //
 // FUTURE OPTIMIZATION: If this becomes a performance bottleneck, consider:
 // 1. SQL JOIN approach: Single query with JOINs to conversations and actors
@@ -221,10 +224,10 @@ func (s *MessageService) GetMessageWithRelations(ctx context.Context, messageID 
 		return &message, nil, nil, err
 	}
 
-	// Get the related sender actor
-	actor, err := s.messageStore.GetActorByID(ctx, message.SenderActorID)
+	// Get the related actor
+	actor, err := s.messageStore.GetActorByID(ctx, message.ActorID)
 	if err != nil {
-		s.logger.Error("Failed to get sender actor for message", "message_id", messageID, "sender_actor_id", message.SenderActorID, "error", err)
+		s.logger.Error("Failed to get actor for message", "message_id", messageID, "actor_id", message.ActorID, "error", err)
 		return &message, &conversation, nil, err
 	}
 

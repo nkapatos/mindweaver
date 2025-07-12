@@ -11,39 +11,46 @@ import (
 )
 
 const createMessage = `-- name: CreateMessage :one
-INSERT INTO messages (conversation_id, sender_actor_id, uuid, content, message_type, metadata) 
-VALUES (?, ?, ?, ?, ?, ?) 
-RETURNING id, conversation_id, sender_actor_id, uuid, content, message_type, metadata, created_at
+INSERT INTO messages (conversation_id, actor_id, uuid, content, message_type, metadata, created_by, updated_by) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
+RETURNING id, conversation_id, actor_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by
 `
 
 type CreateMessageParams struct {
 	ConversationID int64          `json:"conversation_id"`
-	SenderActorID  int64          `json:"sender_actor_id"`
+	ActorID        int64          `json:"actor_id"`
 	Uuid           string         `json:"uuid"`
 	Content        string         `json:"content"`
 	MessageType    sql.NullString `json:"message_type"`
 	Metadata       sql.NullString `json:"metadata"`
+	CreatedBy      int64          `json:"created_by"`
+	UpdatedBy      int64          `json:"updated_by"`
 }
 
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
 	row := q.db.QueryRowContext(ctx, createMessage,
 		arg.ConversationID,
-		arg.SenderActorID,
+		arg.ActorID,
 		arg.Uuid,
 		arg.Content,
 		arg.MessageType,
 		arg.Metadata,
+		arg.CreatedBy,
+		arg.UpdatedBy,
 	)
 	var i Message
 	err := row.Scan(
 		&i.ID,
 		&i.ConversationID,
-		&i.SenderActorID,
+		&i.ActorID,
 		&i.Uuid,
 		&i.Content,
 		&i.MessageType,
 		&i.Metadata,
 		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
@@ -58,7 +65,7 @@ func (q *Queries) DeleteMessage(ctx context.Context, id int64) error {
 }
 
 const getMessageByID = `-- name: GetMessageByID :one
-SELECT id, conversation_id, sender_actor_id, uuid, content, message_type, metadata, created_at 
+SELECT id, conversation_id, actor_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by 
 FROM messages 
 WHERE id = ? 
 LIMIT 1
@@ -70,18 +77,21 @@ func (q *Queries) GetMessageByID(ctx context.Context, id int64) (Message, error)
 	err := row.Scan(
 		&i.ID,
 		&i.ConversationID,
-		&i.SenderActorID,
+		&i.ActorID,
 		&i.Uuid,
 		&i.Content,
 		&i.MessageType,
 		&i.Metadata,
 		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
 
 const getMessageByUUID = `-- name: GetMessageByUUID :one
-SELECT id, conversation_id, sender_actor_id, uuid, content, message_type, metadata, created_at 
+SELECT id, conversation_id, actor_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by 
 FROM messages 
 WHERE uuid = ? 
 LIMIT 1
@@ -93,25 +103,28 @@ func (q *Queries) GetMessageByUUID(ctx context.Context, uuid string) (Message, e
 	err := row.Scan(
 		&i.ID,
 		&i.ConversationID,
-		&i.SenderActorID,
+		&i.ActorID,
 		&i.Uuid,
 		&i.Content,
 		&i.MessageType,
 		&i.Metadata,
 		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
 
 const getMessagesByActorID = `-- name: GetMessagesByActorID :many
-SELECT id, conversation_id, sender_actor_id, uuid, content, message_type, metadata, created_at 
+SELECT id, conversation_id, actor_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by 
 FROM messages 
-WHERE sender_actor_id = ? 
+WHERE actor_id = ? 
 ORDER BY uuid DESC
 `
 
-func (q *Queries) GetMessagesByActorID(ctx context.Context, senderActorID int64) ([]Message, error) {
-	rows, err := q.db.QueryContext(ctx, getMessagesByActorID, senderActorID)
+func (q *Queries) GetMessagesByActorID(ctx context.Context, actorID int64) ([]Message, error) {
+	rows, err := q.db.QueryContext(ctx, getMessagesByActorID, actorID)
 	if err != nil {
 		return nil, err
 	}
@@ -122,12 +135,15 @@ func (q *Queries) GetMessagesByActorID(ctx context.Context, senderActorID int64)
 		if err := rows.Scan(
 			&i.ID,
 			&i.ConversationID,
-			&i.SenderActorID,
+			&i.ActorID,
 			&i.Uuid,
 			&i.Content,
 			&i.MessageType,
 			&i.Metadata,
 			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.UpdatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -143,7 +159,7 @@ func (q *Queries) GetMessagesByActorID(ctx context.Context, senderActorID int64)
 }
 
 const getMessagesByConversationID = `-- name: GetMessagesByConversationID :many
-SELECT id, conversation_id, sender_actor_id, uuid, content, message_type, metadata, created_at 
+SELECT id, conversation_id, actor_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by 
 FROM messages 
 WHERE conversation_id = ? 
 ORDER BY uuid ASC
@@ -161,12 +177,15 @@ func (q *Queries) GetMessagesByConversationID(ctx context.Context, conversationI
 		if err := rows.Scan(
 			&i.ID,
 			&i.ConversationID,
-			&i.SenderActorID,
+			&i.ActorID,
 			&i.Uuid,
 			&i.Content,
 			&i.MessageType,
 			&i.Metadata,
 			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.UpdatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -183,7 +202,7 @@ func (q *Queries) GetMessagesByConversationID(ctx context.Context, conversationI
 
 const updateMessage = `-- name: UpdateMessage :exec
 UPDATE messages 
-SET content = ?, message_type = ?, metadata = ? 
+SET content = ?, message_type = ?, metadata = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ? 
 WHERE id = ?
 `
 
@@ -191,6 +210,7 @@ type UpdateMessageParams struct {
 	Content     string         `json:"content"`
 	MessageType sql.NullString `json:"message_type"`
 	Metadata    sql.NullString `json:"metadata"`
+	UpdatedBy   int64          `json:"updated_by"`
 	ID          int64          `json:"id"`
 }
 
@@ -199,6 +219,7 @@ func (q *Queries) UpdateMessage(ctx context.Context, arg UpdateMessageParams) er
 		arg.Content,
 		arg.MessageType,
 		arg.Metadata,
+		arg.UpdatedBy,
 		arg.ID,
 	)
 	return err

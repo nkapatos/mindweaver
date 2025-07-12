@@ -43,7 +43,11 @@ func (h *PromptHandler) CreatePrompt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.promptService.CreatePrompt(r.Context(), req.ActorID, req.Title, req.Content, req.IsSystem); err != nil {
+	// TODO: Get actual actor ID from authentication/session
+	// For now, use system actor ID (1) for audit trail
+	systemActorID := int64(1)
+
+	if err := h.promptService.CreatePrompt(r.Context(), req.ActorID, req.Title, req.Content, req.IsSystem, systemActorID, systemActorID); err != nil {
 		http.Error(w, "Failed to create prompt", http.StatusInternalServerError)
 		return
 	}
@@ -179,7 +183,11 @@ func (h *PromptHandler) UpdatePrompt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.promptService.UpdatePrompt(r.Context(), id, req.ActorID, req.Title, req.Content, req.IsSystem); err != nil {
+	// TODO: Get actual actor ID from authentication/session
+	// For now, use system actor ID (1) for audit trail
+	systemActorID := int64(1)
+
+	if err := h.promptService.UpdatePrompt(r.Context(), id, req.ActorID, req.Title, req.Content, req.IsSystem, systemActorID); err != nil {
 		http.Error(w, "Failed to update prompt", http.StatusInternalServerError)
 		return
 	}

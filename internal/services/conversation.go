@@ -21,7 +21,7 @@ func NewConversationService(conversationStore store.Querier) *ConversationServic
 }
 
 // CreateConversation creates a new conversation
-func (s *ConversationService) CreateConversation(ctx context.Context, actorID int64, title string, description string, isActive bool, metadata string) (*store.Conversation, error) {
+func (s *ConversationService) CreateConversation(ctx context.Context, actorID int64, title string, description string, isActive bool, metadata string, createdBy, updatedBy int64) (*store.Conversation, error) {
 	s.logger.Info("Creating new conversation", "actor_id", actorID, "title", title)
 
 	params := store.CreateConversationParams{
@@ -30,6 +30,8 @@ func (s *ConversationService) CreateConversation(ctx context.Context, actorID in
 		Description: sql.NullString{String: description, Valid: description != ""},
 		IsActive:    sql.NullBool{Bool: isActive, Valid: true},
 		Metadata:    sql.NullString{String: metadata, Valid: metadata != ""},
+		CreatedBy:   createdBy,
+		UpdatedBy:   updatedBy,
 	}
 
 	conversation, err := s.conversationStore.CreateConversation(ctx, params)
@@ -71,7 +73,7 @@ func (s *ConversationService) GetConversationsByActorID(ctx context.Context, act
 }
 
 // UpdateConversation updates a conversation by its ID
-func (s *ConversationService) UpdateConversation(ctx context.Context, id int64, actorID int64, title string, description string, isActive bool, metadata string) error {
+func (s *ConversationService) UpdateConversation(ctx context.Context, id int64, actorID int64, title string, description string, isActive bool, metadata string, updatedBy int64) error {
 	s.logger.Info("Updating conversation", "id", id, "title", title)
 
 	params := store.UpdateConversationParams{
@@ -81,6 +83,7 @@ func (s *ConversationService) UpdateConversation(ctx context.Context, id int64, 
 		Description: sql.NullString{String: description, Valid: description != ""},
 		IsActive:    sql.NullBool{Bool: isActive, Valid: true},
 		Metadata:    sql.NullString{String: metadata, Valid: metadata != ""},
+		UpdatedBy:   updatedBy,
 	}
 
 	if err := s.conversationStore.UpdateConversation(ctx, params); err != nil {

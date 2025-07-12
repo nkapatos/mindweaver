@@ -11,9 +11,9 @@ import (
 )
 
 const createLLMServiceConfig = `-- name: CreateLLMServiceConfig :one
-INSERT INTO llm_service_configs (llm_service_id, name, description, configuration) 
-VALUES (?, ?, ?, ?) 
-RETURNING id, llm_service_id, name, description, configuration, created_at, updated_at
+INSERT INTO llm_service_configs (llm_service_id, name, description, configuration, created_by, updated_by) 
+VALUES (?, ?, ?, ?, ?, ?) 
+RETURNING id, llm_service_id, name, description, configuration, created_at, updated_at, created_by, updated_by
 `
 
 type CreateLLMServiceConfigParams struct {
@@ -21,6 +21,8 @@ type CreateLLMServiceConfigParams struct {
 	Name          string         `json:"name"`
 	Description   sql.NullString `json:"description"`
 	Configuration string         `json:"configuration"`
+	CreatedBy     int64          `json:"created_by"`
+	UpdatedBy     int64          `json:"updated_by"`
 }
 
 func (q *Queries) CreateLLMServiceConfig(ctx context.Context, arg CreateLLMServiceConfigParams) (LlmServiceConfig, error) {
@@ -29,6 +31,8 @@ func (q *Queries) CreateLLMServiceConfig(ctx context.Context, arg CreateLLMServi
 		arg.Name,
 		arg.Description,
 		arg.Configuration,
+		arg.CreatedBy,
+		arg.UpdatedBy,
 	)
 	var i LlmServiceConfig
 	err := row.Scan(
@@ -39,6 +43,8 @@ func (q *Queries) CreateLLMServiceConfig(ctx context.Context, arg CreateLLMServi
 		&i.Configuration,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
@@ -54,7 +60,7 @@ func (q *Queries) DeleteLLMServiceConfig(ctx context.Context, id int64) error {
 }
 
 const getAllLLMServiceConfigs = `-- name: GetAllLLMServiceConfigs :many
-SELECT id, llm_service_id, name, description, configuration, created_at, updated_at
+SELECT id, llm_service_id, name, description, configuration, created_at, updated_at, created_by, updated_by
 FROM llm_service_configs 
 ORDER BY llm_service_id, name
 `
@@ -76,6 +82,8 @@ func (q *Queries) GetAllLLMServiceConfigs(ctx context.Context) ([]LlmServiceConf
 			&i.Configuration,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.UpdatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -91,7 +99,7 @@ func (q *Queries) GetAllLLMServiceConfigs(ctx context.Context) ([]LlmServiceConf
 }
 
 const getLLMServiceConfigByID = `-- name: GetLLMServiceConfigByID :one
-SELECT id, llm_service_id, name, description, configuration, created_at, updated_at
+SELECT id, llm_service_id, name, description, configuration, created_at, updated_at, created_by, updated_by
 FROM llm_service_configs 
 WHERE id = ?
 `
@@ -107,12 +115,14 @@ func (q *Queries) GetLLMServiceConfigByID(ctx context.Context, id int64) (LlmSer
 		&i.Configuration,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
 
 const getLLMServiceConfigByName = `-- name: GetLLMServiceConfigByName :one
-SELECT id, llm_service_id, name, description, configuration, created_at, updated_at
+SELECT id, llm_service_id, name, description, configuration, created_at, updated_at, created_by, updated_by
 FROM llm_service_configs 
 WHERE llm_service_id = ? AND name = ?
 LIMIT 1
@@ -134,12 +144,14 @@ func (q *Queries) GetLLMServiceConfigByName(ctx context.Context, arg GetLLMServi
 		&i.Configuration,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
 
 const getLLMServiceConfigsByServiceID = `-- name: GetLLMServiceConfigsByServiceID :many
-SELECT id, llm_service_id, name, description, configuration, created_at, updated_at
+SELECT id, llm_service_id, name, description, configuration, created_at, updated_at, created_by, updated_by
 FROM llm_service_configs 
 WHERE llm_service_id = ?
 ORDER BY name
@@ -162,6 +174,8 @@ func (q *Queries) GetLLMServiceConfigsByServiceID(ctx context.Context, llmServic
 			&i.Configuration,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.UpdatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -178,7 +192,7 @@ func (q *Queries) GetLLMServiceConfigsByServiceID(ctx context.Context, llmServic
 
 const updateLLMServiceConfig = `-- name: UpdateLLMServiceConfig :exec
 UPDATE llm_service_configs 
-SET name = ?, description = ?, configuration = ?, updated_at = CURRENT_TIMESTAMP
+SET name = ?, description = ?, configuration = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ?
 WHERE id = ?
 `
 
@@ -186,6 +200,7 @@ type UpdateLLMServiceConfigParams struct {
 	Name          string         `json:"name"`
 	Description   sql.NullString `json:"description"`
 	Configuration string         `json:"configuration"`
+	UpdatedBy     int64          `json:"updated_by"`
 	ID            int64          `json:"id"`
 }
 
@@ -194,6 +209,7 @@ func (q *Queries) UpdateLLMServiceConfig(ctx context.Context, arg UpdateLLMServi
 		arg.Name,
 		arg.Description,
 		arg.Configuration,
+		arg.UpdatedBy,
 		arg.ID,
 	)
 	return err

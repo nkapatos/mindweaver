@@ -34,6 +34,7 @@ var (
 	RESTActionDelete = "delete"
 	RESTActionEdit   = "edit"
 	RESTActionView   = "view"
+	RESTActionCreate = "create"
 )
 
 var (

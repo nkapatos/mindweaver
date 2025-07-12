@@ -21,7 +21,7 @@ func NewActorService(actorStore store.Querier) *ActorService {
 }
 
 // CreateActor creates a new actor with the given type, name, and metadata
-func (s *ActorService) CreateActor(ctx context.Context, actorType, name, displayName, avatarURL, metadata string, isActive bool) error {
+func (s *ActorService) CreateActor(ctx context.Context, actorType, name, displayName, avatarURL, metadata string, isActive bool, createdBy, updatedBy int64) error {
 	s.logger.Info("Creating new actor", "type", actorType, "name", name)
 
 	params := store.CreateActorParams{
@@ -31,6 +31,8 @@ func (s *ActorService) CreateActor(ctx context.Context, actorType, name, display
 		AvatarUrl:   sql.NullString{String: avatarURL, Valid: avatarURL != ""},
 		Metadata:    sql.NullString{String: metadata, Valid: metadata != ""},
 		IsActive:    sql.NullBool{Bool: isActive, Valid: true},
+		CreatedBy:   createdBy,
+		UpdatedBy:   updatedBy,
 	}
 
 	if _, err := s.actorStore.CreateActor(ctx, params); err != nil {
@@ -90,7 +92,7 @@ func (s *ActorService) GetActorsByType(ctx context.Context, actorType string) ([
 }
 
 // UpdateActor updates an actor's information by their ID
-func (s *ActorService) UpdateActor(ctx context.Context, id int64, actorType, name, displayName, avatarURL, metadata string, isActive bool) error {
+func (s *ActorService) UpdateActor(ctx context.Context, id int64, actorType, name, displayName, avatarURL, metadata string, isActive bool, updatedBy int64) error {
 	s.logger.Info("Updating actor", "id", id, "type", actorType, "name", name)
 
 	params := store.UpdateActorParams{
@@ -100,6 +102,7 @@ func (s *ActorService) UpdateActor(ctx context.Context, id int64, actorType, nam
 		AvatarUrl:   sql.NullString{String: avatarURL, Valid: avatarURL != ""},
 		Metadata:    sql.NullString{String: metadata, Valid: metadata != ""},
 		IsActive:    sql.NullBool{Bool: isActive, Valid: true},
+		UpdatedBy:   updatedBy,
 		ID:          id,
 	}
 

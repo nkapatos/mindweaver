@@ -12,12 +12,11 @@ import (
 type OpenAIAdapter struct {
 	BaseAdapter
 	client openai.Client
-	config AdapterConfig
 }
 
 // NewOpenAIAdapter creates a new OpenAI-compatible adapter
-func NewOpenAIAdapter(config AdapterConfig) (LLMProvider, error) {
-	if config.APIKey == "" {
+func NewOpenAIAdapter(apiKey, baseURL string) (LLMProvider, error) {
+	if apiKey == "" {
 		return nil, fmt.Errorf("API key is required for OpenAI adapter")
 	}
 
@@ -25,16 +24,11 @@ func NewOpenAIAdapter(config AdapterConfig) (LLMProvider, error) {
 	var opts []option.RequestOption
 
 	// Add API key
-	opts = append(opts, option.WithAPIKey(config.APIKey))
+	opts = append(opts, option.WithAPIKey(apiKey))
 
 	// Set custom base URL if provided
-	if config.BaseURL != "" {
-		opts = append(opts, option.WithBaseURL(config.BaseURL))
-	}
-
-	// Set organization if provided
-	if org, exists := config.Settings["organization"]; exists && org != "" {
-		opts = append(opts, option.WithOrganization(org))
+	if baseURL != "" {
+		opts = append(opts, option.WithBaseURL(baseURL))
 	}
 
 	// Create client
@@ -42,26 +36,18 @@ func NewOpenAIAdapter(config AdapterConfig) (LLMProvider, error) {
 
 	return &OpenAIAdapter{
 		BaseAdapter: BaseAdapter{
-			Name: config.Name,
+			Name:    "openai",
+			APIKey:  apiKey,
+			BaseURL: baseURL,
 		},
 		client: client,
-		config: config,
 	}, nil
 }
 
-// ListModels fetches available models from OpenAI API
-func (a *OpenAIAdapter) ListModels(ctx context.Context, apiKey, baseURL string) ([]Model, error) {
-	// Create a temporary client with the provided credentials for model discovery
-	var opts []option.RequestOption
-	opts = append(opts, option.WithAPIKey(apiKey))
-	if baseURL != "" {
-		opts = append(opts, option.WithBaseURL(baseURL))
-	}
-
-	tempClient := openai.NewClient(opts...)
-
+// GetModels fetches available models from OpenAI API
+func (a *OpenAIAdapter) GetModels(ctx context.Context) ([]Model, error) {
 	// Fetch models from OpenAI API
-	resp, err := tempClient.Models.List(ctx, opts...)
+	resp, err := a.client.Models.List(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch models from OpenAI: %w", err)
 	}
@@ -82,11 +68,11 @@ func (a *OpenAIAdapter) ListModels(ctx context.Context, apiKey, baseURL string) 
 	return models, nil
 }
 
+// Generate generates a response using OpenAI's completion API
 func (a *OpenAIAdapter) Generate(ctx context.Context, prompt string, options GenerateOptions) (*GenerateResponse, error) {
-	// Set default model if not provided
-	model := options.Model
-	if model == "" {
-		model = "gpt-3.5-turbo-instruct" // Default model for completions
+	// Model is required
+	if options.Model == "" {
+		return nil, fmt.Errorf("model is required for generation")
 	}
 
 	// Create completion parameters
@@ -94,17 +80,9 @@ func (a *OpenAIAdapter) Generate(ctx context.Context, prompt string, options Gen
 		Prompt: openai.CompletionNewParamsPromptUnion{
 			OfString: openai.String(prompt),
 		},
-		Model:       openai.CompletionNewParamsModelGPT3_5TurboInstruct, // TODO: update to make it dynamic
+		Model:       openai.CompletionNewParamsModel(options.Model),
 		Temperature: openai.Float(options.Temperature),
 		MaxTokens:   openai.Int(options.MaxTokens),
-	}
-
-	// Add optional parameters if they have non-zero values
-	if options.Temperature == 0 {
-		params.Temperature = openai.Float(0.7) // Use default temperature
-	}
-	if options.MaxTokens == 0 {
-		params.MaxTokens = openai.Int(12) // Use default max tokens
 	}
 
 	// Call the OpenAI API
@@ -123,4 +101,45 @@ func (a *OpenAIAdapter) Generate(ctx context.Context, prompt string, options Gen
 	return &GenerateResponse{
 		Content: content,
 	}, nil
+}
+
+// GenerateResponse is a convenience method that combines prompt and system prompt
+func (a *OpenAIAdapter) GenerateResponse(ctx context.Context, prompt, systemPrompt string, options map[string]interface{}) (string, error) {
+	// Combine system prompt and user prompt
+	fullPrompt := prompt
+	if systemPrompt != "" {
+		fullPrompt = systemPrompt + "\n\n" + prompt
+	}
+
+	// Extract required options
+	model, ok := options["model"].(string)
+	if !ok || model == "" {
+		return "", fmt.Errorf("model is required in options")
+	}
+
+	temperature := 0.7 // default
+	if temp, exists := options["temperature"]; exists {
+		if tempFloat, ok := temp.(float64); ok {
+			temperature = tempFloat
+		}
+	}
+
+	maxTokens := int64(1000) // default
+	if max, exists := options["max_tokens"]; exists {
+		if maxInt, ok := max.(int); ok {
+			maxTokens = int64(maxInt)
+		}
+	}
+
+	// Generate response
+	response, err := a.Generate(ctx, fullPrompt, GenerateOptions{
+		Model:       model,
+		Temperature: temperature,
+		MaxTokens:   maxTokens,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return response.Content, nil
 }

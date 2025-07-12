@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/internal/services"
 	"github.com/nkapatos/mindweaver/internal/store"
@@ -46,7 +47,12 @@ func (h *PromptsHandler) Prompts(c echo.Context) error {
 	return views.PromptsList(templatePrompts).Render(c.Request().Context(), c.Response().Writer)
 }
 
-// CreatePrompt handles POST /prompts - processes form submission
+// NewPrompt handles GET /prompts/new - shows create form
+func (h *PromptsHandler) NewPrompt(c echo.Context) error {
+	return views.PromptDetailsForm(nil).Render(c.Request().Context(), c.Response().Writer)
+}
+
+// CreatePrompt handles POST /prompts/create - processes form submission
 func (h *PromptsHandler) CreatePrompt(c echo.Context) error {
 	// Parse form data
 	if err := c.Request().ParseForm(); err != nil {
@@ -61,16 +67,20 @@ func (h *PromptsHandler) CreatePrompt(c echo.Context) error {
 	// Validate required fields
 	if title == "" || content == "" {
 		// Redirect back to prompts page with error
-		return c.Redirect(http.StatusSeeOther, "/prompts?error=Title and content are required")
+		return c.Redirect(http.StatusSeeOther, "/prompts/new?error=Title and content are required")
 	}
 
 	// Convert is_system checkbox to boolean
 	isSystem := isSystemStr == "1"
 
+	// Get actor ID from authentication context for audit trail
+	sess, _ := session.Get("session", c)
+	actorID, _ := sess.Values["actor_id"].(int64)
+
 	// Create the prompt (for now without actor_id, we'll add that later with sessions)
-	if err := h.promptService.CreatePrompt(c.Request().Context(), nil, title, content, isSystem); err != nil {
+	if err := h.promptService.CreatePrompt(c.Request().Context(), nil, title, content, isSystem, actorID, actorID); err != nil {
 		// Redirect back with error
-		return c.Redirect(http.StatusSeeOther, "/prompts?error=Failed to create prompt")
+		return c.Redirect(http.StatusSeeOther, "/prompts/new?error=Failed to create prompt")
 	}
 
 	// Redirect back to prompts page with success message
@@ -173,8 +183,12 @@ func (h *PromptsHandler) UpdatePrompt(c echo.Context) error {
 	// Convert is_system checkbox to boolean
 	isSystem := isSystemStr == "1"
 
+	// Get actor ID from authentication context for audit trail
+	sess, _ := session.Get("session", c)
+	actorID, _ := sess.Values["actor_id"].(int64)
+
 	// Update the prompt (for now without actor_id, we'll add that later with sessions)
-	if err := h.promptService.UpdatePrompt(c.Request().Context(), id, nil, title, content, isSystem); err != nil {
+	if err := h.promptService.UpdatePrompt(c.Request().Context(), id, nil, title, content, isSystem, actorID); err != nil {
 		return c.Redirect(http.StatusSeeOther, "/prompts/edit/"+idStr+"?error=Failed to update prompt")
 	}
 

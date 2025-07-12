@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/internal/services"
 	"github.com/nkapatos/mindweaver/internal/store"
@@ -24,13 +25,21 @@ func NewProvidersHandler(providerService *services.ProviderService, llmService *
 	}
 }
 
-// getProvidersWithRelations fetches all providers with their relations
-func (h *ProvidersHandler) getProvidersWithRelations(ctx echo.Context) []views.ProviderWithRelations {
-	providersWithRelations, err := h.providerService.GetAllProvidersWithRelations(ctx.Request().Context())
+// Providers handles GET /providers - displays the providers page with form and list
+func (h *ProvidersHandler) Providers(c echo.Context) error {
+	// Get all providers with relations for display
+	providersWithRelations, err := h.providerService.GetAllProvidersWithRelations(c.Request().Context())
 	if err != nil {
-		return []views.ProviderWithRelations{}
+		// For now, just log the error and continue with empty list
+		providersWithRelations = []struct {
+			Provider         store.Provider
+			LLMServiceConfig store.LlmServiceConfig
+			LLMService       store.LlmService
+			SystemPrompt     *store.Prompt
+		}{}
 	}
 
+	// Convert to template format
 	var templateProviders []views.ProviderWithRelations
 	for _, p := range providersWithRelations {
 		templateProviders = append(templateProviders, views.ProviderWithRelations{
@@ -40,43 +49,38 @@ func (h *ProvidersHandler) getProvidersWithRelations(ctx echo.Context) []views.P
 			SystemPrompt:     p.SystemPrompt,
 		})
 	}
-	return templateProviders
+
+	return views.ProvidersList(templateProviders).Render(c.Request().Context(), c.Response().Writer)
 }
 
-// getAllLLMServiceConfigs fetches all LLM service configs from all services
-func (h *ProvidersHandler) getAllLLMServiceConfigs(ctx echo.Context) []store.LlmServiceConfig {
-	llmServices, err := h.llmService.GetAllLLMServices(ctx.Request().Context())
+// NewProvider handles GET /providers/new - shows create form
+func (h *ProvidersHandler) NewProvider(c echo.Context) error {
+	// Get all LLM services to get their configs
+	llmServices, err := h.llmService.GetAllLLMServices(c.Request().Context())
 	if err != nil {
-		return []store.LlmServiceConfig{}
+		llmServices = []store.LlmService{}
 	}
 
-	var allConfigs []store.LlmServiceConfig
+	// Get all configs from all services
+	var configs []store.LlmServiceConfig
 	for _, service := range llmServices {
-		configs, err := h.llmService.GetLLMServiceConfigsByServiceID(ctx.Request().Context(), service.ID)
+		serviceConfigs, err := h.llmService.GetLLMServiceConfigsByServiceID(c.Request().Context(), service.ID)
 		if err != nil {
-			continue // Skip this service if we can't get its configs
+			continue
 		}
-		allConfigs = append(allConfigs, configs...)
+		configs = append(configs, serviceConfigs...)
 	}
-	return allConfigs
-}
 
-// getSystemPrompts fetches all system prompts
-func (h *ProvidersHandler) getSystemPrompts(ctx echo.Context) []store.Prompt {
-	systemPrompts, err := h.promptService.GetSystemPrompts(ctx.Request().Context())
+	// Get all system prompts for the dropdown
+	prompts, err := h.promptService.GetSystemPrompts(c.Request().Context())
 	if err != nil {
-		return []store.Prompt{}
+		prompts = []store.Prompt{}
 	}
-	return systemPrompts
+
+	return views.ProviderDetailsForm(nil, configs, prompts).Render(c.Request().Context(), c.Response().Writer)
 }
 
-// Providers handles GET /providers - displays the providers page with list
-func (h *ProvidersHandler) Providers(c echo.Context) error {
-	providersWithRelations := h.getProvidersWithRelations(c)
-	return views.ProvidersList(providersWithRelations).Render(c.Request().Context(), c.Response().Writer)
-}
-
-// CreateProvider handles POST /providers - processes form submission
+// CreateProvider handles POST /providers/create - processes form submission
 func (h *ProvidersHandler) CreateProvider(c echo.Context) error {
 	// Parse form data
 	if err := c.Request().ParseForm(); err != nil {
@@ -91,13 +95,13 @@ func (h *ProvidersHandler) CreateProvider(c echo.Context) error {
 
 	// Validate required fields
 	if name == "" || description == "" || llmServiceConfigIDStr == "" {
-		return c.Redirect(http.StatusSeeOther, "/providers?error=Name, description and LLM service configuration are required")
+		return c.Redirect(http.StatusSeeOther, "/providers/new?error=Name, description and LLM service configuration are required")
 	}
 
 	// Parse LLM service config ID
 	llmServiceConfigID, err := strconv.ParseInt(llmServiceConfigIDStr, 10, 64)
 	if err != nil {
-		return c.Redirect(http.StatusSeeOther, "/providers?error=Invalid LLM service configuration ID")
+		return c.Redirect(http.StatusSeeOther, "/providers/new?error=Invalid LLM service configuration ID")
 	}
 
 	// Parse optional system prompt ID
@@ -105,15 +109,18 @@ func (h *ProvidersHandler) CreateProvider(c echo.Context) error {
 	if systemPromptIDStr != "" {
 		id, err := strconv.ParseInt(systemPromptIDStr, 10, 64)
 		if err != nil {
-			return c.Redirect(http.StatusSeeOther, "/providers?error=Invalid system prompt ID")
+			return c.Redirect(http.StatusSeeOther, "/providers/new?error=Invalid system prompt ID")
 		}
 		systemPromptID = &id
 	}
 
+	sess, _ := session.Get("session", c)
+	actorID, _ := sess.Values["actor_id"].(int64)
+
 	// Create the provider
-	_, err = h.providerService.CreateProvider(c.Request().Context(), name, description, llmServiceConfigID, systemPromptID)
+	_, err = h.providerService.CreateProvider(c.Request().Context(), name, description, llmServiceConfigID, systemPromptID, actorID, actorID)
 	if err != nil {
-		return c.Redirect(http.StatusSeeOther, "/providers?error=Failed to create provider")
+		return c.Redirect(http.StatusSeeOther, "/providers/new?error=Failed to create provider")
 	}
 
 	// Redirect back to providers page with success message
@@ -165,11 +172,51 @@ func (h *ProvidersHandler) EditProvider(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/providers?error=Provider not found")
 	}
 
-	// Get form data
-	allConfigs := h.getAllLLMServiceConfigs(c)
-	systemPrompts := h.getSystemPrompts(c)
+	// Get all LLM services to get their configs
+	llmServices, err := h.llmService.GetAllLLMServices(c.Request().Context())
+	if err != nil {
+		llmServices = []store.LlmService{}
+	}
 
-	return views.ProviderDetailsForm(provider, allConfigs, systemPrompts).Render(c.Request().Context(), c.Response().Writer)
+	// Get all configs from all services
+	var configs []store.LlmServiceConfig
+	for _, service := range llmServices {
+		serviceConfigs, err := h.llmService.GetLLMServiceConfigsByServiceID(c.Request().Context(), service.ID)
+		if err != nil {
+			continue
+		}
+		configs = append(configs, serviceConfigs...)
+	}
+
+	// Get all system prompts for the dropdown
+	prompts, err := h.promptService.GetSystemPrompts(c.Request().Context())
+	if err != nil {
+		prompts = []store.Prompt{}
+	}
+
+	// Get all providers with relations for display
+	providersWithRelations, err := h.providerService.GetAllProvidersWithRelations(c.Request().Context())
+	if err != nil {
+		providersWithRelations = []struct {
+			Provider         store.Provider
+			LLMServiceConfig store.LlmServiceConfig
+			LLMService       store.LlmService
+			SystemPrompt     *store.Prompt
+		}{}
+	}
+
+	// Convert to template format
+	var templateProviders []views.ProviderWithRelations
+	for _, p := range providersWithRelations {
+		templateProviders = append(templateProviders, views.ProviderWithRelations{
+			Provider:         p.Provider,
+			LLMServiceConfig: p.LLMServiceConfig,
+			LLMService:       p.LLMService,
+			SystemPrompt:     p.SystemPrompt,
+		})
+	}
+
+	return views.ProviderDetailsForm(provider, configs, prompts).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // UpdateProvider handles POST /providers/edit/{id} - processes edit form submission
@@ -216,8 +263,11 @@ func (h *ProvidersHandler) UpdateProvider(c echo.Context) error {
 		systemPromptID = &promptID
 	}
 
+	sess, _ := session.Get("session", c)
+	actorID, _ := sess.Values["actor_id"].(int64)
+
 	// Update the provider
-	if err := h.providerService.UpdateProvider(c.Request().Context(), id, name, description, llmServiceConfigID, systemPromptID); err != nil {
+	if err := h.providerService.UpdateProvider(c.Request().Context(), id, name, description, llmServiceConfigID, systemPromptID, actorID); err != nil {
 		return c.Redirect(http.StatusSeeOther, "/providers/edit/"+idStr+"?error=Failed to update provider")
 	}
 

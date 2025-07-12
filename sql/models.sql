@@ -1,20 +1,20 @@
 -- name: CreateModel :one
 INSERT INTO models (
-    llm_service_id, model_id, name, provider, description, created_at, owned_by
+    llm_service_id, model_id, name, provider, description, created_at, owned_by, created_by, updated_by
 ) VALUES (
-    ?, ?, ?, ?, ?, ?, ?
-) RETURNING *;
+    ?, ?, ?, ?, ?, ?, ?, ?, ?
+) RETURNING id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at, created_by, updated_by;
 
 -- name: GetModelsByLLMServiceID :many
-SELECT * FROM models 
+SELECT id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at, created_by, updated_by FROM models 
 WHERE llm_service_id = ? 
 ORDER BY name;
 
 -- name: GetModelByID :one
-SELECT * FROM models WHERE id = ?;
+SELECT id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at, created_by, updated_by FROM models WHERE id = ?;
 
 -- name: GetModelByServiceAndModelID :one
-SELECT * FROM models 
+SELECT id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at, created_by, updated_by FROM models 
 WHERE llm_service_id = ? AND model_id = ?;
 
 -- name: UpdateModel :one
@@ -24,9 +24,10 @@ UPDATE models SET
     description = ?,
     created_at = ?,
     owned_by = ?,
-    last_fetched_at = CURRENT_TIMESTAMP
+    last_fetched_at = CURRENT_TIMESTAMP,
+    updated_by = ?
 WHERE id = ?
-RETURNING *;
+RETURNING id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at, created_by, updated_by;
 
 -- name: DeleteModel :exec
 DELETE FROM models WHERE id = ?;
@@ -35,7 +36,7 @@ DELETE FROM models WHERE id = ?;
 DELETE FROM models WHERE llm_service_id = ?;
 
 -- name: GetModelsLastFetchedBefore :many
-SELECT * FROM models 
+SELECT id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at, created_by, updated_by FROM models 
 WHERE llm_service_id = ? AND last_fetched_at < ?
 ORDER BY last_fetched_at;
 

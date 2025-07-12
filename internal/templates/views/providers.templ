@@ -34,7 +34,12 @@ templ ProvidersList(providersWithRelations []ProviderWithRelations) {
 	@ProvidersPage("Providers", "Configure and manage your AI providers and models.") {
 		<div class="card bg-base-100 shadow-lg">
 			<div class="card-body">
-				<h2 class="card-title text-xl mb-4">Your Providers</h2>
+				<div class="flex justify-between items-center mb-4">
+					<h2 class="card-title text-xl">Your Providers</h2>
+					<a href={ templ.SafeURL(config.RouteProviders + "/" + config.RESTActionNew) } class="btn btn-primary btn-sm">
+						Create New Provider
+					</a>
+				</div>
 				if len(providersWithRelations) == 0 {
 					<div class="text-center py-8">
 						<p class="text-base-content/60">No providers configured yet. Create your first provider using the form.</p>
@@ -112,7 +117,7 @@ templ ProviderDetailsForm(editingProvider *store.Provider, llmServiceConfigs []s
 					<div class="flex items-center gap-4 mb-4">
 						<h2 class="card-title text-xl">Edit Provider</h2>
 						<a href={ config.RouteProviders } class="btn btn-ghost btn-sm">
-							← Back to Create
+							← Back to List
 						</a>
 					</div>
 					<form action={ templ.SafeURL(config.RouteProviders + "/" + strconv.FormatInt(editingProvider.ID, 10) + "/" + config.RESTActionEdit) } method="POST" class="space-y-4">
@@ -127,8 +132,13 @@ templ ProviderDetailsForm(editingProvider *store.Provider, llmServiceConfigs []s
 						</div>
 					</form>
 				} else {
-					<h2 class="card-title text-xl mb-4">Create New Provider</h2>
-					<form action={ config.RouteProviders } method="POST" class="space-y-4">
+					<div class="flex items-center gap-4 mb-4">
+						<h2 class="card-title text-xl">Create New Provider</h2>
+						<a href={ config.RouteProviders } class="btn btn-ghost btn-sm">
+							← Back to List
+						</a>
+					</div>
+					<form action={ templ.SafeURL(config.RouteProviders + "/" + config.RESTActionCreate) } method="POST" class="space-y-4">
 						@ProviderFormFields(nil, llmServiceConfigs, systemPrompts)
 						<button type="submit" class="btn btn-primary w-full">
 							Create Provider

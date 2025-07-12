@@ -21,7 +21,7 @@ func NewPromptService(promptStore store.Querier) *PromptService {
 }
 
 // CreatePrompt creates a new prompt
-func (s *PromptService) CreatePrompt(ctx context.Context, actorID *int64, title, content string, isSystem bool) error {
+func (s *PromptService) CreatePrompt(ctx context.Context, actorID *int64, title, content string, isSystem bool, createdBy, updatedBy int64) error {
 	s.logger.Info("Creating new prompt",
 		"title", title,
 		"actor_id", actorID,
@@ -41,10 +41,12 @@ func (s *PromptService) CreatePrompt(ctx context.Context, actorID *int64, title,
 	}
 
 	params := store.CreatePromptParams{
-		ActorID:  actorIDNull,
-		Title:    title,
-		Content:  content,
-		IsSystem: isSystemNull,
+		ActorID:   actorIDNull,
+		Title:     title,
+		Content:   content,
+		IsSystem:  isSystemNull,
+		CreatedBy: createdBy,
+		UpdatedBy: updatedBy,
 	}
 
 	if err := s.promptStore.CreatePrompt(ctx, params); err != nil {
@@ -118,7 +120,7 @@ func (s *PromptService) GetSystemPrompts(ctx context.Context) ([]store.Prompt, e
 }
 
 // UpdatePrompt updates a prompt by its ID
-func (s *PromptService) UpdatePrompt(ctx context.Context, id int64, actorID *int64, title, content string, isSystem bool) error {
+func (s *PromptService) UpdatePrompt(ctx context.Context, id int64, actorID *int64, title, content string, isSystem bool, updatedBy int64) error {
 	s.logger.Info("Updating prompt",
 		"id", id,
 		"actor_id", actorID,
@@ -139,11 +141,12 @@ func (s *PromptService) UpdatePrompt(ctx context.Context, id int64, actorID *int
 	}
 
 	params := store.UpdatePromptParams{
-		ActorID:  actorIDNull,
-		Title:    title,
-		Content:  content,
-		IsSystem: isSystemNull,
-		ID:       id,
+		ActorID:   actorIDNull,
+		Title:     title,
+		Content:   content,
+		IsSystem:  isSystemNull,
+		UpdatedBy: updatedBy,
+		ID:        id,
 	}
 
 	if err := s.promptStore.UpdatePrompt(ctx, params); err != nil {

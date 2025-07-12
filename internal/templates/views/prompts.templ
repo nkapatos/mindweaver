@@ -32,7 +32,12 @@ templ PromptsList(promptsWithRelations []PromptWithRelations) {
 	@PromptsPage("Prompts", "Create and manage your system prompts and templates.") {
 		<div class="card bg-base-100 shadow-lg">
 			<div class="card-body">
-				<h2 class="card-title text-xl mb-4">Your Prompts</h2>
+				<div class="flex justify-between items-center mb-4">
+					<h2 class="card-title text-xl">Your Prompts</h2>
+					<a href={ templ.SafeURL(config.RoutePrompts + "/" + config.RESTActionNew) } class="btn btn-primary btn-sm">
+						Create New Prompt
+					</a>
+				</div>
 				if len(promptsWithRelations) == 0 {
 					<div class="text-center py-8">
 						<p class="text-base-content/60">No prompts created yet. Create your first prompt using the form.</p>
@@ -59,7 +64,7 @@ templ PromptsList(promptsWithRelations []PromptWithRelations) {
 								<div class="flex justify-between items-center text-xs text-base-content/50 mb-3">
 									<span>ID: { strconv.FormatInt(promptData.Prompt.ID, 10) }</span>
 									if promptData.Prompt.CreatedAt.Valid {
-										<span>Created: { promptData.Prompt.CreatedAt.String }</span>
+										<span>Created: { promptData.Prompt.CreatedAt.Time.Format("2006-01-02 15:04:05") }</span>
 									}
 								</div>
 								<div class="mt-3 flex gap-2">
@@ -90,7 +95,7 @@ templ PromptDetailsForm(editingPrompt *store.Prompt) {
 					<div class="flex items-center gap-4 mb-4">
 						<h2 class="card-title text-xl">Edit Prompt</h2>
 						<a href={ config.RoutePrompts } class="btn btn-ghost btn-sm">
-							← Back to Create
+							← Back to List
 						</a>
 					</div>
 					<form action={ templ.SafeURL(config.RoutePrompts + "/" + strconv.FormatInt(editingPrompt.ID, 10) + "/" + config.RESTActionEdit) } method="POST" class="space-y-4">
@@ -105,8 +110,13 @@ templ PromptDetailsForm(editingPrompt *store.Prompt) {
 						</div>
 					</form>
 				} else {
-					<h2 class="card-title text-xl mb-4">Create New Prompt</h2>
-					<form action={ config.RoutePrompts } method="POST" class="space-y-4">
+					<div class="flex items-center gap-4 mb-4">
+						<h2 class="card-title text-xl">Create New Prompt</h2>
+						<a href={ config.RoutePrompts } class="btn btn-ghost btn-sm">
+							← Back to List
+						</a>
+					</div>
+					<form action={ templ.SafeURL(config.RoutePrompts + "/" + config.RESTActionCreate) } method="POST" class="space-y-4">
 						@PromptFormFields(nil)
 						<button type="submit" class="btn btn-primary w-full">
 							Create Prompt

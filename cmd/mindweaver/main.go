@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"log/slog"
 	"os"
 
@@ -13,6 +15,22 @@ import (
 	"github.com/nkapatos/mindweaver/internal/store"
 )
 
+// ActorAuthMetadata represents authentication information stored in actor metadata
+//
+// Supported strategies (for future struct streamlining):
+//   - "system":
+//     Credentials: { "role": "system", "permissions": "all" }
+//   - "password":
+//     Credentials: { "username": "...", "password": "..." }
+//
+// Additional strategies (e.g., "oauth", "api_key") can be added as needed.
+type ActorAuthMetadata struct {
+	AuthStrategy string            `json:"auth_strategy"` // "password", "oauth", "api_key", etc.
+	Credentials  map[string]string `json:"credentials"`   // Strategy-specific credentials
+	LastLogin    *string           `json:"last_login,omitempty"`
+	IsActive     bool              `json:"is_active"`
+}
+
 var db *sql.DB
 var logger *slog.Logger
 
@@ -22,6 +40,18 @@ func init() {
 		Level: slog.LevelInfo,
 	}))
 	slog.SetDefault(logger)
+
+	// Quick check: if the database file does not exist, create it (touch)
+	dbPath := "mw.db"
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		logger.Info("Database file does not exist, creating...", "file", dbPath)
+		file, err := os.Create(dbPath)
+		if err != nil {
+			logger.Error("Failed to create database file", "error", err)
+			os.Exit(1)
+		}
+		file.Close()
+	}
 
 	var err error
 	db, err = sql.Open("sqlite3", "file:mw.db?cache=shared&mode=rwc")
@@ -49,15 +79,39 @@ func main() {
 	// Initialize dependencies
 	querier := store.New(db)
 	actorService := services.NewActorService(querier)
+
+	// Initialize system actor
+	if err := initializeSystemActor(actorService); err != nil {
+		logger.Error("Failed to initialize system actor", "error", err)
+		os.Exit(1)
+	}
+
+	// Initialize test user actor
+	if err := initializeTestUser(actorService); err != nil {
+		logger.Error("Failed to initialize test user", "error", err)
+		os.Exit(1)
+	}
+
+	// Initialize auth service
+	authService := services.NewAuthService(actorService)
+
 	promptService := services.NewPromptService(querier)
 	providerService := services.NewProviderService(querier)
-	llmService := services.NewLLMService(querier)
+	llmService := services.NewLLMService(querier, providerService)
 	conversationService := services.NewConversationService(querier)
+	messageService := services.NewMessageService(querier)
+
 	// API handlers (only the ones that work with our services)
 	actorHandler := api.NewActorHandler(actorService)
 	promptHandler := api.NewPromptHandler(promptService)
+	providerHandler := api.NewProvidersHandler(providerService)
+	llmServiceHandler := api.NewLLMServicesHandler(llmService)
+	llmServiceConfigHandler := api.NewLLMServiceConfigsHandler(llmService)
+	modelsHandler := api.NewModelsHandler(llmService)
+	conversationHandler := api.NewConversationHandler(conversationService, messageService, providerService, llmService)
 
 	// Web handlers (our main focus)
+	authHandler := web.NewAuthHandler(authService)
 	homeHandler := web.NewHomeHandler()
 	notFoundHandler := web.NewNotFoundHandler()
 	promptsHandler := web.NewPromptsHandler(promptService)
@@ -65,7 +119,7 @@ func main() {
 	llmServicesHandler := web.NewLLMServicesHandler(llmService)
 	llmServiceConfigsHandler := web.NewLLMServiceConfigsHandler(llmService)
 	settingsHandler := web.NewSettingsHandler()
-	conversationHandler := web.NewConversationHandler(conversationService, providerService)
+	webConversationHandler := web.NewConversationHandler(conversationService, providerService)
 
 	logger.Info("Application dependencies initialized")
 
@@ -74,16 +128,23 @@ func main() {
 
 	// Setup all routes
 	router.SetupRoutes(
+		authService,
+		authHandler,
 		actorHandler,
 		promptHandler,
 		nil, // No LLM API handler for now - focus on web handlers
+		conversationHandler,
+		providerHandler,
+		llmServiceHandler,
+		llmServiceConfigHandler,
+		modelsHandler,
 		homeHandler,
 		promptsHandler,
 		providersHandler,
 		llmServicesHandler,
 		llmServiceConfigsHandler,
 		settingsHandler,
-		conversationHandler,
+		webConversationHandler,
 		notFoundHandler,
 	)
 
@@ -92,4 +153,105 @@ func main() {
 		logger.Error("Server failed to start", "error", err)
 		os.Exit(1)
 	}
+}
+
+// initializeSystemActor creates the system actor if it doesn't exist
+func initializeSystemActor(actorService *services.ActorService) error {
+	logger.Info("Initializing system actor")
+
+	// Try to get the system actor by name
+	_, err := actorService.GetActorByName(context.Background(), "System", "system")
+	if err != nil {
+		// System actor doesn't exist, create it
+		logger.Info("System actor not found, creating...")
+
+		// Create system metadata
+		systemMetadata := ActorAuthMetadata{
+			AuthStrategy: "system",
+			Credentials: map[string]string{
+				"role":        "system",
+				"permissions": "all",
+			},
+			IsActive: true,
+		}
+
+		// Serialize system metadata to JSON
+		metadataJSON, err := json.Marshal(systemMetadata)
+		if err != nil {
+			return err
+		}
+
+		// For the first system actor, we'll use ID 1 as created_by and updated_by
+		// This is a special case for the initial system actor
+		err = actorService.CreateActor(
+			context.Background(),
+			"system",
+			"System",
+			"System",
+			"",
+			string(metadataJSON), // Store system info in metadata
+			true,
+			1, // created_by - will be updated after creation
+			1, // updated_by - will be updated after creation
+		)
+		if err != nil {
+			return err
+		}
+
+		logger.Info("System actor created successfully with metadata")
+	} else {
+		logger.Info("System actor already exists")
+	}
+
+	return nil
+}
+
+// initializeTestUser creates a test user actor if it doesn't exist
+func initializeTestUser(actorService *services.ActorService) error {
+	logger.Info("Initializing test user")
+
+	// Try to get the test user by name
+	_, err := actorService.GetActorByName(context.Background(), "testuser", "user")
+	if err != nil {
+		// Test user doesn't exist, create it
+		logger.Info("Test user not found, creating...")
+
+		// Create auth metadata for the test user
+		authMetadata := ActorAuthMetadata{
+			AuthStrategy: "password",
+			Credentials: map[string]string{
+				"username": "testuser",
+				"password": "testpass123", // In production, this would be hashed
+			},
+			IsActive: true,
+		}
+
+		// Serialize auth metadata to JSON
+		metadataJSON, err := json.Marshal(authMetadata)
+		if err != nil {
+			return err
+		}
+
+		// Create test user with system actor as creator and auth metadata
+		err = actorService.CreateActor(
+			context.Background(),
+			"user",
+			"testuser",
+			"Test User",
+			"",
+			string(metadataJSON), // Store auth info in metadata
+			true,
+			1, // created_by - system actor
+			1, // updated_by - system actor
+		)
+		if err != nil {
+			return err
+		}
+
+		logger.Info("Test user created successfully with auth metadata")
+	} else {
+		logger.Info("Test user already exists")
+	}
+
+	return nil
 }
