@@ -10,7 +10,13 @@ templ UserDropdown() {
 		<ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
 			<li><a>Profile</a></li>
 			<li><a>Settings</a></li>
-			<li><a href="/auth/logout">Logout</a></li>
+			<li>
+				<form action="/auth/logout" method="POST" class="inline">
+					<button type="submit" class="w-full text-left">
+						Logout
+					</button>
+				</form>
+			</li>
 		</ul>
 	</div>
 }

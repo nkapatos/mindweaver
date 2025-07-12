@@ -1,8 +1,6 @@
 package router
 
 import (
-	"crypto/subtle"
-
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -64,19 +62,10 @@ func (r *Router) SetupRoutes(
 	// Add session middleware using Echo's session middleware with gorilla/sessions
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("mindweaver-secret-key-change-in-production"))))
 
-	// TODO: Replace basic auth with proper session-based authentication
-	// For now, we'll use basic auth as a placeholder
-	basicAuthMiddleware := echoMiddleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-		// TODO: Use authService.AuthenticateActor() for proper authentication
-		// For now, use hardcoded credentials for testing
-		if subtle.ConstantTimeCompare([]byte(username), []byte("testuser")) == 1 &&
-			subtle.ConstantTimeCompare([]byte(password), []byte("testpass123")) == 1 {
-			return true, nil
-		}
-		return false, nil
-	})
+	// Create auth middleware that redirects to signin page
+	authMiddleware := middleware.AuthMiddleware(authService)
 
-	routes.SetupWebRoutes(e, authHandler, basicAuthMiddleware, homeHandler, promptsHandler, providersHandler, llmServicesHandler, llmServiceConfigsHandler, settingsHandler, webConversationHandler, setupHandler)
+	routes.SetupWebRoutes(e, authHandler, authMiddleware, homeHandler, promptsHandler, providersHandler, llmServicesHandler, llmServiceConfigsHandler, settingsHandler, webConversationHandler, setupHandler)
 	if llmHandler != nil {
 		routes.SetupAPIRoutes(e, actorHandler, promptHandler, llmHandler, conversationHandler, providerHandler, llmServiceHandler, llmServiceConfigHandler, modelsHandler)
 	} else {

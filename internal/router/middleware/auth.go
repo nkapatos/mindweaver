@@ -1,6 +1,9 @@
 package middleware
 
 import (
+	"net/http"
+
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/internal/services"
 )
@@ -10,12 +13,17 @@ func AuthMiddleware(authService *services.AuthService) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			// TODO: Implement proper session-based authentication
-			// For now, we'll use a simple approach with actor ID 1 (test user)
+			// For now, redirect to signin page if not authenticated
 			// In a real implementation, you'd check session or JWT tokens
 
-			// Check if user is authenticated (this is a placeholder)
-			// You can implement your own authentication logic here
-			actorID := int64(2) // Default to test user actor for now (ID 2)
+			// Check if user is authenticated by looking for actor_id in session
+			sess, _ := session.Get("session", c)
+			actorID, ok := sess.Values["actor_id"].(int64)
+
+			if !ok || actorID == 0 {
+				// Not authenticated, redirect to signin
+				return c.Redirect(http.StatusSeeOther, "/auth/signin")
+			}
 
 			// Store actor ID in context for handlers to use
 			c.Set("actor_id", actorID)

@@ -94,14 +94,9 @@ func main() {
 	// 3. If there is at least one user actor, continue. If not, show setup wizard to create one.
 	needsSetup := checkIfSetupNeeded()
 	if needsSetup {
-		logger.Info("Application setup required - test user will not be created")
-	} else {
-		// Initialize test user actor only if setup is not needed (legacy/test flow)
-		if err := initializeTestUser(actorService); err != nil {
-			logger.Error("Failed to initialize test user", "error", err)
-			os.Exit(1)
-		}
+		logger.Info("Application setup required - no test user will be created")
 	}
+	// Note: Test user creation has been removed. Users are now created through the setup wizard.
 
 	// Initialize auth service
 	authService := services.NewAuthService(actorService)
@@ -214,56 +209,6 @@ func initializeSystemActor(actorService *services.ActorService) error {
 		logger.Info("System actor created successfully with metadata")
 	} else {
 		logger.Info("System actor already exists")
-	}
-
-	return nil
-}
-
-// initializeTestUser creates a test user actor if it doesn't exist
-func initializeTestUser(actorService *services.ActorService) error {
-	logger.Info("Initializing test user")
-
-	// Try to get the test user by name
-	_, err := actorService.GetActorByName(context.Background(), "testuser", "user")
-	if err != nil {
-		// Test user doesn't exist, create it
-		logger.Info("Test user not found, creating...")
-
-		// Create auth metadata for the test user
-		authMetadata := ActorAuthMetadata{
-			AuthStrategy: "password",
-			Credentials: map[string]string{
-				"username": "testuser",
-				"password": "testpass123", // In production, this would be hashed
-			},
-			IsActive: true,
-		}
-
-		// Serialize auth metadata to JSON
-		metadataJSON, err := json.Marshal(authMetadata)
-		if err != nil {
-			return err
-		}
-
-		// Create test user with system actor as creator and auth metadata
-		err = actorService.CreateActor(
-			context.Background(),
-			"user",
-			"testuser",
-			"Test User",
-			"",
-			string(metadataJSON), // Store auth info in metadata
-			true,
-			1, // created_by - system actor
-			1, // updated_by - system actor
-		)
-		if err != nil {
-			return err
-		}
-
-		logger.Info("Test user created successfully with auth metadata")
-	} else {
-		logger.Info("Test user already exists")
 	}
 
 	return nil
