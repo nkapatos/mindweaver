@@ -48,7 +48,14 @@ func (h *SetupHandler) SetupPage(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/")
 	}
 
-	return views.SetupPage().Render(c.Request().Context(), c.Response().Writer)
+	// Determine if this should use base layout (init mode) or app layout (regular mode)
+	useBaseLayout := h.isInitMode()
+
+	setupData := views.SetupData{
+		UseBaseLayout: useBaseLayout,
+	}
+
+	return views.SetupPage(setupData).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // SetupApplication handles POST /setup - processes the setup form
@@ -126,4 +133,16 @@ func (h *SetupHandler) checkIfSetupNeeded() (bool, error) {
 
 	// If no user actors exist, setup is needed
 	return len(actors) == 0, nil
+}
+
+// isInitMode checks if this is the initial setup (no user actors exist)
+func (h *SetupHandler) isInitMode() bool {
+	actors, err := h.actorService.GetActorsByType(context.Background(), "user")
+	if err != nil {
+		// If we can't get actors, assume it's init mode
+		return true
+	}
+
+	// If no user actors exist, it's init mode
+	return len(actors) == 0
 }
