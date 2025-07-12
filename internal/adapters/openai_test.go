@@ -8,58 +8,31 @@ import (
 func TestNewOpenAIAdapter(t *testing.T) {
 	tests := []struct {
 		name    string
-		config  AdapterConfig
+		apiKey  string
+		baseURL string
 		wantErr bool
 	}{
 		{
-			name: "valid config with API key",
-			config: AdapterConfig{
-				Name:   "openai",
-				APIKey: "test-api-key",
-			},
+			name:    "valid config with API key",
+			apiKey:  "test-api-key",
 			wantErr: false,
 		},
 		{
-			name: "valid config with API key and base URL",
-			config: AdapterConfig{
-				Name:    "openai",
-				APIKey:  "test-api-key",
-				BaseURL: "https://api.openai.com/v1",
-			},
+			name:    "valid config with API key and base URL",
+			apiKey:  "test-api-key",
+			baseURL: "https://api.openai.com/v1",
 			wantErr: false,
 		},
 		{
-			name: "valid config with API key, base URL, and organization",
-			config: AdapterConfig{
-				Name:    "openai",
-				APIKey:  "test-api-key",
-				BaseURL: "https://api.openai.com/v1",
-				Settings: map[string]string{
-					"organization": "test-org",
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "missing API key",
-			config: AdapterConfig{
-				Name: "openai",
-			},
-			wantErr: true,
-		},
-		{
-			name: "empty API key",
-			config: AdapterConfig{
-				Name:   "openai",
-				APIKey: "",
-			},
+			name:    "missing API key",
+			apiKey:  "",
 			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			adapter, err := NewOpenAIAdapter(tt.config)
+			adapter, err := NewOpenAIAdapter(tt.apiKey, tt.baseURL)
 
 			if tt.wantErr {
 				if err == nil {
@@ -79,49 +52,29 @@ func TestNewOpenAIAdapter(t *testing.T) {
 			}
 
 			// Check that the adapter implements the LLMProvider interface
-			if adapter.GetName() != tt.config.Name {
-				t.Errorf("NewOpenAIAdapter() adapter name = %v, want %v", adapter.GetName(), tt.config.Name)
+			if adapter.GetName() != "openai" {
+				t.Errorf("NewOpenAIAdapter() adapter name = %v, want %v", adapter.GetName(), "openai")
 			}
 
 			// Type assertion to check it's an OpenAIAdapter
-			openaiAdapter, ok := adapter.(*OpenAIAdapter)
+			_, ok := adapter.(*OpenAIAdapter)
 			if !ok {
 				t.Errorf("NewOpenAIAdapter() returned wrong type, expected *OpenAIAdapter")
 				return
-			}
-
-			// Check that the config was stored correctly
-			if openaiAdapter.config.Name != tt.config.Name {
-				t.Errorf("NewOpenAIAdapter() stored config name = %v, want %v", openaiAdapter.config.Name, tt.config.Name)
-			}
-
-			if openaiAdapter.config.APIKey != tt.config.APIKey {
-				t.Errorf("NewOpenAIAdapter() stored config API key = %v, want %v", openaiAdapter.config.APIKey, tt.config.APIKey)
-			}
-
-			if openaiAdapter.config.BaseURL != tt.config.BaseURL {
-				t.Errorf("NewOpenAIAdapter() stored config base URL = %v, want %v", openaiAdapter.config.BaseURL, tt.config.BaseURL)
 			}
 		})
 	}
 }
 
-func TestOpenAIAdapter_ListModels(t *testing.T) {
-	// Create adapter config
-	config := AdapterConfig{
-		Name:    "openai",
-		BaseURL: "https://api.openai.com/v1",
-		APIKey:  "test-key", // This won't work with a real API call, but we can test the structure
-	}
-
+func TestOpenAIAdapter_GetModels(t *testing.T) {
 	// Create adapter
-	adapter, err := NewOpenAIAdapter(config)
+	adapter, err := NewOpenAIAdapter("test-key", "https://api.openai.com/v1")
 	if err != nil {
 		t.Fatalf("Failed to create OpenAI adapter: %v", err)
 	}
 
-	// Test ListModels method exists
-	models, err := adapter.ListModels(context.Background(), "test-key", "https://api.openai.com/v1")
+	// Test GetModels method exists
+	models, err := adapter.GetModels(context.Background())
 
 	// We expect an error with a test key, but we can verify the method exists and returns the right type
 	if err != nil {

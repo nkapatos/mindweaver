@@ -52,17 +52,13 @@ func (s *modelCacheService) RefreshModels(ctx context.Context, llmServiceID int6
 	}
 
 	// Create adapter and fetch models
-	adapter, err := adapters.NewAdapter(adapters.AdapterConfig{
-		Name:    llmService.Adapter,
-		BaseURL: llmService.BaseUrl,
-		APIKey:  llmService.ApiKey,
-	})
+	adapter, err := adapters.NewAdapter(llmService.Adapter, llmService.ApiKey, llmService.BaseUrl)
 	if err != nil {
 		return nil, err
 	}
 
 	// Fetch models from the service
-	freshModels, err := adapter.ListModels(ctx, llmService.ApiKey, llmService.BaseUrl)
+	freshModels, err := adapter.GetModels(ctx)
 	if err != nil {
 		return nil, err
 	}

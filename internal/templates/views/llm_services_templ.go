@@ -276,7 +276,7 @@ func LLMServicesList(llmServicesWithRelations []LLMServiceWithRelations) templ.C
 	})
 }
 
-func LLMServiceDetailsForm(editingService *store.LlmService) templ.Component {
+func LLMServiceDetailsForm(editingService *store.LlmService, supportedAdapters []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -344,7 +344,7 @@ func LLMServiceDetailsForm(editingService *store.LlmService) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = LLMServiceFormFields(editingService).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = LLMServiceFormFields(editingService, supportedAdapters).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -396,11 +396,11 @@ func LLMServiceDetailsForm(editingService *store.LlmService) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = LLMServiceFormFields(nil).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = LLMServiceFormFields(nil, supportedAdapters).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<button type=\"submit\" class=\"btn btn-primary w-full\">Create LLM Service</button></form>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<div class=\"flex gap-3\"><button type=\"button\" class=\"btn btn-outline flex-1\" onclick=\"testConnection()\">Test Connection</button> <button type=\"submit\" class=\"btn btn-primary flex-1\">Create LLM Service</button></div></form>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -419,7 +419,7 @@ func LLMServiceDetailsForm(editingService *store.LlmService) templ.Component {
 	})
 }
 
-func LLMServiceFormFields(editingService *store.LlmService) templ.Component {
+func LLMServiceFormFields(editingService *store.LlmService, supportedAdapters []string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -452,7 +452,7 @@ func LLMServiceFormFields(editingService *store.LlmService) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(editingService.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_services.templ`, Line: 144, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_services.templ`, Line: 149, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -463,19 +463,19 @@ func LLMServiceFormFields(editingService *store.LlmService) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, " required></div><div><label class=\"label\" for=\"adapter\"><span class=\"label-text font-medium\">Adapter</span></label> <input type=\"text\" id=\"adapter\" name=\"adapter\" class=\"input input-bordered w-full\" placeholder=\"e.g., openai, anthropic, openrouter\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, " required></div><div><label class=\"label\" for=\"adapter\"><span class=\"label-text font-medium\">Adapter</span></label> <select id=\"adapter\" name=\"adapter\" class=\"select select-bordered w-full\" required><option value=\"\">Select an adapter...</option> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if editingService != nil {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, " value=\"")
+		for _, adapter := range supportedAdapters {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<option value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var23 string
-			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(editingService.Adapter)
+			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(adapter)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_services.templ`, Line: 160, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_services.templ`, Line: 162, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
@@ -485,31 +485,54 @@ func LLMServiceFormFields(editingService *store.LlmService) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, " required></div><div><label class=\"label\" for=\"api_key\"><span class=\"label-text font-medium\">API Key</span></label> <input type=\"password\" id=\"api_key\" name=\"api_key\" class=\"input input-bordered w-full\" placeholder=\"Enter your API key\" required><p class=\"text-xs text-base-content/60 mt-1\">Your API key will be encrypted and stored securely</p></div><div><label class=\"label\" for=\"base_url\"><span class=\"label-text font-medium\">Base URL (Optional)</span></label> <input type=\"url\" id=\"base_url\" name=\"base_url\" class=\"input input-bordered w-full\" placeholder=\"https://api.openai.com/v1\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if editingService != nil {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, " value=\"")
+			if editingService != nil && editingService.Adapter == adapter {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, " selected")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, ">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var24 string
-			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(editingService.BaseUrl)
+			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(adapter)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_services.templ`, Line: 190, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_services.templ`, Line: 167, Col: 14}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</option>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "><p class=\"text-xs text-base-content/60 mt-1\">Leave empty to use the default provider URL</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</select><p class=\"text-xs text-base-content/60 mt-1\">Choose the adapter that matches your LLM service provider</p></div><div><label class=\"label\" for=\"api_key\"><span class=\"label-text font-medium\">API Key</span></label> <input type=\"password\" id=\"api_key\" name=\"api_key\" class=\"input input-bordered w-full\" placeholder=\"Enter your API key\" required><p class=\"text-xs text-base-content/60 mt-1\">Your API key will be encrypted and stored securely</p></div><div><label class=\"label\" for=\"base_url\"><span class=\"label-text font-medium\">Base URL (Optional)</span></label> <input type=\"url\" id=\"base_url\" name=\"base_url\" class=\"input input-bordered w-full\" placeholder=\"https://api.openai.com/v1\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if editingService != nil {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, " value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var25 string
+			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(editingService.BaseUrl)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/llm_services.templ`, Line: 198, Col: 34}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "><p class=\"text-xs text-base-content/60 mt-1\">Leave empty to use the default provider URL</p></div><script>\n\t\tfunction testConnection() {\n\t\t\tconst adapter = document.getElementById('adapter').value;\n\t\t\tconst apiKey = document.getElementById('api_key').value;\n\t\t\tconst baseUrl = document.getElementById('base_url').value;\n\t\t\t\n\t\t\tif (!adapter || !apiKey) {\n\t\t\t\talert('Please fill in the adapter and API key fields first.');\n\t\t\t\treturn;\n\t\t\t}\n\t\t\t\n\t\t\t// Create form data for the request\n\t\t\tconst formData = new FormData();\n\t\t\tformData.append('adapter', adapter);\n\t\t\tformData.append('api_key', apiKey);\n\t\t\tif (baseUrl) {\n\t\t\t\tformData.append('base_url', baseUrl);\n\t\t\t}\n\t\t\t\n\t\t\t// Show loading state\n\t\t\tconst testButton = event.target;\n\t\t\tconst originalText = testButton.textContent;\n\t\t\ttestButton.textContent = 'Testing...';\n\t\t\ttestButton.disabled = true;\n\t\t\t\n\t\t\t// Make AJAX call to test connection endpoint\n\t\t\tfetch('/llm-services/test-connection', {\n\t\t\t\tmethod: 'POST',\n\t\t\t\tbody: formData\n\t\t\t})\n\t\t\t.then(response => response.json())\n\t\t\t.then(data => {\n\t\t\t\tif (data.error) {\n\t\t\t\t\talert('Connection test failed: ' + data.error);\n\t\t\t\t} else {\n\t\t\t\t\talert('Connection test successful!');\n\t\t\t\t}\n\t\t\t})\n\t\t\t.catch(error => {\n\t\t\t\talert('Connection test failed: ' + error.message);\n\t\t\t})\n\t\t\t.finally(() => {\n\t\t\t\t// Restore button state\n\t\t\t\ttestButton.textContent = originalText;\n\t\t\t\ttestButton.disabled = false;\n\t\t\t});\n\t\t}\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

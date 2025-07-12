@@ -59,7 +59,7 @@ func SignIn() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" method=\"POST\" class=\"space-y-4\"><div><label class=\"label\" for=\"email\"><span class=\"label-text\">Email</span></label> <input type=\"email\" id=\"email\" name=\"email\" placeholder=\"Enter your email\" class=\"input input-bordered w-full\" required></div><div><label class=\"label\" for=\"password\"><span class=\"label-text\">Password</span></label> <input type=\"password\" id=\"password\" name=\"password\" placeholder=\"Enter your password\" class=\"input input-bordered w-full\" required> <label class=\"label\"><a href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" method=\"POST\" class=\"space-y-4\"><div><label class=\"label\" for=\"username\"><span class=\"label-text\">Username</span></label> <input type=\"text\" id=\"username\" name=\"username\" placeholder=\"Enter your username\" class=\"input input-bordered w-full\" required></div><div><label class=\"label\" for=\"password\"><span class=\"label-text\">Password</span></label> <input type=\"password\" id=\"password\" name=\"password\" placeholder=\"Enter your password\" class=\"input input-bordered w-full\" required> <label class=\"label\"><a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -12,10 +12,10 @@ import (
 
 const createModel = `-- name: CreateModel :one
 INSERT INTO models (
-    llm_service_id, model_id, name, provider, description, created_at, owned_by
+    llm_service_id, model_id, name, provider, description, created_at, owned_by, created_by, updated_by
 ) VALUES (
-    ?, ?, ?, ?, ?, ?, ?
-) RETURNING id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at
+    ?, ?, ?, ?, ?, ?, ?, ?, ?
+) RETURNING id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at, created_by, updated_by
 `
 
 type CreateModelParams struct {
@@ -26,6 +26,8 @@ type CreateModelParams struct {
 	Description  sql.NullString `json:"description"`
 	CreatedAt    sql.NullInt64  `json:"created_at"`
 	OwnedBy      sql.NullString `json:"owned_by"`
+	CreatedBy    int64          `json:"created_by"`
+	UpdatedBy    int64          `json:"updated_by"`
 }
 
 func (q *Queries) CreateModel(ctx context.Context, arg CreateModelParams) (Model, error) {
@@ -37,6 +39,8 @@ func (q *Queries) CreateModel(ctx context.Context, arg CreateModelParams) (Model
 		arg.Description,
 		arg.CreatedAt,
 		arg.OwnedBy,
+		arg.CreatedBy,
+		arg.UpdatedBy,
 	)
 	var i Model
 	err := row.Scan(
@@ -49,6 +53,8 @@ func (q *Queries) CreateModel(ctx context.Context, arg CreateModelParams) (Model
 		&i.CreatedAt,
 		&i.OwnedBy,
 		&i.LastFetchedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
@@ -72,7 +78,7 @@ func (q *Queries) DeleteModelsByLLMServiceID(ctx context.Context, llmServiceID i
 }
 
 const getModelByID = `-- name: GetModelByID :one
-SELECT id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at FROM models WHERE id = ?
+SELECT id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at, created_by, updated_by FROM models WHERE id = ?
 `
 
 func (q *Queries) GetModelByID(ctx context.Context, id int64) (Model, error) {
@@ -88,12 +94,14 @@ func (q *Queries) GetModelByID(ctx context.Context, id int64) (Model, error) {
 		&i.CreatedAt,
 		&i.OwnedBy,
 		&i.LastFetchedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
 
 const getModelByServiceAndModelID = `-- name: GetModelByServiceAndModelID :one
-SELECT id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at FROM models 
+SELECT id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at, created_by, updated_by FROM models 
 WHERE llm_service_id = ? AND model_id = ?
 `
 
@@ -115,12 +123,14 @@ func (q *Queries) GetModelByServiceAndModelID(ctx context.Context, arg GetModelB
 		&i.CreatedAt,
 		&i.OwnedBy,
 		&i.LastFetchedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
 
 const getModelsByLLMServiceID = `-- name: GetModelsByLLMServiceID :many
-SELECT id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at FROM models 
+SELECT id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at, created_by, updated_by FROM models 
 WHERE llm_service_id = ? 
 ORDER BY name
 `
@@ -144,6 +154,8 @@ func (q *Queries) GetModelsByLLMServiceID(ctx context.Context, llmServiceID int6
 			&i.CreatedAt,
 			&i.OwnedBy,
 			&i.LastFetchedAt,
+			&i.CreatedBy,
+			&i.UpdatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -159,7 +171,7 @@ func (q *Queries) GetModelsByLLMServiceID(ctx context.Context, llmServiceID int6
 }
 
 const getModelsLastFetchedBefore = `-- name: GetModelsLastFetchedBefore :many
-SELECT id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at FROM models 
+SELECT id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at, created_by, updated_by FROM models 
 WHERE llm_service_id = ? AND last_fetched_at < ?
 ORDER BY last_fetched_at
 `
@@ -188,6 +200,8 @@ func (q *Queries) GetModelsLastFetchedBefore(ctx context.Context, arg GetModelsL
 			&i.CreatedAt,
 			&i.OwnedBy,
 			&i.LastFetchedAt,
+			&i.CreatedBy,
+			&i.UpdatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -218,9 +232,10 @@ UPDATE models SET
     description = ?,
     created_at = ?,
     owned_by = ?,
-    last_fetched_at = CURRENT_TIMESTAMP
+    last_fetched_at = CURRENT_TIMESTAMP,
+    updated_by = ?
 WHERE id = ?
-RETURNING id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at
+RETURNING id, llm_service_id, model_id, name, provider, description, created_at, owned_by, last_fetched_at, created_by, updated_by
 `
 
 type UpdateModelParams struct {
@@ -229,6 +244,7 @@ type UpdateModelParams struct {
 	Description sql.NullString `json:"description"`
 	CreatedAt   sql.NullInt64  `json:"created_at"`
 	OwnedBy     sql.NullString `json:"owned_by"`
+	UpdatedBy   int64          `json:"updated_by"`
 	ID          int64          `json:"id"`
 }
 
@@ -239,6 +255,7 @@ func (q *Queries) UpdateModel(ctx context.Context, arg UpdateModelParams) (Model
 		arg.Description,
 		arg.CreatedAt,
 		arg.OwnedBy,
+		arg.UpdatedBy,
 		arg.ID,
 	)
 	var i Model
@@ -252,6 +269,8 @@ func (q *Queries) UpdateModel(ctx context.Context, arg UpdateModelParams) (Model
 		&i.CreatedAt,
 		&i.OwnedBy,
 		&i.LastFetchedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }

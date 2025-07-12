@@ -48,7 +48,10 @@ func (h *LLMServicesHandler) LLMServices(c echo.Context) error {
 
 // NewLLMService handles GET /llm-services/new - shows create form
 func (h *LLMServicesHandler) NewLLMService(c echo.Context) error {
-	return views.LLMServiceDetailsForm(nil).Render(c.Request().Context(), c.Response().Writer)
+	// Get supported adapters for the dropdown
+	supportedAdapters := h.llmService.GetSupportedAdapters()
+
+	return views.LLMServiceDetailsForm(nil, supportedAdapters).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // CreateLLMService handles POST /llm-services/create - processes form submission
@@ -134,7 +137,10 @@ func (h *LLMServicesHandler) EditLLMService(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/llm-services?error=LLM service not found")
 	}
 
-	return views.LLMServiceDetailsForm(llmService).Render(c.Request().Context(), c.Response().Writer)
+	// Get supported adapters for the dropdown
+	supportedAdapters := h.llmService.GetSupportedAdapters()
+
+	return views.LLMServiceDetailsForm(llmService, supportedAdapters).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // GetModels handles GET /llm-services/models - fetches available models for an adapter
@@ -196,10 +202,45 @@ func (h *LLMServicesHandler) UpdateLLMService(c echo.Context) error {
 	}
 
 	// Update the LLM service
-	if err := h.llmService.UpdateLLMService(c.Request().Context(), id, name, description, adapter, apiKey, baseURL, organization); err != nil {
+	if err := h.llmService.UpdateLLMService(c.Request().Context(), id, name, description, adapter, apiKey, baseURL, organization, 1); err != nil {
 		return c.Redirect(http.StatusSeeOther, "/llm-services/"+idStr+"/edit?error=Failed to update LLM service: "+err.Error())
 	}
 
 	// Redirect back to LLM services page with success message
 	return c.Redirect(http.StatusSeeOther, "/llm-services?success=LLM service updated successfully")
+}
+
+// TestConnection handles POST /llm-services/test-connection - tests LLM service connection
+func (h *LLMServicesHandler) TestConnection(c echo.Context) error {
+	// Parse form data
+	if err := c.Request().ParseForm(); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Invalid form data",
+		})
+	}
+
+	// Extract form values
+	adapter := c.FormValue("adapter")
+	apiKey := c.FormValue("api_key")
+	baseURL := c.FormValue("base_url")
+
+	// Validate required fields
+	if adapter == "" || apiKey == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "Adapter and API key are required",
+		})
+	}
+
+	// Test the connection
+	err := h.llmService.TestLLMServiceConnection(c.Request().Context(), adapter, apiKey, baseURL)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Connection test failed: " + err.Error(),
+		})
+	}
+
+	// Return success response
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "Connection test successful!",
+	})
 }

@@ -11,9 +11,9 @@ import (
 )
 
 const createLLMService = `-- name: CreateLLMService :one
-INSERT INTO llm_services (name, description, adapter, api_key, base_url, organization) 
-VALUES (?, ?, ?, ?, ?, ?) 
-RETURNING id, name, description, adapter, api_key, base_url, organization, created_at
+INSERT INTO llm_services (name, description, adapter, api_key, base_url, organization, created_by, updated_by) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
+RETURNING id, name, description, adapter, api_key, base_url, organization, created_at, updated_at, created_by, updated_by
 `
 
 type CreateLLMServiceParams struct {
@@ -23,6 +23,8 @@ type CreateLLMServiceParams struct {
 	ApiKey       string         `json:"api_key"`
 	BaseUrl      string         `json:"base_url"`
 	Organization sql.NullString `json:"organization"`
+	CreatedBy    int64          `json:"created_by"`
+	UpdatedBy    int64          `json:"updated_by"`
 }
 
 func (q *Queries) CreateLLMService(ctx context.Context, arg CreateLLMServiceParams) (LlmService, error) {
@@ -33,6 +35,8 @@ func (q *Queries) CreateLLMService(ctx context.Context, arg CreateLLMServicePara
 		arg.ApiKey,
 		arg.BaseUrl,
 		arg.Organization,
+		arg.CreatedBy,
+		arg.UpdatedBy,
 	)
 	var i LlmService
 	err := row.Scan(
@@ -44,6 +48,9 @@ func (q *Queries) CreateLLMService(ctx context.Context, arg CreateLLMServicePara
 		&i.BaseUrl,
 		&i.Organization,
 		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
@@ -59,7 +66,7 @@ func (q *Queries) DeleteLLMService(ctx context.Context, id int64) error {
 }
 
 const getAllLLMServices = `-- name: GetAllLLMServices :many
-SELECT id, name, description, adapter, api_key, base_url, organization, created_at
+SELECT id, name, description, adapter, api_key, base_url, organization, created_at, updated_at, created_by, updated_by
 FROM llm_services 
 ORDER BY name
 `
@@ -82,6 +89,9 @@ func (q *Queries) GetAllLLMServices(ctx context.Context) ([]LlmService, error) {
 			&i.BaseUrl,
 			&i.Organization,
 			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.UpdatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -97,7 +107,7 @@ func (q *Queries) GetAllLLMServices(ctx context.Context) ([]LlmService, error) {
 }
 
 const getLLMServiceByID = `-- name: GetLLMServiceByID :one
-SELECT id, name, description, adapter, api_key, base_url, organization, created_at
+SELECT id, name, description, adapter, api_key, base_url, organization, created_at, updated_at, created_by, updated_by
 FROM llm_services 
 WHERE id = ?
 `
@@ -114,12 +124,15 @@ func (q *Queries) GetLLMServiceByID(ctx context.Context, id int64) (LlmService, 
 		&i.BaseUrl,
 		&i.Organization,
 		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
 
 const getLLMServiceByName = `-- name: GetLLMServiceByName :one
-SELECT id, name, description, adapter, api_key, base_url, organization, created_at
+SELECT id, name, description, adapter, api_key, base_url, organization, created_at, updated_at, created_by, updated_by
 FROM llm_services 
 WHERE name = ?
 LIMIT 1
@@ -137,13 +150,16 @@ func (q *Queries) GetLLMServiceByName(ctx context.Context, name string) (LlmServ
 		&i.BaseUrl,
 		&i.Organization,
 		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
 
 const updateLLMService = `-- name: UpdateLLMService :exec
 UPDATE llm_services 
-SET name = ?, description = ?, adapter = ?, api_key = ?, base_url = ?, organization = ? 
+SET name = ?, description = ?, adapter = ?, api_key = ?, base_url = ?, organization = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ? 
 WHERE id = ?
 `
 
@@ -154,6 +170,7 @@ type UpdateLLMServiceParams struct {
 	ApiKey       string         `json:"api_key"`
 	BaseUrl      string         `json:"base_url"`
 	Organization sql.NullString `json:"organization"`
+	UpdatedBy    int64          `json:"updated_by"`
 	ID           int64          `json:"id"`
 }
 
@@ -165,6 +182,7 @@ func (q *Queries) UpdateLLMService(ctx context.Context, arg UpdateLLMServicePara
 		arg.ApiKey,
 		arg.BaseUrl,
 		arg.Organization,
+		arg.UpdatedBy,
 		arg.ID,
 	)
 	return err

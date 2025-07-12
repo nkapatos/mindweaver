@@ -11,9 +11,9 @@ import (
 )
 
 const createProvider = `-- name: CreateProvider :one
-INSERT INTO providers (llm_service_config_id, system_prompt_id, name, description) 
-VALUES (?, ?, ?, ?) 
-RETURNING id, llm_service_config_id, system_prompt_id, name, description, created_at
+INSERT INTO providers (llm_service_config_id, system_prompt_id, name, description, created_by, updated_by) 
+VALUES (?, ?, ?, ?, ?, ?) 
+RETURNING id, llm_service_config_id, system_prompt_id, name, description, created_at, updated_at, created_by, updated_by
 `
 
 type CreateProviderParams struct {
@@ -21,6 +21,8 @@ type CreateProviderParams struct {
 	SystemPromptID     sql.NullInt64  `json:"system_prompt_id"`
 	Name               string         `json:"name"`
 	Description        sql.NullString `json:"description"`
+	CreatedBy          int64          `json:"created_by"`
+	UpdatedBy          int64          `json:"updated_by"`
 }
 
 func (q *Queries) CreateProvider(ctx context.Context, arg CreateProviderParams) (Provider, error) {
@@ -29,6 +31,8 @@ func (q *Queries) CreateProvider(ctx context.Context, arg CreateProviderParams) 
 		arg.SystemPromptID,
 		arg.Name,
 		arg.Description,
+		arg.CreatedBy,
+		arg.UpdatedBy,
 	)
 	var i Provider
 	err := row.Scan(
@@ -38,6 +42,9 @@ func (q *Queries) CreateProvider(ctx context.Context, arg CreateProviderParams) 
 		&i.Name,
 		&i.Description,
 		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
@@ -53,7 +60,7 @@ func (q *Queries) DeleteProvider(ctx context.Context, id int64) error {
 }
 
 const getAllProviders = `-- name: GetAllProviders :many
-SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at
+SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at, updated_at, created_by, updated_by
 FROM providers
 ORDER BY name
 `
@@ -74,6 +81,9 @@ func (q *Queries) GetAllProviders(ctx context.Context) ([]Provider, error) {
 			&i.Name,
 			&i.Description,
 			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.UpdatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -89,7 +99,7 @@ func (q *Queries) GetAllProviders(ctx context.Context) ([]Provider, error) {
 }
 
 const getProviderByID = `-- name: GetProviderByID :one
-SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at
+SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at, updated_at, created_by, updated_by
 FROM providers
 WHERE id = ?
 `
@@ -104,12 +114,15 @@ func (q *Queries) GetProviderByID(ctx context.Context, id int64) (Provider, erro
 		&i.Name,
 		&i.Description,
 		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
 
 const getProviderByName = `-- name: GetProviderByName :one
-SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at
+SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at, updated_at, created_by, updated_by
 FROM providers
 WHERE name = ?
 LIMIT 1
@@ -125,12 +138,15 @@ func (q *Queries) GetProviderByName(ctx context.Context, name string) (Provider,
 		&i.Name,
 		&i.Description,
 		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
 
 const getProvidersByLLMServiceConfig = `-- name: GetProvidersByLLMServiceConfig :many
-SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at
+SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at, updated_at, created_by, updated_by
 FROM providers
 WHERE llm_service_config_id = ?
 ORDER BY name
@@ -152,6 +168,9 @@ func (q *Queries) GetProvidersByLLMServiceConfig(ctx context.Context, llmService
 			&i.Name,
 			&i.Description,
 			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.UpdatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -167,7 +186,7 @@ func (q *Queries) GetProvidersByLLMServiceConfig(ctx context.Context, llmService
 }
 
 const getProvidersBySystemPrompt = `-- name: GetProvidersBySystemPrompt :many
-SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at
+SELECT id, llm_service_config_id, system_prompt_id, name, description, created_at, updated_at, created_by, updated_by
 FROM providers
 WHERE system_prompt_id = ?
 ORDER BY name
@@ -189,6 +208,9 @@ func (q *Queries) GetProvidersBySystemPrompt(ctx context.Context, systemPromptID
 			&i.Name,
 			&i.Description,
 			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.UpdatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -205,7 +227,7 @@ func (q *Queries) GetProvidersBySystemPrompt(ctx context.Context, systemPromptID
 
 const updateProvider = `-- name: UpdateProvider :exec
 UPDATE providers 
-SET llm_service_config_id = ?, system_prompt_id = ?, name = ?, description = ? 
+SET llm_service_config_id = ?, system_prompt_id = ?, name = ?, description = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ? 
 WHERE id = ?
 `
 
@@ -214,6 +236,7 @@ type UpdateProviderParams struct {
 	SystemPromptID     sql.NullInt64  `json:"system_prompt_id"`
 	Name               string         `json:"name"`
 	Description        sql.NullString `json:"description"`
+	UpdatedBy          int64          `json:"updated_by"`
 	ID                 int64          `json:"id"`
 }
 
@@ -223,6 +246,7 @@ func (q *Queries) UpdateProvider(ctx context.Context, arg UpdateProviderParams) 
 		arg.SystemPromptID,
 		arg.Name,
 		arg.Description,
+		arg.UpdatedBy,
 		arg.ID,
 	)
 	return err

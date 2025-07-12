@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/internal/services"
 	"github.com/nkapatos/mindweaver/internal/store"
@@ -72,8 +73,12 @@ func (h *PromptsHandler) CreatePrompt(c echo.Context) error {
 	// Convert is_system checkbox to boolean
 	isSystem := isSystemStr == "1"
 
+	// Get actor ID from authentication context for audit trail
+	sess, _ := session.Get("session", c)
+	actorID, _ := sess.Values["actor_id"].(int64)
+
 	// Create the prompt (for now without actor_id, we'll add that later with sessions)
-	if err := h.promptService.CreatePrompt(c.Request().Context(), nil, title, content, isSystem); err != nil {
+	if err := h.promptService.CreatePrompt(c.Request().Context(), nil, title, content, isSystem, actorID, actorID); err != nil {
 		// Redirect back with error
 		return c.Redirect(http.StatusSeeOther, "/prompts/new?error=Failed to create prompt")
 	}
@@ -178,8 +183,12 @@ func (h *PromptsHandler) UpdatePrompt(c echo.Context) error {
 	// Convert is_system checkbox to boolean
 	isSystem := isSystemStr == "1"
 
+	// Get actor ID from authentication context for audit trail
+	sess, _ := session.Get("session", c)
+	actorID, _ := sess.Values["actor_id"].(int64)
+
 	// Update the prompt (for now without actor_id, we'll add that later with sessions)
-	if err := h.promptService.UpdatePrompt(c.Request().Context(), id, nil, title, content, isSystem); err != nil {
+	if err := h.promptService.UpdatePrompt(c.Request().Context(), id, nil, title, content, isSystem, actorID); err != nil {
 		return c.Redirect(http.StatusSeeOther, "/prompts/edit/"+idStr+"?error=Failed to update prompt")
 	}
 

@@ -11,9 +11,9 @@ import (
 )
 
 const createActor = `-- name: CreateActor :one
-INSERT INTO actors (type, name, display_name, avatar_url, is_active, metadata) 
-VALUES (?, ?, ?, ?, ?, ?) 
-RETURNING id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at
+INSERT INTO actors (type, name, display_name, avatar_url, is_active, metadata, created_by, updated_by) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
+RETURNING id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at, created_by, updated_by
 `
 
 type CreateActorParams struct {
@@ -23,6 +23,8 @@ type CreateActorParams struct {
 	AvatarUrl   sql.NullString `json:"avatar_url"`
 	IsActive    sql.NullBool   `json:"is_active"`
 	Metadata    sql.NullString `json:"metadata"`
+	CreatedBy   int64          `json:"created_by"`
+	UpdatedBy   int64          `json:"updated_by"`
 }
 
 func (q *Queries) CreateActor(ctx context.Context, arg CreateActorParams) (Actor, error) {
@@ -33,6 +35,8 @@ func (q *Queries) CreateActor(ctx context.Context, arg CreateActorParams) (Actor
 		arg.AvatarUrl,
 		arg.IsActive,
 		arg.Metadata,
+		arg.CreatedBy,
+		arg.UpdatedBy,
 	)
 	var i Actor
 	err := row.Scan(
@@ -45,6 +49,8 @@ func (q *Queries) CreateActor(ctx context.Context, arg CreateActorParams) (Actor
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
@@ -59,7 +65,7 @@ func (q *Queries) DeleteActor(ctx context.Context, id int64) error {
 }
 
 const getActorByID = `-- name: GetActorByID :one
-SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at 
+SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at, created_by, updated_by 
 FROM actors 
 WHERE id = ? 
 LIMIT 1
@@ -78,12 +84,14 @@ func (q *Queries) GetActorByID(ctx context.Context, id int64) (Actor, error) {
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
 
 const getActorByName = `-- name: GetActorByName :one
-SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at 
+SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at, created_by, updated_by 
 FROM actors 
 WHERE name = ? AND type = ? 
 LIMIT 1
@@ -107,12 +115,14 @@ func (q *Queries) GetActorByName(ctx context.Context, arg GetActorByNameParams) 
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
 	)
 	return i, err
 }
 
 const getActorsByType = `-- name: GetActorsByType :many
-SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at 
+SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at, created_by, updated_by 
 FROM actors 
 WHERE type = ? AND is_active = true 
 ORDER BY name
@@ -137,6 +147,8 @@ func (q *Queries) GetActorsByType(ctx context.Context, type_ string) ([]Actor, e
 			&i.Metadata,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.UpdatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -152,7 +164,7 @@ func (q *Queries) GetActorsByType(ctx context.Context, type_ string) ([]Actor, e
 }
 
 const getAllActors = `-- name: GetAllActors :many
-SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at 
+SELECT id, type, name, display_name, avatar_url, is_active, metadata, created_at, updated_at, created_by, updated_by 
 FROM actors 
 ORDER BY name
 `
@@ -176,6 +188,8 @@ func (q *Queries) GetAllActors(ctx context.Context) ([]Actor, error) {
 			&i.Metadata,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.UpdatedBy,
 		); err != nil {
 			return nil, err
 		}
@@ -192,7 +206,7 @@ func (q *Queries) GetAllActors(ctx context.Context) ([]Actor, error) {
 
 const updateActor = `-- name: UpdateActor :exec
 UPDATE actors 
-SET type = ?, name = ?, display_name = ?, avatar_url = ?, is_active = ?, metadata = ?, updated_at = CURRENT_TIMESTAMP 
+SET type = ?, name = ?, display_name = ?, avatar_url = ?, is_active = ?, metadata = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ? 
 WHERE id = ?
 `
 
@@ -203,6 +217,7 @@ type UpdateActorParams struct {
 	AvatarUrl   sql.NullString `json:"avatar_url"`
 	IsActive    sql.NullBool   `json:"is_active"`
 	Metadata    sql.NullString `json:"metadata"`
+	UpdatedBy   int64          `json:"updated_by"`
 	ID          int64          `json:"id"`
 }
 
@@ -214,6 +229,7 @@ func (q *Queries) UpdateActor(ctx context.Context, arg UpdateActorParams) error 
 		arg.AvatarUrl,
 		arg.IsActive,
 		arg.Metadata,
+		arg.UpdatedBy,
 		arg.ID,
 	)
 	return err

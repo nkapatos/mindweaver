@@ -29,11 +29,31 @@ type LLMConfiguration struct {
 
 	// Provider-specific extensions (stored as raw JSON)
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
+
+	// Metadata for tracking and validation (not stored in JSON)
+	Provider    string `json:"-"` // Provider name (e.g., "openai", "anthropic")
+	ServiceID   int64  `json:"-"` // LLM service ID
+	ConfigID    int64  `json:"-"` // LLM service config ID
+	ValidatedAt int64  `json:"-"` // Unix timestamp of last validation
 }
 
 // ResponseFormat defines how the LLM should format its response
 type ResponseFormat struct {
 	Type string `json:"type" validate:"oneof=text json"` // "text" or "json"
+}
+
+// ValidationResult represents the result of configuration validation
+type ValidationResult struct {
+	Valid    bool     `json:"valid"`
+	Errors   []string `json:"errors,omitempty"`
+	Warnings []string `json:"warnings,omitempty"`
+}
+
+// ProviderValidator defines the interface for provider-specific validation
+type ProviderValidator interface {
+	ValidateConfig(config *LLMConfiguration) ValidationResult
+	GetSupportedModels() []string
+	GetDefaultConfig(model string) *LLMConfiguration
 }
 
 // DefaultConfiguration returns a sensible default configuration
@@ -121,6 +141,20 @@ func (c *LLMConfiguration) Validate() error {
 	return nil
 }
 
+// ValidateWithProvider performs validation with provider-specific rules
+func (c *LLMConfiguration) ValidateWithProvider(validator ProviderValidator) ValidationResult {
+	// First, perform basic validation
+	if err := c.Validate(); err != nil {
+		return ValidationResult{
+			Valid:  false,
+			Errors: []string{err.Error()},
+		}
+	}
+
+	// Then, perform provider-specific validation
+	return validator.ValidateConfig(c)
+}
+
 // ToJSON converts the configuration to JSON string for database storage
 func (c *LLMConfiguration) ToJSON() (string, error) {
 	if err := c.Validate(); err != nil {
@@ -173,10 +207,163 @@ func (c *LLMConfiguration) SetProviderSpecificConfig(provider string, config map
 	c.Extensions[provider] = config
 }
 
+// Merge merges another configuration into this one, with this config taking precedence
+func (c *LLMConfiguration) Merge(other *LLMConfiguration) {
+	if other == nil {
+		return
+	}
+
+	// Merge basic fields (this config takes precedence)
+	if c.Model == "" && other.Model != "" {
+		c.Model = other.Model
+	}
+	if c.Temperature == nil && other.Temperature != nil {
+		c.Temperature = other.Temperature
+	}
+	if c.MaxTokens == nil && other.MaxTokens != nil {
+		c.MaxTokens = other.MaxTokens
+	}
+	if c.TopP == nil && other.TopP != nil {
+		c.TopP = other.TopP
+	}
+	if c.TopK == nil && other.TopK != nil {
+		c.TopK = other.TopK
+	}
+	if c.FrequencyPenalty == nil && other.FrequencyPenalty != nil {
+		c.FrequencyPenalty = other.FrequencyPenalty
+	}
+	if c.PresencePenalty == nil && other.PresencePenalty != nil {
+		c.PresencePenalty = other.PresencePenalty
+	}
+	if c.ResponseFormat == nil && other.ResponseFormat != nil {
+		c.ResponseFormat = other.ResponseFormat
+	}
+	if c.SafeMode == nil && other.SafeMode != nil {
+		c.SafeMode = other.SafeMode
+	}
+
+	// Merge extensions
+	if other.Extensions != nil {
+		if c.Extensions == nil {
+			c.Extensions = make(map[string]interface{})
+		}
+		for provider, config := range other.Extensions {
+			if _, exists := c.Extensions[provider]; !exists {
+				c.Extensions[provider] = config
+			}
+		}
+	}
+}
+
+// Clone creates a deep copy of the configuration
+func (c *LLMConfiguration) Clone() *LLMConfiguration {
+	if c == nil {
+		return nil
+	}
+
+	clone := &LLMConfiguration{
+		Model:       c.Model,
+		Provider:    c.Provider,
+		ServiceID:   c.ServiceID,
+		ConfigID:    c.ConfigID,
+		ValidatedAt: c.ValidatedAt,
+	}
+
+	// Clone pointers
+	if c.Temperature != nil {
+		temp := *c.Temperature
+		clone.Temperature = &temp
+	}
+	if c.MaxTokens != nil {
+		tokens := *c.MaxTokens
+		clone.MaxTokens = &tokens
+	}
+	if c.TopP != nil {
+		topP := *c.TopP
+		clone.TopP = &topP
+	}
+	if c.TopK != nil {
+		topK := *c.TopK
+		clone.TopK = &topK
+	}
+	if c.FrequencyPenalty != nil {
+		freq := *c.FrequencyPenalty
+		clone.FrequencyPenalty = &freq
+	}
+	if c.PresencePenalty != nil {
+		pres := *c.PresencePenalty
+		clone.PresencePenalty = &pres
+	}
+	if c.SafeMode != nil {
+		safe := *c.SafeMode
+		clone.SafeMode = &safe
+	}
+
+	// Clone response format
+	if c.ResponseFormat != nil {
+		clone.ResponseFormat = &ResponseFormat{
+			Type: c.ResponseFormat.Type,
+		}
+	}
+
+	// Clone extensions
+	if c.Extensions != nil {
+		clone.Extensions = make(map[string]interface{})
+		for k, v := range c.Extensions {
+			clone.Extensions[k] = v
+		}
+	}
+
+	return clone
+}
+
+// ToAdapterOptions converts the configuration to adapter-specific options
+func (c *LLMConfiguration) ToAdapterOptions() map[string]interface{} {
+	options := make(map[string]interface{})
+
+	if c.Model != "" {
+		options["model"] = c.Model
+	}
+	if c.Temperature != nil {
+		options["temperature"] = *c.Temperature
+	}
+	if c.MaxTokens != nil {
+		options["max_tokens"] = *c.MaxTokens
+	}
+	if c.TopP != nil {
+		options["top_p"] = *c.TopP
+	}
+	if c.TopK != nil {
+		options["top_k"] = *c.TopK
+	}
+	if c.FrequencyPenalty != nil {
+		options["frequency_penalty"] = *c.FrequencyPenalty
+	}
+	if c.PresencePenalty != nil {
+		options["presence_penalty"] = *c.PresencePenalty
+	}
+	if c.ResponseFormat != nil {
+		options["response_format"] = c.ResponseFormat
+	}
+	if c.SafeMode != nil {
+		options["safe_mode"] = *c.SafeMode
+	}
+
+	// Add provider-specific extensions
+	for provider, config := range c.Extensions {
+		options[provider] = config
+	}
+
+	return options
+}
+
 // LogConfiguration logs the configuration for debugging (without sensitive data)
 func (c *LLMConfiguration) LogConfiguration(logger *slog.Logger) {
 	logger.Info("LLM Configuration",
 		"model", c.Model,
+		"provider", c.Provider,
+		"service_id", c.ServiceID,
+		"config_id", c.ConfigID,
 		"temperature", c.Temperature,
 		"max_tokens", c.MaxTokens,
 		"top_p", c.TopP,

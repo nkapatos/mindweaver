@@ -9,12 +9,21 @@ import (
 )
 
 // SetupWebRoutes configures all web routes
-func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, llmServicesHandler *web.LLMServicesHandler, llmServiceConfigsHandler *web.LLMServiceConfigsHandler, settingsHandler *web.SettingsHandler, conversationHandler *web.ConversationHandler) {
-	// Home
-	e.GET(config.RouteHome, homeHandler.Home)
+func SetupWebRoutes(e *echo.Echo, authHandler *web.AuthHandler, authMiddleware echo.MiddlewareFunc, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, llmServicesHandler *web.LLMServicesHandler, llmServiceConfigsHandler *web.LLMServiceConfigsHandler, settingsHandler *web.SettingsHandler, conversationHandler *web.ConversationHandler) {
+	// Auth routes (no authentication required)
+	e.GET(config.RouteAuthSignIn, authHandler.SignInPage)
+	e.POST(config.RouteAuthSignIn, authHandler.SignIn)
+	e.POST("/auth/logout", authHandler.Logout)
 
-	// Prompts group
-	prompts := e.Group(config.RoutePrompts)
+	// Protected routes (require authentication)
+	protected := e.Group("")
+	protected.Use(authMiddleware)
+
+	// Home (requires authentication)
+	protected.GET(config.RouteHome, homeHandler.Home)
+
+	// Prompts group (requires authentication)
+	prompts := protected.Group(config.RoutePrompts)
 	prompts.GET("", promptsHandler.Prompts)
 	prompts.GET(fmt.Sprintf("/%s", config.RESTActionNew), promptsHandler.NewPrompt)
 	prompts.POST(fmt.Sprintf("/%s", config.RESTActionCreate), promptsHandler.CreatePrompt)
@@ -22,8 +31,8 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	prompts.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), promptsHandler.UpdatePrompt)
 	prompts.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionDelete), promptsHandler.DeletePrompt)
 
-	// Providers group
-	providers := e.Group(config.RouteProviders)
+	// Providers group (requires authentication)
+	providers := protected.Group(config.RouteProviders)
 	providers.GET("", providersHandler.Providers)
 	providers.GET(fmt.Sprintf("/%s", config.RESTActionNew), providersHandler.NewProvider)
 	providers.POST(fmt.Sprintf("/%s", config.RESTActionCreate), providersHandler.CreateProvider)
@@ -31,8 +40,8 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	providers.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), providersHandler.UpdateProvider)
 	providers.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionDelete), providersHandler.DeleteProvider)
 
-	// LLM Services group
-	llmServices := e.Group(config.RouteLLMServices)
+	// LLM Services group (requires authentication)
+	llmServices := protected.Group(config.RouteLLMServices)
 	llmServices.GET("", llmServicesHandler.LLMServices)
 	llmServices.GET(fmt.Sprintf("/%s", config.RESTActionNew), llmServicesHandler.NewLLMService)
 	llmServices.POST(fmt.Sprintf("/%s", config.RESTActionCreate), llmServicesHandler.CreateLLMService)
@@ -40,9 +49,10 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	llmServices.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionEdit), llmServicesHandler.UpdateLLMService)
 	llmServices.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionDelete), llmServicesHandler.DeleteLLMService)
 	llmServices.GET("/:service-id/models", llmServicesHandler.GetModels)
+	llmServices.POST("/test-connection", llmServicesHandler.TestConnection)
 
-	// LLM Service Configurations group
-	configs := e.Group(config.RouteLLMServiceConfigs)
+	// LLM Service Configurations group (requires authentication)
+	configs := protected.Group(config.RouteLLMServiceConfigs)
 	configs.GET("", llmServiceConfigsHandler.LLMServiceConfigs)
 	configs.GET(fmt.Sprintf("/%s", config.RESTActionNew), llmServiceConfigsHandler.NewLLMServiceConfig)
 	configs.POST(fmt.Sprintf("/%s", config.RESTActionCreate), llmServiceConfigsHandler.CreateLLMServiceConfig)
@@ -51,11 +61,11 @@ func SetupWebRoutes(e *echo.Echo, homeHandler *web.HomeHandler, promptsHandler *
 	configs.POST(fmt.Sprintf("/%s/%s", ":id", config.RESTActionDelete), llmServiceConfigsHandler.DeleteLLMServiceConfig)
 	configs.GET(fmt.Sprintf("/%s/models", ":id"), llmServiceConfigsHandler.GetModelsForService)
 
-	// Settings
-	e.GET(config.RouteSettings, settingsHandler.Settings)
+	// Settings (requires authentication)
+	protected.GET(config.RouteSettings, settingsHandler.Settings)
 
-	// Conversations group
-	conversations := e.Group(config.RouteConversations)
+	// Conversations group (requires authentication)
+	conversations := protected.Group(config.RouteConversations)
 	conversations.GET("", conversationHandler.Conversation)
 	conversations.GET(fmt.Sprintf("/%s", config.RESTActionNew), conversationHandler.NewConversation)
 	conversations.POST(fmt.Sprintf("/%s", config.RESTActionCreate), conversationHandler.CreateConversation)

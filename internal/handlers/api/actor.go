@@ -45,7 +45,11 @@ func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.actorService.CreateActor(r.Context(), req.Type, req.Name, req.DisplayName, req.AvatarURL, req.Metadata, req.IsActive); err != nil {
+	// TODO: Get actual actor ID from authentication/session
+	// For now, use system actor ID (1) for audit trail
+	systemActorID := int64(1)
+
+	if err := h.actorService.CreateActor(r.Context(), req.Type, req.Name, req.DisplayName, req.AvatarURL, req.Metadata, req.IsActive, systemActorID, systemActorID); err != nil {
 		http.Error(w, "Failed to create actor", http.StatusInternalServerError)
 		return
 	}
@@ -167,7 +171,11 @@ func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.actorService.UpdateActor(r.Context(), id, req.Name, req.Type, req.DisplayName, req.AvatarURL, req.Metadata, req.IsActive); err != nil {
+	// TODO: Get actual actor ID from authentication/session
+	// For now, use system actor ID (1) for audit trail
+	systemActorID := int64(1)
+
+	if err := h.actorService.UpdateActor(r.Context(), id, req.Name, req.Type, req.DisplayName, req.AvatarURL, req.Metadata, req.IsActive, systemActorID); err != nil {
 		http.Error(w, "Failed to update actor", http.StatusInternalServerError)
 		return
 	}

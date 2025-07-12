@@ -130,7 +130,7 @@ func (h *LLMServiceConfigsHandler) CreateLLMServiceConfig(c echo.Context) error 
 	}
 
 	// Create the LLM service configuration
-	_, err = h.llmService.CreateLLMServiceConfig(c.Request().Context(), llmServiceID, name, description, config)
+	_, err = h.llmService.CreateLLMServiceConfig(c.Request().Context(), llmServiceID, name, description, config, 1, 1) // TODO: Use real actor ID from session
 	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/new?error=Failed to create configuration: "+err.Error())
 	}
@@ -291,7 +291,7 @@ func (h *LLMServiceConfigsHandler) UpdateLLMServiceConfig(c echo.Context) error 
 	}
 
 	// Update the configuration
-	if err := h.llmService.UpdateLLMServiceConfig(c.Request().Context(), id, name, description, config); err != nil {
+	if err := h.llmService.UpdateLLMServiceConfig(c.Request().Context(), id, name, description, config, 1); err != nil { // TODO: Use real actor ID from session
 		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/"+idStr+"/edit?error=Failed to update configuration: "+err.Error())
 	}
 

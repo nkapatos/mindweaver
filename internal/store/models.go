@@ -18,6 +18,8 @@ type Actor struct {
 	Metadata    sql.NullString `json:"metadata"`
 	CreatedAt   sql.NullTime   `json:"created_at"`
 	UpdatedAt   sql.NullTime   `json:"updated_at"`
+	CreatedBy   int64          `json:"created_by"`
+	UpdatedBy   int64          `json:"updated_by"`
 }
 
 type Conversation struct {
@@ -29,6 +31,8 @@ type Conversation struct {
 	Metadata    sql.NullString `json:"metadata"`
 	CreatedAt   sql.NullTime   `json:"created_at"`
 	UpdatedAt   sql.NullTime   `json:"updated_at"`
+	CreatedBy   int64          `json:"created_by"`
+	UpdatedBy   int64          `json:"updated_by"`
 }
 
 type LlmService struct {
@@ -40,6 +44,9 @@ type LlmService struct {
 	BaseUrl      string         `json:"base_url"`
 	Organization sql.NullString `json:"organization"`
 	CreatedAt    sql.NullTime   `json:"created_at"`
+	UpdatedAt    sql.NullTime   `json:"updated_at"`
+	CreatedBy    int64          `json:"created_by"`
+	UpdatedBy    int64          `json:"updated_by"`
 }
 
 type LlmServiceConfig struct {
@@ -50,17 +57,22 @@ type LlmServiceConfig struct {
 	Configuration string         `json:"configuration"`
 	CreatedAt     sql.NullTime   `json:"created_at"`
 	UpdatedAt     sql.NullTime   `json:"updated_at"`
+	CreatedBy     int64          `json:"created_by"`
+	UpdatedBy     int64          `json:"updated_by"`
 }
 
 type Message struct {
 	ID             int64          `json:"id"`
 	ConversationID int64          `json:"conversation_id"`
-	SenderActorID  int64          `json:"sender_actor_id"`
+	ActorID        int64          `json:"actor_id"`
 	Uuid           string         `json:"uuid"`
 	Content        string         `json:"content"`
 	MessageType    sql.NullString `json:"message_type"`
 	Metadata       sql.NullString `json:"metadata"`
 	CreatedAt      sql.NullTime   `json:"created_at"`
+	UpdatedAt      sql.NullTime   `json:"updated_at"`
+	CreatedBy      int64          `json:"created_by"`
+	UpdatedBy      int64          `json:"updated_by"`
 }
 
 type Model struct {
@@ -73,16 +85,20 @@ type Model struct {
 	CreatedAt     sql.NullInt64  `json:"created_at"`
 	OwnedBy       sql.NullString `json:"owned_by"`
 	LastFetchedAt sql.NullTime   `json:"last_fetched_at"`
+	CreatedBy     int64          `json:"created_by"`
+	UpdatedBy     int64          `json:"updated_by"`
 }
 
 type Prompt struct {
-	ID        int64          `json:"id"`
-	ActorID   sql.NullInt64  `json:"actor_id"`
-	Title     string         `json:"title"`
-	Content   string         `json:"content"`
-	IsSystem  sql.NullInt64  `json:"is_system"`
-	CreatedAt sql.NullString `json:"created_at"`
-	UpdatedAt sql.NullString `json:"updated_at"`
+	ID        int64         `json:"id"`
+	ActorID   sql.NullInt64 `json:"actor_id"`
+	Title     string        `json:"title"`
+	Content   string        `json:"content"`
+	IsSystem  sql.NullInt64 `json:"is_system"`
+	CreatedAt sql.NullTime  `json:"created_at"`
+	UpdatedAt sql.NullTime  `json:"updated_at"`
+	CreatedBy int64         `json:"created_by"`
+	UpdatedBy int64         `json:"updated_by"`
 }
 
 type Provider struct {
@@ -92,4 +108,7 @@ type Provider struct {
 	Name               string         `json:"name"`
 	Description        sql.NullString `json:"description"`
 	CreatedAt          sql.NullTime   `json:"created_at"`
+	UpdatedAt          sql.NullTime   `json:"updated_at"`
+	CreatedBy          int64          `json:"created_by"`
+	UpdatedBy          int64          `json:"updated_by"`
 }

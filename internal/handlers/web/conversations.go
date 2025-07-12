@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/internal/services"
 	"github.com/nkapatos/mindweaver/internal/store"
@@ -52,40 +53,40 @@ func NewConversationHandler(conversationService *services.ConversationService, p
 	}
 }
 
+// Conversation handles GET /conversations - displays the conversations page
 func (h *ConversationHandler) Conversation(c echo.Context) error {
+	// Get actor ID from authentication context
+	sess, _ := session.Get("session", c)
+	actorID, _ := sess.Values["actor_id"].(int64)
+
+	// Get all conversations for the actor
+	_, err := h.conversationService.GetConversationsByActorID(c.Request().Context(), actorID)
+	if err != nil {
+		// For now, just log the error and continue with empty list
+	}
+
+	// Get all providers for the dropdown
 	providers, err := h.providerService.GetAllProviders(c.Request().Context())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to load providers")
+		providers = []store.Provider{}
 	}
 
-	// Compose the provider dropdown component with its specific data
-	providerDropdownData := components.ProviderDropdownData{
-		Providers:        providers,
-		SelectedProvider: nil, // No provider selected for main conversation page
-		DropdownID:       "conversation-provider-dropdown",
-	}
-
-	// Compose the message input component with its specific data
-	messageInputData := components.MessageInputData{
-		Placeholder: "Type your message here...",
-		IsDisabled:  true, // Disabled because no provider is selected
-	}
-
-	// For the main conversation page, no conversation is selected yet
-	return views.Conversation(providerDropdownData, messageInputData).Render(c.Request().Context(), c.Response().Writer)
+	// Use the NewConversationPage template
+	return views.NewConversationPage(providers, "/conversations").Render(c.Request().Context(), c.Response().Writer)
 }
 
+// NewConversation handles GET /conversations/new - shows create form
 func (h *ConversationHandler) NewConversation(c echo.Context) error {
-	// Get all providers for selection
+	// Get all providers for the dropdown
 	providers, err := h.providerService.GetAllProviders(c.Request().Context())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to load providers")
+		providers = []store.Provider{}
 	}
 
-	currentPath := c.Path()
-	return views.NewConversationPage(providers, currentPath).Render(c.Request().Context(), c.Response().Writer)
+	return views.NewConversationPage(providers, "/conversations/new").Render(c.Request().Context(), c.Response().Writer)
 }
 
+// CreateConversation handles POST /conversations/create - processes form submission
 func (h *ConversationHandler) CreateConversation(c echo.Context) error {
 	// Parse form data
 	providerIDStr := c.FormValue("provider_id")
@@ -107,8 +108,9 @@ func (h *ConversationHandler) CreateConversation(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Provider not found")
 	}
 
-	// For now, use a default actor ID (we'll need to implement user authentication later)
-	actorID := int64(1) // TODO: Get from session/authentication
+	// Get actor ID from authentication context
+	sess, _ := session.Get("session", c)
+	actorID, _ := sess.Values["actor_id"].(int64)
 
 	// Create metadata with the default provider
 	metadata := ConversationMetadata{
@@ -122,6 +124,10 @@ func (h *ConversationHandler) CreateConversation(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create metadata")
 	}
 
+	// Get actor ID from authentication context for audit trail
+	sess, _ = session.Get("session", c)
+	systemActorID, _ := sess.Values["actor_id"].(int64)
+
 	// Create the conversation
 	conversation, err := h.conversationService.CreateConversation(
 		c.Request().Context(),
@@ -130,6 +136,8 @@ func (h *ConversationHandler) CreateConversation(c echo.Context) error {
 		description,
 		true, // isActive
 		string(metadataJSON),
+		systemActorID, // createdBy
+		systemActorID, // updatedBy
 	)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create conversation")
@@ -139,41 +147,39 @@ func (h *ConversationHandler) CreateConversation(c echo.Context) error {
 	return c.Redirect(http.StatusSeeOther, "/conversations/"+strconv.FormatInt(conversation.ID, 10))
 }
 
+// ViewConversation handles GET /conversations/{id} - shows conversation view
 func (h *ConversationHandler) ViewConversation(c echo.Context) error {
-	conversationIDStr := c.Param("id")
-	conversationID, err := strconv.ParseInt(conversationIDStr, 10, 64)
+	idStr := c.Param("id")
+	if idStr == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Conversation ID is required")
+	}
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid conversation ID")
 	}
 
 	// Get the conversation with messages
-	conversation, _, _, err := h.conversationService.GetConversationWithActorAndMessages(
-		c.Request().Context(),
-		conversationID,
-	)
+	_, _, err = h.conversationService.GetConversationWithMessages(c.Request().Context(), id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "Conversation not found")
 	}
 
+	// Get all providers for the dropdown
 	providers, err := h.providerService.GetAllProviders(c.Request().Context())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to load providers")
+		providers = []store.Provider{}
 	}
 
-	// Extract default provider from conversation metadata
-	defaultProvider := getDefaultProviderFromMetadata(conversation, providers)
-
-	// Compose the provider dropdown component with its specific data
+	// Use the Conversation template with provider dropdown data
 	providerDropdownData := components.ProviderDropdownData{
 		Providers:        providers,
-		SelectedProvider: defaultProvider,
-		DropdownID:       "conversation-provider-dropdown",
+		SelectedProvider: nil, // Will be set based on conversation metadata
 	}
 
-	// Compose the message input component with its specific data
 	messageInputData := components.MessageInputData{
-		Placeholder: "Type your message here...",
-		IsDisabled:  defaultProvider == nil,
+		Placeholder: "Type your message...",
+		IsDisabled:  false,
 	}
 
 	return views.Conversation(providerDropdownData, messageInputData).Render(c.Request().Context(), c.Response().Writer)

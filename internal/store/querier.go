@@ -44,7 +44,7 @@ type Querier interface {
 	GetLLMServiceConfigsByServiceID(ctx context.Context, llmServiceID int64) ([]LlmServiceConfig, error)
 	GetMessageByID(ctx context.Context, id int64) (Message, error)
 	GetMessageByUUID(ctx context.Context, uuid string) (Message, error)
-	GetMessagesByActorID(ctx context.Context, senderActorID int64) ([]Message, error)
+	GetMessagesByActorID(ctx context.Context, actorID int64) ([]Message, error)
 	GetMessagesByConversationID(ctx context.Context, conversationID int64) ([]Message, error)
 	GetModelByID(ctx context.Context, id int64) (Model, error)
 	GetModelByServiceAndModelID(ctx context.Context, arg GetModelByServiceAndModelIDParams) (Model, error)

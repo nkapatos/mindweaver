@@ -88,7 +88,7 @@ templ LLMServicesList(llmServicesWithRelations []LLMServiceWithRelations) {
 	}
 }
 
-templ LLMServiceDetailsForm(editingService *store.LlmService) {
+templ LLMServiceDetailsForm(editingService *store.LlmService, supportedAdapters []string) {
 	@LLMServicesPage("LLM Services", "Configure and manage your LLM service connections.") {
 		<div class="card bg-base-100 shadow-lg">
 			<div class="card-body">
@@ -100,7 +100,7 @@ templ LLMServiceDetailsForm(editingService *store.LlmService) {
 						</a>
 					</div>
 					<form action={ templ.SafeURL(config.RouteLLMServices + "/" + strconv.FormatInt(editingService.ID, 10) + "/" + config.RESTActionEdit) } method="POST" class="space-y-4">
-						@LLMServiceFormFields(editingService)
+						@LLMServiceFormFields(editingService, supportedAdapters)
 						<div class="flex gap-3">
 							<a href={ config.RouteLLMServices } class="btn btn-outline flex-1">
 								Cancel
@@ -118,10 +118,15 @@ templ LLMServiceDetailsForm(editingService *store.LlmService) {
 						</a>
 					</div>
 					<form action={ templ.SafeURL(config.RouteLLMServices + "/" + config.RESTActionCreate) } method="POST" class="space-y-4">
-						@LLMServiceFormFields(nil)
-						<button type="submit" class="btn btn-primary w-full">
-							Create LLM Service
-						</button>
+						@LLMServiceFormFields(nil, supportedAdapters)
+						<div class="flex gap-3">
+							<button type="button" class="btn btn-outline flex-1" onclick="testConnection()">
+								Test Connection
+							</button>
+							<button type="submit" class="btn btn-primary flex-1">
+								Create LLM Service
+							</button>
+						</div>
 					</form>
 				}
 			</div>
@@ -129,7 +134,7 @@ templ LLMServiceDetailsForm(editingService *store.LlmService) {
 	}
 }
 
-templ LLMServiceFormFields(editingService *store.LlmService) {
+templ LLMServiceFormFields(editingService *store.LlmService, supportedAdapters []string) {
 	<div>
 		<label class="label" for="name">
 			<span class="label-text font-medium">Service Name</span>
@@ -150,17 +155,20 @@ templ LLMServiceFormFields(editingService *store.LlmService) {
 		<label class="label" for="adapter">
 			<span class="label-text font-medium">Adapter</span>
 		</label>
-		<input
-			type="text"
-			id="adapter"
-			name="adapter"
-			class="input input-bordered w-full"
-			placeholder="e.g., openai, anthropic, openrouter"
-			if editingService != nil {
-				value={ editingService.Adapter }
+		<select id="adapter" name="adapter" class="select select-bordered w-full" required>
+			<option value="">Select an adapter...</option>
+			for _, adapter := range supportedAdapters {
+				<option 
+					value={ adapter }
+					if editingService != nil && editingService.Adapter == adapter {
+						selected
+					}
+				>
+					{ adapter }
+				</option>
 			}
-			required
-		/>
+		</select>
+		<p class="text-xs text-base-content/60 mt-1">Choose the adapter that matches your LLM service provider</p>
 	</div>
 	<div>
 		<label class="label" for="api_key">
@@ -192,4 +200,53 @@ templ LLMServiceFormFields(editingService *store.LlmService) {
 		/>
 		<p class="text-xs text-base-content/60 mt-1">Leave empty to use the default provider URL</p>
 	</div>
+	
+	<script>
+		function testConnection() {
+			const adapter = document.getElementById('adapter').value;
+			const apiKey = document.getElementById('api_key').value;
+			const baseUrl = document.getElementById('base_url').value;
+			
+			if (!adapter || !apiKey) {
+				alert('Please fill in the adapter and API key fields first.');
+				return;
+			}
+			
+			// Create form data for the request
+			const formData = new FormData();
+			formData.append('adapter', adapter);
+			formData.append('api_key', apiKey);
+			if (baseUrl) {
+				formData.append('base_url', baseUrl);
+			}
+			
+			// Show loading state
+			const testButton = event.target;
+			const originalText = testButton.textContent;
+			testButton.textContent = 'Testing...';
+			testButton.disabled = true;
+			
+			// Make AJAX call to test connection endpoint
+			fetch('/llm-services/test-connection', {
+				method: 'POST',
+				body: formData
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.error) {
+					alert('Connection test failed: ' + data.error);
+				} else {
+					alert('Connection test successful!');
+				}
+			})
+			.catch(error => {
+				alert('Connection test failed: ' + error.message);
+			})
+			.finally(() => {
+				// Restore button state
+				testButton.textContent = originalText;
+				testButton.disabled = false;
+			});
+		}
+	</script>
 }

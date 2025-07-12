@@ -202,9 +202,9 @@ func PromptsList(promptsWithRelations []PromptWithRelations) templ.Component {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var9 string
-						templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(promptData.Prompt.CreatedAt.String)
+						templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(promptData.Prompt.CreatedAt.Time.Format("2006-01-02 15:04:05"))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 67, Col: 61}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/views/prompts.templ`, Line: 67, Col: 89}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 						if templ_7745c5c3_Err != nil {
