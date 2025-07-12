@@ -9,7 +9,11 @@ import (
 )
 
 // SetupWebRoutes configures all web routes
-func SetupWebRoutes(e *echo.Echo, authHandler *web.AuthHandler, authMiddleware echo.MiddlewareFunc, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, llmServicesHandler *web.LLMServicesHandler, llmServiceConfigsHandler *web.LLMServiceConfigsHandler, settingsHandler *web.SettingsHandler, conversationHandler *web.ConversationHandler) {
+func SetupWebRoutes(e *echo.Echo, authHandler *web.AuthHandler, authMiddleware echo.MiddlewareFunc, homeHandler *web.HomeHandler, promptsHandler *web.PromptsHandler, providersHandler *web.ProvidersHandler, llmServicesHandler *web.LLMServicesHandler, llmServiceConfigsHandler *web.LLMServiceConfigsHandler, settingsHandler *web.SettingsHandler, conversationHandler *web.ConversationHandler, setupHandler *web.SetupHandler) {
+	// Setup routes (no authentication required)
+	e.GET("/setup", setupHandler.SetupPage)
+	e.POST("/setup", setupHandler.SetupApplication)
+
 	// Auth routes (no authentication required)
 	e.GET(config.RouteAuthSignIn, authHandler.SignInPage)
 	e.POST(config.RouteAuthSignIn, authHandler.SignIn)

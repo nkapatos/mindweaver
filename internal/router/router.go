@@ -57,6 +57,7 @@ func (r *Router) SetupRoutes(
 	settingsHandler *web.SettingsHandler,
 	webConversationHandler *web.ConversationHandler,
 	notFoundHandler *web.NotFoundHandler,
+	setupHandler *web.SetupHandler,
 ) {
 	e := r.echo
 
@@ -75,7 +76,7 @@ func (r *Router) SetupRoutes(
 		return false, nil
 	})
 
-	routes.SetupWebRoutes(e, authHandler, basicAuthMiddleware, homeHandler, promptsHandler, providersHandler, llmServicesHandler, llmServiceConfigsHandler, settingsHandler, webConversationHandler)
+	routes.SetupWebRoutes(e, authHandler, basicAuthMiddleware, homeHandler, promptsHandler, providersHandler, llmServicesHandler, llmServiceConfigsHandler, settingsHandler, webConversationHandler, setupHandler)
 	if llmHandler != nil {
 		routes.SetupAPIRoutes(e, actorHandler, promptHandler, llmHandler, conversationHandler, providerHandler, llmServiceHandler, llmServiceConfigHandler, modelsHandler)
 	} else {

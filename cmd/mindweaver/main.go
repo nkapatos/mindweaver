@@ -80,16 +80,27 @@ func main() {
 	querier := store.New(db)
 	actorService := services.NewActorService(querier)
 
-	// Initialize system actor
+	// --- SETUP FLOW ---
+	// 1. On init, check if db exists in the path. If not, create it (handled in init()).
+	// 2. Always check if the system actor exists. If not, create it.
+	//    NOTE: The system actor's ID may not always be 1 (auto-increment).
+	//    If the system actor is manually deleted, the next created actor will have a higher ID.
+	//    In the future, consider a more robust way to always identify the system actor (e.g., by a unique field or flag).
 	if err := initializeSystemActor(actorService); err != nil {
 		logger.Error("Failed to initialize system actor", "error", err)
 		os.Exit(1)
 	}
 
-	// Initialize test user actor
-	if err := initializeTestUser(actorService); err != nil {
-		logger.Error("Failed to initialize test user", "error", err)
-		os.Exit(1)
+	// 3. If there is at least one user actor, continue. If not, show setup wizard to create one.
+	needsSetup := checkIfSetupNeeded()
+	if needsSetup {
+		logger.Info("Application setup required - test user will not be created")
+	} else {
+		// Initialize test user actor only if setup is not needed (legacy/test flow)
+		if err := initializeTestUser(actorService); err != nil {
+			logger.Error("Failed to initialize test user", "error", err)
+			os.Exit(1)
+		}
 	}
 
 	// Initialize auth service
@@ -120,6 +131,7 @@ func main() {
 	llmServiceConfigsHandler := web.NewLLMServiceConfigsHandler(llmService)
 	settingsHandler := web.NewSettingsHandler()
 	webConversationHandler := web.NewConversationHandler(conversationService, providerService)
+	setupHandler := web.NewSetupHandler(actorService)
 
 	logger.Info("Application dependencies initialized")
 
@@ -146,6 +158,7 @@ func main() {
 		settingsHandler,
 		webConversationHandler,
 		notFoundHandler,
+		setupHandler,
 	)
 
 	logger.Info("Starting Echo server", "port", "8080")
@@ -254,4 +267,22 @@ func initializeTestUser(actorService *services.ActorService) error {
 	}
 
 	return nil
+}
+
+// checkIfSetupNeeded checks if the application needs initial setup
+func checkIfSetupNeeded() bool {
+	// Check if setup marker file exists
+	if _, err := os.Stat("setup_completed"); err == nil {
+		// Setup marker exists, setup is not needed
+		return false
+	}
+
+	// Check if database file exists
+	if _, err := os.Stat("mw.db"); os.IsNotExist(err) {
+		// Database doesn't exist, setup is needed
+		return true
+	}
+
+	// If database exists but no setup marker, setup is needed
+	return true
 }
