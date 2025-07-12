@@ -158,7 +158,7 @@ templ LLMServiceFormFields(editingService *store.LlmService, supportedAdapters [
 		<select id="adapter" name="adapter" class="select select-bordered w-full" required>
 			<option value="">Select an adapter...</option>
 			for _, adapter := range supportedAdapters {
-				<option 
+				<option
 					value={ adapter }
 					if editingService != nil && editingService.Adapter == adapter {
 						selected
@@ -200,7 +200,6 @@ templ LLMServiceFormFields(editingService *store.LlmService, supportedAdapters [
 		/>
 		<p class="text-xs text-base-content/60 mt-1">Leave empty to use the default provider URL</p>
 	</div>
-	
 	<script>
 		function testConnection() {
 			const adapter = document.getElementById('adapter').value;
