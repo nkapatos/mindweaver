@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 -- MindWeaver Database Schema - Complete MVP Schema
--- This file contains all tables with proper audit trail and alignment with instructions
+-- This file contains all tables with proper foreign key constraints and ownership model
 -- 
 -- Core Concept: MindWeaver is a knowledge management and AI chat application
 -- that allows users to configure LLM services, create specialized providers,
@@ -21,7 +21,9 @@ CREATE TABLE llm_services (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by INTEGER NOT NULL,                  -- Foreign key to actors.id
-    updated_by INTEGER NOT NULL                   -- Foreign key to actors.id
+    updated_by INTEGER NOT NULL,                  -- Foreign key to actors.id
+    FOREIGN KEY (created_by) REFERENCES actors(id) ON DELETE RESTRICT,
+    FOREIGN KEY (updated_by) REFERENCES actors(id) ON DELETE RESTRICT
 );
 
 -- Create indexes for llm_services
@@ -39,7 +41,9 @@ CREATE TABLE llm_service_configs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by INTEGER NOT NULL,                  -- Foreign key to actors.id
-    updated_by INTEGER NOT NULL                   -- Foreign key to actors.id
+    updated_by INTEGER NOT NULL,                  -- Foreign key to actors.id
+    FOREIGN KEY (created_by) REFERENCES actors(id) ON DELETE RESTRICT,
+    FOREIGN KEY (updated_by) REFERENCES actors(id) ON DELETE RESTRICT
 );
 
 -- Create indexes for llm_service_configs
@@ -64,6 +68,8 @@ CREATE TABLE models (
     last_fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_by INTEGER NOT NULL,                  -- Foreign key to actors.id
     updated_by INTEGER NOT NULL,                  -- Foreign key to actors.id
+    FOREIGN KEY (created_by) REFERENCES actors(id) ON DELETE RESTRICT,
+    FOREIGN KEY (updated_by) REFERENCES actors(id) ON DELETE RESTRICT,
     UNIQUE(llm_service_id, model_id)
 );
 
@@ -76,6 +82,7 @@ CREATE INDEX idx_models_updated_by ON models(updated_by);
 -- Actors table (users, agents, services, system)
 -- Actors represent all participants in the system - humans, AI agents, services, etc.
 -- This unified approach allows for flexible conversation scenarios.
+-- Note: created_by and updated_by are nullable to handle self-references
 CREATE TABLE actors (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT NOT NULL CHECK (type IN ('user', 'agent', 'service', 'system')),
@@ -86,8 +93,10 @@ CREATE TABLE actors (
     metadata TEXT,                                -- JSON: type-specific data (user preferences, agent capabilities, etc.)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by INTEGER NOT NULL,                  -- Foreign key to actors.id
-    updated_by INTEGER NOT NULL                   -- Foreign key to actors.id
+    created_by INTEGER,                           -- Foreign key to actors.id (nullable for self-references)
+    updated_by INTEGER,                           -- Foreign key to actors.id (nullable for self-references)
+    FOREIGN KEY (created_by) REFERENCES actors(id) ON DELETE SET NULL,
+    FOREIGN KEY (updated_by) REFERENCES actors(id) ON DELETE SET NULL
 );
 
 -- Create indexes for actors
@@ -100,21 +109,21 @@ CREATE INDEX idx_actors_updated_by ON actors(updated_by);
 -- Stores both system prompts and user prompts.
 -- System prompts (is_system = 1) can be reused across providers.
 -- User prompts (is_system = 0) are actor-specific prompt templates.
+-- Ownership is determined by created_by field
 CREATE TABLE prompts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    actor_id INTEGER,                             -- NULL for system prompts, actor_id for user prompts
     title TEXT NOT NULL,                          -- Prompt title/name
     content TEXT NOT NULL,                        -- Actual prompt content
     is_system INTEGER DEFAULT 0,                  -- 1 for system prompts, 0 for user prompts
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by INTEGER NOT NULL,                  -- Foreign key to actors.id
+    created_by INTEGER NOT NULL,                  -- Foreign key to actors.id (ownership)
     updated_by INTEGER NOT NULL,                  -- Foreign key to actors.id
-    FOREIGN KEY (actor_id) REFERENCES actors(id) ON DELETE CASCADE
+    FOREIGN KEY (created_by) REFERENCES actors(id) ON DELETE RESTRICT,
+    FOREIGN KEY (updated_by) REFERENCES actors(id) ON DELETE RESTRICT
 );
 
 -- Create indexes for prompts
-CREATE INDEX idx_prompts_actor_id ON prompts(actor_id);
 CREATE INDEX idx_prompts_is_system ON prompts(is_system);
 CREATE INDEX idx_prompts_created_by ON prompts(created_by);
 CREATE INDEX idx_prompts_updated_by ON prompts(updated_by);
@@ -130,7 +139,9 @@ CREATE TABLE providers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by INTEGER NOT NULL,                  -- Foreign key to actors.id
-    updated_by INTEGER NOT NULL                   -- Foreign key to actors.id
+    updated_by INTEGER NOT NULL,                  -- Foreign key to actors.id
+    FOREIGN KEY (created_by) REFERENCES actors(id) ON DELETE RESTRICT,
+    FOREIGN KEY (updated_by) REFERENCES actors(id) ON DELETE RESTRICT
 );
 
 -- Create indexes for providers
@@ -141,22 +152,22 @@ CREATE INDEX idx_providers_updated_by ON providers(updated_by);
 
 -- Conversations table
 -- Conversations are containers for related messages between participants.
--- actor_id represents the conversation owner/creator.
+-- Ownership is determined by created_by field
 CREATE TABLE conversations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    actor_id INTEGER NOT NULL REFERENCES actors(id) ON DELETE CASCADE,  -- Conversation owner
     title TEXT NOT NULL,                          -- Conversation title
     description TEXT,                             -- Optional description
     is_active BOOLEAN DEFAULT true,
     metadata TEXT,                                -- JSON: conversation-specific data
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by INTEGER NOT NULL,                  -- Foreign key to actors.id
-    updated_by INTEGER NOT NULL                   -- Foreign key to actors.id
+    created_by INTEGER NOT NULL,                  -- Foreign key to actors.id (ownership)
+    updated_by INTEGER NOT NULL,                  -- Foreign key to actors.id
+    FOREIGN KEY (created_by) REFERENCES actors(id) ON DELETE RESTRICT,
+    FOREIGN KEY (updated_by) REFERENCES actors(id) ON DELETE RESTRICT
 );
 
 -- Create indexes for conversations
-CREATE INDEX idx_conversations_actor_id ON conversations(actor_id);
 CREATE INDEX idx_conversations_created_at ON conversations(created_at);
 CREATE INDEX idx_conversations_created_by ON conversations(created_by);
 CREATE INDEX idx_conversations_updated_by ON conversations(updated_by);
@@ -165,24 +176,25 @@ CREATE INDEX idx_conversations_updated_by ON conversations(updated_by);
 -- Messages are the actual content exchanged in conversations.
 -- UUID v7 is used for natural ordering (generated in application code).
 -- Messages can be from any actor type (user, agent, service, system).
+-- Ownership is determined by created_by field (who wrote the message)
 CREATE TABLE messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,         -- Database relationship ID
     conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
-    actor_id INTEGER NOT NULL REFERENCES actors(id) ON DELETE CASCADE,  -- Who sent the message
     uuid TEXT UNIQUE NOT NULL,                    -- UUID v7 for natural ordering and external references
     content TEXT NOT NULL,                        -- Message content
     message_type TEXT DEFAULT 'text' CHECK (message_type IN ('text', 'image', 'file')),  -- Future extensibility
     metadata TEXT,                                -- JSON: message-specific data (attachments, formatting, etc.)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by INTEGER NOT NULL,                  -- Foreign key to actors.id
-    updated_by INTEGER NOT NULL                   -- Foreign key to actors.id
+    created_by INTEGER NOT NULL,                  -- Foreign key to actors.id (who wrote the message)
+    updated_by INTEGER NOT NULL,                  -- Foreign key to actors.id
+    FOREIGN KEY (created_by) REFERENCES actors(id) ON DELETE RESTRICT,
+    FOREIGN KEY (updated_by) REFERENCES actors(id) ON DELETE RESTRICT
 );
 
 -- Create indexes for messages
 CREATE INDEX idx_messages_uuid ON messages(uuid);
 CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
-CREATE INDEX idx_messages_actor_id ON messages(actor_id);
 CREATE INDEX idx_messages_created_at ON messages(created_at);
 CREATE INDEX idx_messages_conversation_ordered ON messages(conversation_id, uuid);  -- For efficient conversation retrieval
 CREATE INDEX idx_messages_created_by ON messages(created_by);
