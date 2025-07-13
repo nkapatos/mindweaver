@@ -2,6 +2,7 @@
 	"dependencies": {
 		"@tailwindcss/postcss": "^4.1.8",
 		"alpinejs": "^3.14.9",
+		"htmx-ext-sse": "^2.2.3",
 		"htmx.org": "2.0.6",
 		"lucide-static": "^0.523.0",
 		"postcss": "^8.5.4",

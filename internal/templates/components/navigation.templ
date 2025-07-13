@@ -9,7 +9,7 @@ import (
 )
 
 templ NavigationMenu() {
-	<ul class="menu" hx-boost="true">
+	<ul class="menu">
 		for _, route := range config.WebRoutes {
 			<li>
 				<a href={ route.Href } class={ templ.KV("menu-active", isActiveRoute(route.Href, ctx)) }>

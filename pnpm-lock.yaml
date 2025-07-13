@@ -14,6 +14,9 @@ importers:
       alpinejs:
         specifier: ^3.14.9
         version: 3.14.9
+      htmx-ext-sse:
+        specifier: ^2.2.3
+        version: 2.2.3
       htmx.org:
         specifier: 2.0.6
         version: 2.0.6
@@ -341,6 +344,9 @@ packages:
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
+
+  htmx-ext-sse@2.2.3:
+    resolution: {integrity: sha512-DDahTngA+XSUeX4/EFAzAGDkvY8pdr/FmelHzag0FvZpUOh41G08P1fwp+jfFZCQphkA7/z06l90FN4iyD6O2w==}
 
   htmx.org@2.0.6:
     resolution: {integrity: sha512-7ythjYneGSk3yCHgtCnQeaoF+D+o7U2LF37WU3O0JYv3gTZSicdEFiI/Ai/NJyC5ZpYJWMpUb11OC5Lr6AfAqA==}
@@ -692,6 +698,10 @@ snapshots:
       '@esbuild/win32-x64': 0.25.5
 
   graceful-fs@4.2.11: {}
+
+  htmx-ext-sse@2.2.3:
+    dependencies:
+      htmx.org: 2.0.6
 
   htmx.org@2.0.6: {}
 

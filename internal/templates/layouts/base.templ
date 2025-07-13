@@ -13,7 +13,7 @@ templ BaseLayout(title, description string) {
 			<script src={ config.RouteAssets + "/vendor.js" } defer></script>
 			<script src={ config.RouteAssets + "/main.js" }></script>
 		</head>
-		<body class="h-screen overflow-hidden">
+		<body class="h-screen overflow-hidden" hx-boost="true">
 			{ children... }
 		</body>
 	</html>
