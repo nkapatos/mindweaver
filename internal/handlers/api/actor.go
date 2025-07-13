@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/internal/services"
 )
 
@@ -20,12 +22,7 @@ func NewActorHandler(actorService *services.ActorService) *ActorHandler {
 }
 
 // CreateActor handles POST /api/actors
-func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func (h *ActorHandler) CreateActor(c echo.Context) error {
 	var req struct {
 		Type        string `json:"type"`
 		Name        string `json:"name"`
@@ -35,121 +32,86 @@ func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
 		IsActive    bool   `json:"is_active"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
+	if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 	}
 
 	if req.Name == "" || req.Type == "" {
-		http.Error(w, "Name and type are required", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Name and type are required"})
 	}
 
-	// TODO: Get actual actor ID from authentication/session
-	// For now, use system actor ID (1) for audit trail
-	systemActorID := int64(1)
+	// Get actor ID from session
+	sess, _ := session.Get("session", c)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
-	if err := h.actorService.CreateActor(r.Context(), req.Type, req.Name, req.DisplayName, req.AvatarURL, req.Metadata, req.IsActive, systemActorID, systemActorID); err != nil {
-		http.Error(w, "Failed to create actor", http.StatusInternalServerError)
-		return
+	if err := h.actorService.CreateActor(c.Request().Context(), req.Type, req.Name, req.DisplayName, req.AvatarURL, req.Metadata, req.IsActive, createdBy, createdBy); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create actor"})
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	return c.JSON(http.StatusCreated, map[string]string{"message": "Actor created successfully"})
 }
 
 // GetActor handles GET /api/actors/{id}
-func (h *ActorHandler) GetActor(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	idStr := r.URL.Query().Get("id")
+func (h *ActorHandler) GetActor(c echo.Context) error {
+	idStr := c.Param("id")
 	if idStr == "" {
-		http.Error(w, "Actor ID is required", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Actor ID is required"})
 	}
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid actor ID", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid actor ID"})
 	}
 
-	actor, err := h.actorService.GetActorByID(r.Context(), id)
+	actor, err := h.actorService.GetActorByID(c.Request().Context(), id)
 	if err != nil {
-		http.Error(w, "Actor not found", http.StatusNotFound)
-		return
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Actor not found"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(actor)
+	return c.JSON(http.StatusOK, actor)
 }
 
 // GetActorByName handles GET /api/actors/by-name?name={name}&type={type}
-func (h *ActorHandler) GetActorByName(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	name := r.URL.Query().Get("name")
-	actorType := r.URL.Query().Get("type")
+func (h *ActorHandler) GetActorByName(c echo.Context) error {
+	name := c.QueryParam("name")
+	actorType := c.QueryParam("type")
 	if name == "" || actorType == "" {
-		http.Error(w, "Name and type are required", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Name and type are required"})
 	}
 
-	actor, err := h.actorService.GetActorByName(r.Context(), name, actorType)
+	actor, err := h.actorService.GetActorByName(c.Request().Context(), name, actorType)
 	if err != nil {
-		http.Error(w, "Actor not found", http.StatusNotFound)
-		return
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Actor not found"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(actor)
+	return c.JSON(http.StatusOK, actor)
 }
 
 // GetActorsByType handles GET /api/actors/by-type?type={type}
-func (h *ActorHandler) GetActorsByType(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	actorType := r.URL.Query().Get("type")
+func (h *ActorHandler) GetActorsByType(c echo.Context) error {
+	actorType := c.QueryParam("type")
 	if actorType == "" {
-		http.Error(w, "Type is required", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Type is required"})
 	}
 
-	actors, err := h.actorService.GetActorsByType(r.Context(), actorType)
+	actors, err := h.actorService.GetActorsByType(c.Request().Context(), actorType)
 	if err != nil {
-		http.Error(w, "Failed to fetch actors", http.StatusInternalServerError)
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch actors"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(actors)
+	return c.JSON(http.StatusOK, actors)
 }
 
 // UpdateActor handles PUT /api/actors/{id}
-func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	idStr := r.URL.Query().Get("id")
+func (h *ActorHandler) UpdateActor(c echo.Context) error {
+	idStr := c.Param("id")
 	if idStr == "" {
-		http.Error(w, "Actor ID is required", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Actor ID is required"})
 	}
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid actor ID", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid actor ID"})
 	}
 
 	var req struct {
@@ -161,26 +123,23 @@ func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
 		IsActive    bool   `json:"is_active"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
+	if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 	}
 
 	if req.Name == "" {
-		http.Error(w, "Name is required", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Name is required"})
 	}
 
-	// TODO: Get actual actor ID from authentication/session
-	// For now, use system actor ID (1) for audit trail
-	systemActorID := int64(1)
+	// Get actor ID from session
+	sess, _ := session.Get("session", c)
+	updatedBy, _ := sess.Values["actor_id"].(int64)
 
-	if err := h.actorService.UpdateActor(r.Context(), id, req.Name, req.Type, req.DisplayName, req.AvatarURL, req.Metadata, req.IsActive, systemActorID); err != nil {
-		http.Error(w, "Failed to update actor", http.StatusInternalServerError)
-		return
+	if err := h.actorService.UpdateActor(c.Request().Context(), id, req.Name, req.Type, req.DisplayName, req.AvatarURL, req.Metadata, req.IsActive, updatedBy); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update actor"})
 	}
 
-	w.WriteHeader(http.StatusOK)
+	return c.JSON(http.StatusOK, map[string]string{"message": "Actor updated successfully"})
 }
 
 // DeleteActor handles DELETE /api/actors/{id}

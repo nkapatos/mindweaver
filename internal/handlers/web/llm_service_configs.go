@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/internal/services"
 	"github.com/nkapatos/mindweaver/internal/store"
@@ -20,9 +21,8 @@ func NewLLMServiceConfigsHandler(llmService *services.LLMService) *LLMServiceCon
 	}
 }
 
-// LLMServiceConfigs handles GET /llm-service-configs - displays the configurations page
+// LLMServiceConfigs handles GET /llm-service-configs - displays the LLM service configs page
 func (h *LLMServiceConfigsHandler) LLMServiceConfigs(c echo.Context) error {
-
 	// Get all LLM services for the service selection dropdown
 	llmServices, err := h.llmService.GetAllLLMServices(c.Request().Context())
 	if err != nil {
@@ -34,7 +34,7 @@ func (h *LLMServiceConfigsHandler) LLMServiceConfigs(c echo.Context) error {
 	for _, service := range llmServices {
 		configs, err := h.llmService.GetLLMServiceConfigsByServiceID(c.Request().Context(), service.ID)
 		if err != nil {
-			continue // Skip this service if we can't get its configs
+			continue
 		}
 		for _, config := range configs {
 			configsWithServices = append(configsWithServices, views.LLMServiceConfigWithService{
@@ -55,25 +55,10 @@ func (h *LLMServiceConfigsHandler) NewLLMServiceConfig(c echo.Context) error {
 		llmServices = []store.LlmService{}
 	}
 
-	// Get all configurations with their service info for display
-	var configsWithServices []views.LLMServiceConfigWithService
-	for _, service := range llmServices {
-		configs, err := h.llmService.GetLLMServiceConfigsByServiceID(c.Request().Context(), service.ID)
-		if err != nil {
-			continue // Skip this service if we can't get its configs
-		}
-		for _, config := range configs {
-			configsWithServices = append(configsWithServices, views.LLMServiceConfigWithService{
-				LLMServiceConfig: config,
-				LLMService:       service,
-			})
-		}
-	}
-
-	return views.LLMServiceConfigsList(configsWithServices).Render(c.Request().Context(), c.Response().Writer)
+	return views.LLMServiceConfigDetailsForm(nil, llmServices, 0, []views.Model{}).Render(c.Request().Context(), c.Response().Writer)
 }
 
-// CreateLLMServiceConfig handles POST /llm-service-configs/create - creates a new configuration
+// CreateLLMServiceConfig handles POST /llm-service-configs/create - processes form submission
 func (h *LLMServiceConfigsHandler) CreateLLMServiceConfig(c echo.Context) error {
 	// Parse form data
 	if err := c.Request().ParseForm(); err != nil {
@@ -88,14 +73,9 @@ func (h *LLMServiceConfigsHandler) CreateLLMServiceConfig(c echo.Context) error 
 	temperatureStr := c.FormValue("temperature")
 	maxTokensStr := c.FormValue("max_tokens")
 
-	// If this is just a service selection (no name/model), redirect back with service ID
-	if llmServiceIDStr != "" && (name == "" || model == "") {
-		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/new?llm_service_id="+llmServiceIDStr)
-	}
-
 	// Validate required fields
 	if llmServiceIDStr == "" || name == "" || model == "" {
-		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/new?error=Service, name, and model are required")
+		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/new?error=LLM service, name and model are required")
 	}
 
 	// Parse LLM service ID
@@ -129,8 +109,12 @@ func (h *LLMServiceConfigsHandler) CreateLLMServiceConfig(c echo.Context) error 
 		config.MaxTokens = &maxTokens
 	}
 
+	// Get actor ID from session
+	sess, _ := session.Get("session", c)
+	createdBy, _ := sess.Values["actor_id"].(int64)
+
 	// Create the LLM service configuration
-	_, err = h.llmService.CreateLLMServiceConfig(c.Request().Context(), llmServiceID, name, description, config, 1, 1) // TODO: Use real actor ID from session
+	_, err = h.llmService.CreateLLMServiceConfig(c.Request().Context(), llmServiceID, name, description, config, createdBy, createdBy)
 	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/new?error=Failed to create configuration: "+err.Error())
 	}
@@ -290,8 +274,12 @@ func (h *LLMServiceConfigsHandler) UpdateLLMServiceConfig(c echo.Context) error 
 		config.MaxTokens = &maxTokens
 	}
 
+	// Get actor ID from session
+	sess, _ := session.Get("session", c)
+	updatedBy, _ := sess.Values["actor_id"].(int64)
+
 	// Update the configuration
-	if err := h.llmService.UpdateLLMServiceConfig(c.Request().Context(), id, name, description, config, 1); err != nil { // TODO: Use real actor ID from session
+	if err := h.llmService.UpdateLLMServiceConfig(c.Request().Context(), id, name, description, config, updatedBy); err != nil {
 		return c.Redirect(http.StatusSeeOther, "/llm-service-configs/"+idStr+"/edit?error=Failed to update configuration: "+err.Error())
 	}
 

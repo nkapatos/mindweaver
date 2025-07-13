@@ -11,13 +11,12 @@ import (
 )
 
 const createConversation = `-- name: CreateConversation :one
-INSERT INTO conversations (actor_id, title, description, is_active, metadata, created_by, updated_by) 
-VALUES (?, ?, ?, ?, ?, ?, ?) 
-RETURNING id, actor_id, title, description, is_active, metadata, created_at, updated_at, created_by, updated_by
+INSERT INTO conversations (title, description, is_active, metadata, created_by, updated_by) 
+VALUES (?, ?, ?, ?, ?, ?) 
+RETURNING id, title, description, is_active, metadata, created_at, updated_at, created_by, updated_by
 `
 
 type CreateConversationParams struct {
-	ActorID     int64          `json:"actor_id"`
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
 	IsActive    sql.NullBool   `json:"is_active"`
@@ -28,7 +27,6 @@ type CreateConversationParams struct {
 
 func (q *Queries) CreateConversation(ctx context.Context, arg CreateConversationParams) (Conversation, error) {
 	row := q.db.QueryRowContext(ctx, createConversation,
-		arg.ActorID,
 		arg.Title,
 		arg.Description,
 		arg.IsActive,
@@ -39,7 +37,6 @@ func (q *Queries) CreateConversation(ctx context.Context, arg CreateConversation
 	var i Conversation
 	err := row.Scan(
 		&i.ID,
-		&i.ActorID,
 		&i.Title,
 		&i.Description,
 		&i.IsActive,
@@ -62,7 +59,7 @@ func (q *Queries) DeleteConversation(ctx context.Context, id int64) error {
 }
 
 const getConversationByID = `-- name: GetConversationByID :one
-SELECT id, actor_id, title, description, is_active, metadata, created_at, updated_at, created_by, updated_by 
+SELECT id, title, description, is_active, metadata, created_at, updated_at, created_by, updated_by 
 FROM conversations 
 WHERE id = ? 
 LIMIT 1
@@ -73,7 +70,6 @@ func (q *Queries) GetConversationByID(ctx context.Context, id int64) (Conversati
 	var i Conversation
 	err := row.Scan(
 		&i.ID,
-		&i.ActorID,
 		&i.Title,
 		&i.Description,
 		&i.IsActive,
@@ -87,14 +83,14 @@ func (q *Queries) GetConversationByID(ctx context.Context, id int64) (Conversati
 }
 
 const getConversationsByActorID = `-- name: GetConversationsByActorID :many
-SELECT id, actor_id, title, description, is_active, metadata, created_at, updated_at, created_by, updated_by 
+SELECT id, title, description, is_active, metadata, created_at, updated_at, created_by, updated_by 
 FROM conversations 
-WHERE actor_id = ? AND is_active = true 
+WHERE created_by = ? AND is_active = true 
 ORDER BY created_at DESC
 `
 
-func (q *Queries) GetConversationsByActorID(ctx context.Context, actorID int64) ([]Conversation, error) {
-	rows, err := q.db.QueryContext(ctx, getConversationsByActorID, actorID)
+func (q *Queries) GetConversationsByActorID(ctx context.Context, createdBy int64) ([]Conversation, error) {
+	rows, err := q.db.QueryContext(ctx, getConversationsByActorID, createdBy)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +100,6 @@ func (q *Queries) GetConversationsByActorID(ctx context.Context, actorID int64) 
 		var i Conversation
 		if err := rows.Scan(
 			&i.ID,
-			&i.ActorID,
 			&i.Title,
 			&i.Description,
 			&i.IsActive,
@@ -129,12 +124,11 @@ func (q *Queries) GetConversationsByActorID(ctx context.Context, actorID int64) 
 
 const updateConversation = `-- name: UpdateConversation :exec
 UPDATE conversations 
-SET actor_id = ?, title = ?, description = ?, is_active = ?, metadata = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ? 
+SET title = ?, description = ?, is_active = ?, metadata = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ? 
 WHERE id = ?
 `
 
 type UpdateConversationParams struct {
-	ActorID     int64          `json:"actor_id"`
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
 	IsActive    sql.NullBool   `json:"is_active"`
@@ -145,7 +139,6 @@ type UpdateConversationParams struct {
 
 func (q *Queries) UpdateConversation(ctx context.Context, arg UpdateConversationParams) error {
 	_, err := q.db.ExecContext(ctx, updateConversation,
-		arg.ActorID,
 		arg.Title,
 		arg.Description,
 		arg.IsActive,

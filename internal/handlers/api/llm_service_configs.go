@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/internal/services"
 )
@@ -74,9 +75,9 @@ func (h *LLMServiceConfigsHandler) CreateLLMServiceConfig(c echo.Context) error 
 		config.PresencePenalty = &req.Configuration.PresencePenalty
 	}
 
-	// TODO: Get actual actor ID from authentication/session
-	// For now, use system actor ID (1) for audit trail
-	systemActorID := int64(1)
+	// Get actor ID from session
+	sess, _ := session.Get("session", c)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
 	llmServiceConfig, err := h.llmService.CreateLLMServiceConfig(
 		c.Request().Context(),
@@ -84,8 +85,8 @@ func (h *LLMServiceConfigsHandler) CreateLLMServiceConfig(c echo.Context) error 
 		req.Name,
 		req.Description,
 		config,
-		systemActorID,
-		systemActorID,
+		createdBy,
+		createdBy,
 	)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create LLM service config"})
@@ -180,9 +181,9 @@ func (h *LLMServiceConfigsHandler) UpdateLLMServiceConfig(c echo.Context) error 
 		config.PresencePenalty = &req.Configuration.PresencePenalty
 	}
 
-	// TODO: Get actual actor ID from authentication/session
-	// For now, use system actor ID (1) for audit trail
-	systemActorID := int64(1)
+	// Get actor ID from session
+	sess, _ := session.Get("session", c)
+	updatedBy, _ := sess.Values["actor_id"].(int64)
 
 	if err := h.llmService.UpdateLLMServiceConfig(
 		c.Request().Context(),
@@ -190,7 +191,7 @@ func (h *LLMServiceConfigsHandler) UpdateLLMServiceConfig(c echo.Context) error 
 		req.Name,
 		req.Description,
 		config,
-		systemActorID,
+		updatedBy,
 	); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update LLM service config"})
 	}

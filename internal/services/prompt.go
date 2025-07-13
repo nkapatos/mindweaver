@@ -21,18 +21,12 @@ func NewPromptService(promptStore store.Querier) *PromptService {
 }
 
 // CreatePrompt creates a new prompt
-func (s *PromptService) CreatePrompt(ctx context.Context, actorID *int64, title, content string, isSystem bool, createdBy, updatedBy int64) error {
+func (s *PromptService) CreatePrompt(ctx context.Context, title, content string, isSystem bool, createdBy, updatedBy int64) error {
 	s.logger.Info("Creating new prompt",
 		"title", title,
-		"actor_id", actorID,
+		"created_by", createdBy,
 		"is_system", isSystem,
 		"content_length", len(content))
-
-	var actorIDNull sql.NullInt64
-	if actorID != nil {
-		actorIDNull.Int64 = *actorID
-		actorIDNull.Valid = true
-	}
 
 	var isSystemNull sql.NullInt64
 	if isSystem {
@@ -41,7 +35,6 @@ func (s *PromptService) CreatePrompt(ctx context.Context, actorID *int64, title,
 	}
 
 	params := store.CreatePromptParams{
-		ActorID:   actorIDNull,
 		Title:     title,
 		Content:   content,
 		IsSystem:  isSystemNull,
@@ -52,13 +45,13 @@ func (s *PromptService) CreatePrompt(ctx context.Context, actorID *int64, title,
 	if err := s.promptStore.CreatePrompt(ctx, params); err != nil {
 		s.logger.Error("Failed to create prompt",
 			"title", title,
-			"actor_id", actorID,
+			"created_by", createdBy,
 			"is_system", isSystem,
 			"error", err)
 		return err
 	}
 
-	s.logger.Info("Prompt created successfully", "title", title, "actor_id", actorID, "is_system", isSystem)
+	s.logger.Info("Prompt created successfully", "title", title, "created_by", createdBy, "is_system", isSystem)
 	return nil
 }
 
@@ -90,18 +83,17 @@ func (s *PromptService) GetAllPrompts(ctx context.Context) ([]store.Prompt, erro
 	return prompts, nil
 }
 
-// GetPromptsByActorID retrieves all prompts for a specific actor
-func (s *PromptService) GetPromptsByActorID(ctx context.Context, actorID int64) ([]store.Prompt, error) {
-	s.logger.Debug("Getting prompts by actor ID", "actor_id", actorID)
+// GetPromptsByCreatedBy retrieves all prompts for a specific actor
+func (s *PromptService) GetPromptsByCreatedBy(ctx context.Context, createdBy int64) ([]store.Prompt, error) {
+	s.logger.Debug("Getting prompts by created_by", "created_by", createdBy)
 
-	actorIDNull := sql.NullInt64{Int64: actorID, Valid: true}
-	prompts, err := s.promptStore.GetPromptsByActorID(ctx, actorIDNull)
+	prompts, err := s.promptStore.GetPromptsByActorID(ctx, createdBy) // SQL query filters by created_by
 	if err != nil {
-		s.logger.Error("Failed to get prompts by actor ID", "actor_id", actorID, "error", err)
+		s.logger.Error("Failed to get prompts by created_by", "created_by", createdBy, "error", err)
 		return nil, err
 	}
 
-	s.logger.Debug("Prompts retrieved successfully", "actor_id", actorID, "count", len(prompts))
+	s.logger.Debug("Prompts retrieved successfully", "created_by", createdBy, "count", len(prompts))
 	return prompts, nil
 }
 
@@ -120,18 +112,18 @@ func (s *PromptService) GetSystemPrompts(ctx context.Context) ([]store.Prompt, e
 }
 
 // UpdatePrompt updates a prompt by its ID
-func (s *PromptService) UpdatePrompt(ctx context.Context, id int64, actorID *int64, title, content string, isSystem bool, updatedBy int64) error {
+func (s *PromptService) UpdatePrompt(ctx context.Context, id int64, createdBy *int64, title, content string, isSystem bool, updatedBy int64) error {
 	s.logger.Info("Updating prompt",
 		"id", id,
-		"actor_id", actorID,
+		"created_by", createdBy,
 		"title", title,
 		"is_system", isSystem,
 		"content_length", len(content))
 
-	var actorIDNull sql.NullInt64
-	if actorID != nil {
-		actorIDNull.Int64 = *actorID
-		actorIDNull.Valid = true
+	var createdByNull sql.NullInt64
+	if createdBy != nil {
+		createdByNull.Int64 = *createdBy
+		createdByNull.Valid = true
 	}
 
 	var isSystemNull sql.NullInt64
@@ -141,7 +133,6 @@ func (s *PromptService) UpdatePrompt(ctx context.Context, id int64, actorID *int
 	}
 
 	params := store.UpdatePromptParams{
-		ActorID:   actorIDNull,
 		Title:     title,
 		Content:   content,
 		IsSystem:  isSystemNull,
@@ -152,7 +143,7 @@ func (s *PromptService) UpdatePrompt(ctx context.Context, id int64, actorID *int
 	if err := s.promptStore.UpdatePrompt(ctx, params); err != nil {
 		s.logger.Error("Failed to update prompt",
 			"id", id,
-			"actor_id", actorID,
+			"created_by", createdBy,
 			"title", title,
 			"is_system", isSystem,
 			"error", err)
@@ -183,7 +174,7 @@ func (s *PromptService) DeletePrompt(ctx context.Context, id int64) error {
 // 2. Batch loading: Load multiple prompts with actors in one operation
 // 3. Stored procedure: Complex prompt loading logic for prompt management interfaces
 // 4. Caching: Cache prompt-actor relationships for frequently accessed prompts
-// 5. Indexing: Ensure proper indexes on actor_id for user prompts
+// 5. Indexing: Ensure proper indexes on created_by for user prompts
 func (s *PromptService) GetPromptWithActor(ctx context.Context, promptID int64) (*store.Prompt, *store.Actor, error) {
 	s.logger.Debug("Getting prompt with actor", "prompt_id", promptID)
 
@@ -194,16 +185,16 @@ func (s *PromptService) GetPromptWithActor(ctx context.Context, promptID int64) 
 		return nil, nil, err
 	}
 
-	// Check if this is a user prompt (has an actor_id)
-	if !prompt.ActorID.Valid {
+	// Check if this is a user prompt (has a created_by)
+	if prompt.CreatedBy == 0 {
 		s.logger.Debug("Prompt is a system prompt, no actor relationship", "prompt_id", promptID)
 		return &prompt, nil, nil
 	}
 
 	// Get the related actor
-	actor, err := s.promptStore.GetActorByID(ctx, prompt.ActorID.Int64)
+	actor, err := s.promptStore.GetActorByID(ctx, prompt.CreatedBy)
 	if err != nil {
-		s.logger.Error("Failed to get actor for prompt", "prompt_id", promptID, "actor_id", prompt.ActorID.Int64, "error", err)
+		s.logger.Error("Failed to get actor for prompt", "prompt_id", promptID, "created_by", prompt.CreatedBy, "error", err)
 		return &prompt, nil, err
 	}
 
@@ -248,11 +239,11 @@ func (s *PromptService) GetAllPromptsWithRelations(ctx context.Context) ([]struc
 	for _, prompt := range prompts {
 		// Get the related actor (if any)
 		var actor *store.Actor
-		if prompt.ActorID.Valid {
-			if a, exists := actorMap[prompt.ActorID.Int64]; exists {
+		if prompt.CreatedBy != 0 { // Changed from ActorID.Valid to CreatedBy != 0
+			if a, exists := actorMap[prompt.CreatedBy]; exists { // Changed from ActorID.Int64 to CreatedBy
 				actor = &a
 			} else {
-				s.logger.Warn("Actor not found for prompt", "prompt_id", prompt.ID, "actor_id", prompt.ActorID.Int64)
+				s.logger.Warn("Actor not found for prompt", "prompt_id", prompt.ID, "created_by", prompt.CreatedBy) // Changed from ActorID.Int64 to CreatedBy
 			}
 		}
 

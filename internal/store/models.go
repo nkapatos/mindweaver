@@ -24,7 +24,6 @@ type Actor struct {
 
 type Conversation struct {
 	ID          int64          `json:"id"`
-	ActorID     int64          `json:"actor_id"`
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
 	IsActive    sql.NullBool   `json:"is_active"`
@@ -64,7 +63,6 @@ type LlmServiceConfig struct {
 type Message struct {
 	ID             int64          `json:"id"`
 	ConversationID int64          `json:"conversation_id"`
-	ActorID        int64          `json:"actor_id"`
 	Uuid           string         `json:"uuid"`
 	Content        string         `json:"content"`
 	MessageType    sql.NullString `json:"message_type"`
@@ -91,7 +89,6 @@ type Model struct {
 
 type Prompt struct {
 	ID        int64         `json:"id"`
-	ActorID   sql.NullInt64 `json:"actor_id"`
 	Title     string        `json:"title"`
 	Content   string        `json:"content"`
 	IsSystem  sql.NullInt64 `json:"is_system"`

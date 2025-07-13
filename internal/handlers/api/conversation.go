@@ -39,9 +39,9 @@ func (h *ConversationHandler) CreateConversation(c echo.Context) error {
 	}
 
 	sess, _ := session.Get("session", c)
-	actorID, _ := sess.Values["actor_id"].(int64)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
-	conversation, err := h.conversationService.CreateConversation(c.Request().Context(), actorID, request.Title, request.Description, true, "", actorID, actorID)
+	conversation, err := h.conversationService.CreateConversation(c.Request().Context(), request.Title, request.Description, true, "", createdBy, createdBy)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -72,9 +72,9 @@ func (h *ConversationHandler) GetConversation(c echo.Context) error {
 // GetConversations handles GET /api/conversations
 func (h *ConversationHandler) GetConversations(c echo.Context) error {
 	sess, _ := session.Get("session", c)
-	actorID, _ := sess.Values["actor_id"].(int64)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
-	conversations, err := h.conversationService.GetConversationsByActorID(c.Request().Context(), actorID)
+	conversations, err := h.conversationService.GetConversationsByOwner(c.Request().Context(), createdBy)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -109,11 +109,13 @@ func (h *ConversationHandler) CreateMessage(c echo.Context) error {
 	}
 
 	sess, _ := session.Get("session", c)
-	actorID, _ := sess.Values["actor_id"].(int64)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 	systemActorID := int64(1) // System actor ID for AI responses
+	// TODO: When assistants are implemented, use the provider's/assistant's actor ID instead of system actor ID
+	// This will allow proper attribution of AI responses to specific assistants/providers
 
 	// Create the user message
-	userMessage, err := h.messageService.CreateMessage(c.Request().Context(), conversationID, actorID, request.Content, "user", "", actorID, actorID)
+	userMessage, err := h.messageService.CreateMessage(c.Request().Context(), conversationID, createdBy, request.Content, "user", "", createdBy, createdBy)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -199,9 +201,9 @@ func (h *ConversationHandler) UpdateMessage(c echo.Context) error {
 	}
 
 	sess, _ := session.Get("session", c)
-	actorID, _ := sess.Values["actor_id"].(int64)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
-	err = h.messageService.UpdateMessage(c.Request().Context(), messageID, request.Content, "user", "", actorID)
+	err = h.messageService.UpdateMessage(c.Request().Context(), messageID, request.Content, "user", "", createdBy)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}

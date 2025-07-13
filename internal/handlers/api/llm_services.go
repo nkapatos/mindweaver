@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/internal/services"
 )
@@ -47,9 +48,9 @@ func (h *LLMServicesHandler) CreateLLMService(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "API key is required"})
 	}
 
-	// TODO: Get actual actor ID from authentication/session
-	// For now, use system actor ID (1) for audit trail
-	systemActorID := int64(1)
+	// Get actor ID from session
+	sess, _ := session.Get("session", c)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
 	llmService, err := h.llmService.CreateLLMService(
 		c.Request().Context(),
@@ -59,8 +60,8 @@ func (h *LLMServicesHandler) CreateLLMService(c echo.Context) error {
 		req.ApiKey,
 		req.BaseURL,
 		req.Organization,
-		systemActorID,
-		systemActorID,
+		createdBy,
+		createdBy,
 	)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create LLM service"})
@@ -136,9 +137,9 @@ func (h *LLMServicesHandler) UpdateLLMService(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "API key is required"})
 	}
 
-	// TODO: Get actual actor ID from authentication/session
-	// For now, use system actor ID (1) for audit trail
-	systemActorID := int64(1)
+	// Get actor ID from session
+	sess, _ := session.Get("session", c)
+	updatedBy, _ := sess.Values["actor_id"].(int64)
 
 	if err := h.llmService.UpdateLLMService(
 		c.Request().Context(),
@@ -149,7 +150,7 @@ func (h *LLMServicesHandler) UpdateLLMService(c echo.Context) error {
 		req.ApiKey,
 		req.BaseURL,
 		req.Organization,
-		systemActorID,
+		updatedBy,
 	); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update LLM service"})
 	}

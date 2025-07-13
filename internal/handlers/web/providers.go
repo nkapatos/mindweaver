@@ -115,10 +115,10 @@ func (h *ProvidersHandler) CreateProvider(c echo.Context) error {
 	}
 
 	sess, _ := session.Get("session", c)
-	actorID, _ := sess.Values["actor_id"].(int64)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
 	// Create the provider
-	_, err = h.providerService.CreateProvider(c.Request().Context(), name, description, llmServiceConfigID, systemPromptID, actorID, actorID)
+	_, err = h.providerService.CreateProvider(c.Request().Context(), name, description, llmServiceConfigID, systemPromptID, createdBy, createdBy)
 	if err != nil {
 		return c.Redirect(http.StatusSeeOther, "/providers/new?error=Failed to create provider")
 	}
@@ -264,10 +264,10 @@ func (h *ProvidersHandler) UpdateProvider(c echo.Context) error {
 	}
 
 	sess, _ := session.Get("session", c)
-	actorID, _ := sess.Values["actor_id"].(int64)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
 	// Update the provider
-	if err := h.providerService.UpdateProvider(c.Request().Context(), id, name, description, llmServiceConfigID, systemPromptID, actorID); err != nil {
+	if err := h.providerService.UpdateProvider(c.Request().Context(), id, name, description, llmServiceConfigID, systemPromptID, createdBy); err != nil {
 		return c.Redirect(http.StatusSeeOther, "/providers/edit/"+idStr+"?error=Failed to update provider")
 	}
 

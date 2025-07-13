@@ -43,7 +43,7 @@ func (h *ProvidersHandler) CreateProvider(c echo.Context) error {
 	}
 
 	sess, _ := session.Get("session", c)
-	actorID, _ := sess.Values["actor_id"].(int64)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
 	provider, err := h.providerService.CreateProvider(
 		c.Request().Context(),
@@ -51,8 +51,8 @@ func (h *ProvidersHandler) CreateProvider(c echo.Context) error {
 		req.Description,
 		req.LlmServiceConfigID,
 		req.SystemPromptID,
-		actorID,
-		actorID,
+		createdBy,
+		createdBy,
 	)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create provider"})
@@ -123,7 +123,7 @@ func (h *ProvidersHandler) UpdateProvider(c echo.Context) error {
 	}
 
 	sess, _ := session.Get("session", c)
-	actorID, _ := sess.Values["actor_id"].(int64)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
 	if err := h.providerService.UpdateProvider(
 		c.Request().Context(),
@@ -132,7 +132,7 @@ func (h *ProvidersHandler) UpdateProvider(c echo.Context) error {
 		req.Description,
 		req.LlmServiceConfigID,
 		req.SystemPromptID,
-		actorID,
+		createdBy,
 	); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update provider"})
 	}

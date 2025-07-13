@@ -17,15 +17,25 @@ func SetupAPIRoutes(
 	llmServiceConfigHandler *api.LLMServiceConfigsHandler,
 	modelsHandler *api.ModelsHandler,
 ) {
-	// API routes
-	e.POST("/api/actors", func(c echo.Context) error {
-		actorHandler.CreateActor(c.Response().Writer, c.Request())
-		return nil
-	})
-	e.POST("/api/prompts", func(c echo.Context) error {
-		promptHandler.CreatePrompt(c.Response().Writer, c.Request())
-		return nil
-	})
+	// Actor routes - only if handler is provided
+	if actorHandler != nil {
+		e.POST("/api/actors", actorHandler.CreateActor)
+		e.GET("/api/actors/:id", actorHandler.GetActor)
+		e.GET("/api/actors/by-name", actorHandler.GetActorByName)
+		e.GET("/api/actors/by-type", actorHandler.GetActorsByType)
+		e.PUT("/api/actors/:id", actorHandler.UpdateActor)
+	}
+
+	// Prompt routes - only if handler is provided
+	if promptHandler != nil {
+		e.POST("/api/prompts", promptHandler.CreatePrompt)
+		e.GET("/api/prompts", promptHandler.GetAllPrompts)
+		e.GET("/api/prompts/:id", promptHandler.GetPrompt)
+		e.PUT("/api/prompts/:id", promptHandler.UpdatePrompt)
+		e.DELETE("/api/prompts/:id", promptHandler.DeletePrompt)
+		e.GET("/api/prompts/by-actor", promptHandler.GetPromptsByCreatedBy)
+		e.GET("/api/prompts/system", promptHandler.GetSystemPrompts)
+	}
 
 	// Provider routes - only if handler is provided
 	if providerHandler != nil {

@@ -57,10 +57,10 @@ func NewConversationHandler(conversationService *services.ConversationService, p
 func (h *ConversationHandler) Conversation(c echo.Context) error {
 	// Get actor ID from authentication context
 	sess, _ := session.Get("session", c)
-	actorID, _ := sess.Values["actor_id"].(int64)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
 	// Get all conversations for the actor
-	_, err := h.conversationService.GetConversationsByActorID(c.Request().Context(), actorID)
+	_, err := h.conversationService.GetConversationsByOwner(c.Request().Context(), createdBy)
 	if err != nil {
 		// For now, just log the error and continue with empty list
 	}
@@ -110,7 +110,7 @@ func (h *ConversationHandler) CreateConversation(c echo.Context) error {
 
 	// Get actor ID from authentication context
 	sess, _ := session.Get("session", c)
-	actorID, _ := sess.Values["actor_id"].(int64)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
 	// Create metadata with the default provider
 	metadata := ConversationMetadata{
@@ -124,20 +124,15 @@ func (h *ConversationHandler) CreateConversation(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create metadata")
 	}
 
-	// Get actor ID from authentication context for audit trail
-	sess, _ = session.Get("session", c)
-	systemActorID, _ := sess.Values["actor_id"].(int64)
-
-	// Create the conversation
+	// Create the conversation using the authenticated user's actor ID
 	conversation, err := h.conversationService.CreateConversation(
 		c.Request().Context(),
-		actorID,
 		title,
 		description,
 		true, // isActive
 		string(metadataJSON),
-		systemActorID, // createdBy
-		systemActorID, // updatedBy
+		createdBy, // createdBy - authenticated user
+		createdBy, // updatedBy - authenticated user
 	)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create conversation")

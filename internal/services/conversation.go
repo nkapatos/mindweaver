@@ -21,11 +21,10 @@ func NewConversationService(conversationStore store.Querier) *ConversationServic
 }
 
 // CreateConversation creates a new conversation
-func (s *ConversationService) CreateConversation(ctx context.Context, actorID int64, title string, description string, isActive bool, metadata string, createdBy, updatedBy int64) (*store.Conversation, error) {
-	s.logger.Info("Creating new conversation", "actor_id", actorID, "title", title)
+func (s *ConversationService) CreateConversation(ctx context.Context, title string, description string, isActive bool, metadata string, createdBy, updatedBy int64) (*store.Conversation, error) {
+	s.logger.Info("Creating new conversation", "created_by", createdBy, "title", title)
 
 	params := store.CreateConversationParams{
-		ActorID:     actorID,
 		Title:       title,
 		Description: sql.NullString{String: description, Valid: description != ""},
 		IsActive:    sql.NullBool{Bool: isActive, Valid: true},
@@ -36,7 +35,7 @@ func (s *ConversationService) CreateConversation(ctx context.Context, actorID in
 
 	conversation, err := s.conversationStore.CreateConversation(ctx, params)
 	if err != nil {
-		s.logger.Error("Failed to create conversation", "actor_id", actorID, "title", title, "error", err)
+		s.logger.Error("Failed to create conversation", "created_by", createdBy, "title", title, "error", err)
 		return nil, err
 	}
 
@@ -58,27 +57,26 @@ func (s *ConversationService) GetConversationByID(ctx context.Context, id int64)
 	return &conversation, nil
 }
 
-// GetConversationsByActorID retrieves all conversations for a specific actor
-func (s *ConversationService) GetConversationsByActorID(ctx context.Context, actorID int64) ([]store.Conversation, error) {
-	s.logger.Debug("Getting conversations by actor ID", "actor_id", actorID)
+// GetConversationsByOwner retrieves all conversations for a specific owner (created_by)
+func (s *ConversationService) GetConversationsByOwner(ctx context.Context, ownerID int64) ([]store.Conversation, error) {
+	s.logger.Debug("Getting conversations by owner (created_by)", "created_by", ownerID)
 
-	conversations, err := s.conversationStore.GetConversationsByActorID(ctx, actorID)
+	conversations, err := s.conversationStore.GetConversationsByActorID(ctx, ownerID)
 	if err != nil {
-		s.logger.Error("Failed to get conversations by actor ID", "actor_id", actorID, "error", err)
+		s.logger.Error("Failed to get conversations by owner", "created_by", ownerID, "error", err)
 		return nil, err
 	}
 
-	s.logger.Debug("Conversations retrieved successfully", "actor_id", actorID, "count", len(conversations))
+	s.logger.Debug("Conversations retrieved successfully", "created_by", ownerID, "count", len(conversations))
 	return conversations, nil
 }
 
 // UpdateConversation updates a conversation by its ID
-func (s *ConversationService) UpdateConversation(ctx context.Context, id int64, actorID int64, title string, description string, isActive bool, metadata string, updatedBy int64) error {
+func (s *ConversationService) UpdateConversation(ctx context.Context, id int64, title string, description string, isActive bool, metadata string, updatedBy int64) error {
 	s.logger.Info("Updating conversation", "id", id, "title", title)
 
 	params := store.UpdateConversationParams{
 		ID:          id,
-		ActorID:     actorID,
 		Title:       title,
 		Description: sql.NullString{String: description, Valid: description != ""},
 		IsActive:    sql.NullBool{Bool: isActive, Valid: true},
@@ -109,6 +107,7 @@ func (s *ConversationService) DeleteConversation(ctx context.Context, id int64) 
 }
 
 // GetConversationWithActor retrieves a conversation along with its owner actor
+// NOTE: This method is deprecated and will be removed since actor_id is no longer present.
 func (s *ConversationService) GetConversationWithActor(ctx context.Context, conversationID int64) (*store.Conversation, *store.Actor, error) {
 	s.logger.Debug("Getting conversation with actor", "conversation_id", conversationID)
 
@@ -120,9 +119,9 @@ func (s *ConversationService) GetConversationWithActor(ctx context.Context, conv
 	}
 
 	// Get the related actor (conversation owner)
-	actor, err := s.conversationStore.GetActorByID(ctx, conversation.ActorID)
+	actor, err := s.conversationStore.GetActorByID(ctx, conversation.CreatedBy)
 	if err != nil {
-		s.logger.Error("Failed to get actor for conversation", "conversation_id", conversationID, "actor_id", conversation.ActorID, "error", err)
+		s.logger.Error("Failed to get actor for conversation", "conversation_id", conversationID, "actor_id", conversation.CreatedBy, "error", err)
 		return &conversation, nil, err
 	}
 
@@ -160,6 +159,7 @@ func (s *ConversationService) GetConversationWithMessages(ctx context.Context, c
 // 3. Stored procedure: Complex conversation loading logic in database
 // 4. Caching: Cache conversation context for frequently accessed conversations
 // 5. Lazy loading: Load messages only when needed (e.g., on scroll)
+// NOTE: This method is deprecated and will be removed since actor_id is no longer present.
 func (s *ConversationService) GetConversationWithActorAndMessages(ctx context.Context, conversationID int64) (*store.Conversation, *store.Actor, []store.Message, error) {
 	s.logger.Debug("Getting conversation with actor and messages", "conversation_id", conversationID)
 
@@ -171,9 +171,9 @@ func (s *ConversationService) GetConversationWithActorAndMessages(ctx context.Co
 	}
 
 	// Get the related actor (conversation owner)
-	actor, err := s.conversationStore.GetActorByID(ctx, conversation.ActorID)
+	actor, err := s.conversationStore.GetActorByID(ctx, conversation.CreatedBy)
 	if err != nil {
-		s.logger.Error("Failed to get actor for conversation", "conversation_id", conversationID, "actor_id", conversation.ActorID, "error", err)
+		s.logger.Error("Failed to get actor for conversation", "conversation_id", conversationID, "actor_id", conversation.CreatedBy, "error", err)
 		return &conversation, nil, nil, err
 	}
 

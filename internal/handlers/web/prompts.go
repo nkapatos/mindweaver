@@ -75,10 +75,11 @@ func (h *PromptsHandler) CreatePrompt(c echo.Context) error {
 
 	// Get actor ID from authentication context for audit trail
 	sess, _ := session.Get("session", c)
-	actorID, _ := sess.Values["actor_id"].(int64)
+	createdBy, _ := sess.Values["actor_id"].(int64)
+	updatedBy := createdBy
 
-	// Create the prompt (for now without actor_id, we'll add that later with sessions)
-	if err := h.promptService.CreatePrompt(c.Request().Context(), nil, title, content, isSystem, actorID, actorID); err != nil {
+	// Create the prompt with actor ID from session
+	if err := h.promptService.CreatePrompt(c.Request().Context(), title, content, isSystem, createdBy, updatedBy); err != nil {
 		// Redirect back with error
 		return c.Redirect(http.StatusSeeOther, "/prompts/new?error=Failed to create prompt")
 	}
@@ -185,10 +186,10 @@ func (h *PromptsHandler) UpdatePrompt(c echo.Context) error {
 
 	// Get actor ID from authentication context for audit trail
 	sess, _ := session.Get("session", c)
-	actorID, _ := sess.Values["actor_id"].(int64)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
-	// Update the prompt (for now without actor_id, we'll add that later with sessions)
-	if err := h.promptService.UpdatePrompt(c.Request().Context(), id, nil, title, content, isSystem, actorID); err != nil {
+	// Update the prompt with actor ID from session
+	if err := h.promptService.UpdatePrompt(c.Request().Context(), id, nil, title, content, isSystem, createdBy); err != nil {
 		return c.Redirect(http.StatusSeeOther, "/prompts/edit/"+idStr+"?error=Failed to update prompt")
 	}
 

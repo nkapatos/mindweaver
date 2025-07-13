@@ -11,14 +11,13 @@ import (
 )
 
 const createMessage = `-- name: CreateMessage :one
-INSERT INTO messages (conversation_id, actor_id, uuid, content, message_type, metadata, created_by, updated_by) 
-VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
-RETURNING id, conversation_id, actor_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by
+INSERT INTO messages (conversation_id, uuid, content, message_type, metadata, created_by, updated_by) 
+VALUES (?, ?, ?, ?, ?, ?, ?) 
+RETURNING id, conversation_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by
 `
 
 type CreateMessageParams struct {
 	ConversationID int64          `json:"conversation_id"`
-	ActorID        int64          `json:"actor_id"`
 	Uuid           string         `json:"uuid"`
 	Content        string         `json:"content"`
 	MessageType    sql.NullString `json:"message_type"`
@@ -30,7 +29,6 @@ type CreateMessageParams struct {
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
 	row := q.db.QueryRowContext(ctx, createMessage,
 		arg.ConversationID,
-		arg.ActorID,
 		arg.Uuid,
 		arg.Content,
 		arg.MessageType,
@@ -42,7 +40,6 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 	err := row.Scan(
 		&i.ID,
 		&i.ConversationID,
-		&i.ActorID,
 		&i.Uuid,
 		&i.Content,
 		&i.MessageType,
@@ -65,7 +62,7 @@ func (q *Queries) DeleteMessage(ctx context.Context, id int64) error {
 }
 
 const getMessageByID = `-- name: GetMessageByID :one
-SELECT id, conversation_id, actor_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by 
+SELECT id, conversation_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by 
 FROM messages 
 WHERE id = ? 
 LIMIT 1
@@ -77,7 +74,6 @@ func (q *Queries) GetMessageByID(ctx context.Context, id int64) (Message, error)
 	err := row.Scan(
 		&i.ID,
 		&i.ConversationID,
-		&i.ActorID,
 		&i.Uuid,
 		&i.Content,
 		&i.MessageType,
@@ -91,7 +87,7 @@ func (q *Queries) GetMessageByID(ctx context.Context, id int64) (Message, error)
 }
 
 const getMessageByUUID = `-- name: GetMessageByUUID :one
-SELECT id, conversation_id, actor_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by 
+SELECT id, conversation_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by 
 FROM messages 
 WHERE uuid = ? 
 LIMIT 1
@@ -103,7 +99,6 @@ func (q *Queries) GetMessageByUUID(ctx context.Context, uuid string) (Message, e
 	err := row.Scan(
 		&i.ID,
 		&i.ConversationID,
-		&i.ActorID,
 		&i.Uuid,
 		&i.Content,
 		&i.MessageType,
@@ -117,14 +112,14 @@ func (q *Queries) GetMessageByUUID(ctx context.Context, uuid string) (Message, e
 }
 
 const getMessagesByActorID = `-- name: GetMessagesByActorID :many
-SELECT id, conversation_id, actor_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by 
+SELECT id, conversation_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by 
 FROM messages 
-WHERE actor_id = ? 
+WHERE created_by = ? 
 ORDER BY uuid DESC
 `
 
-func (q *Queries) GetMessagesByActorID(ctx context.Context, actorID int64) ([]Message, error) {
-	rows, err := q.db.QueryContext(ctx, getMessagesByActorID, actorID)
+func (q *Queries) GetMessagesByActorID(ctx context.Context, createdBy int64) ([]Message, error) {
+	rows, err := q.db.QueryContext(ctx, getMessagesByActorID, createdBy)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +130,6 @@ func (q *Queries) GetMessagesByActorID(ctx context.Context, actorID int64) ([]Me
 		if err := rows.Scan(
 			&i.ID,
 			&i.ConversationID,
-			&i.ActorID,
 			&i.Uuid,
 			&i.Content,
 			&i.MessageType,
@@ -159,7 +153,7 @@ func (q *Queries) GetMessagesByActorID(ctx context.Context, actorID int64) ([]Me
 }
 
 const getMessagesByConversationID = `-- name: GetMessagesByConversationID :many
-SELECT id, conversation_id, actor_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by 
+SELECT id, conversation_id, uuid, content, message_type, metadata, created_at, updated_at, created_by, updated_by 
 FROM messages 
 WHERE conversation_id = ? 
 ORDER BY uuid ASC
@@ -177,7 +171,6 @@ func (q *Queries) GetMessagesByConversationID(ctx context.Context, conversationI
 		if err := rows.Scan(
 			&i.ID,
 			&i.ConversationID,
-			&i.ActorID,
 			&i.Uuid,
 			&i.Content,
 			&i.MessageType,

@@ -38,26 +38,25 @@ func NewMessageService(messageStore store.Querier) *MessageService {
 
 // CreateMessage creates a new message with an automatically generated UUID v7
 // UUID v7 provides both uniqueness and timestamp-based ordering for optimal message sequencing
-func (s *MessageService) CreateMessage(ctx context.Context, conversationID, actorID int64, content, messageType, metadata string, createdBy, updatedBy int64) (*store.Message, error) {
+func (s *MessageService) CreateMessage(ctx context.Context, conversationID, createdBy int64, content, messageType, metadata string, createdByParam, updatedBy int64) (*store.Message, error) {
 	// Generate UUID v7 for optimal message ordering and uniqueness
 	messageUUID := uuid.Must(uuid.NewV7())
 
-	s.logger.Info("Creating new message", "conversation_id", conversationID, "actor_id", actorID, "uuid", messageUUID)
+	s.logger.Info("Creating new message", "conversation_id", conversationID, "created_by", createdBy, "uuid", messageUUID)
 
 	params := store.CreateMessageParams{
 		ConversationID: conversationID,
-		ActorID:        actorID,
 		Uuid:           messageUUID.String(),
 		Content:        content,
 		MessageType:    sql.NullString{String: messageType, Valid: messageType != ""},
 		Metadata:       sql.NullString{String: metadata, Valid: metadata != ""},
-		CreatedBy:      createdBy,
+		CreatedBy:      createdByParam,
 		UpdatedBy:      updatedBy,
 	}
 
 	message, err := s.messageStore.CreateMessage(ctx, params)
 	if err != nil {
-		s.logger.Error("Failed to create message", "conversation_id", conversationID, "actor_id", actorID, "uuid", messageUUID, "error", err)
+		s.logger.Error("Failed to create message", "conversation_id", conversationID, "created_by", createdBy, "uuid", messageUUID, "error", err)
 		return nil, err
 	}
 
@@ -107,17 +106,17 @@ func (s *MessageService) GetMessagesByConversationID(ctx context.Context, conver
 	return messages, nil
 }
 
-// GetMessagesByActorID retrieves all messages sent by a specific actor
-func (s *MessageService) GetMessagesByActorID(ctx context.Context, actorID int64) ([]store.Message, error) {
-	s.logger.Debug("Getting messages by actor ID", "actor_id", actorID)
+// GetMessagesByCreatedBy retrieves all messages sent by a specific actor
+func (s *MessageService) GetMessagesByCreatedBy(ctx context.Context, createdBy int64) ([]store.Message, error) {
+	s.logger.Debug("Getting messages by created_by", "created_by", createdBy)
 
-	messages, err := s.messageStore.GetMessagesByActorID(ctx, actorID)
+	messages, err := s.messageStore.GetMessagesByActorID(ctx, createdBy)
 	if err != nil {
-		s.logger.Error("Failed to get messages by actor ID", "actor_id", actorID, "error", err)
+		s.logger.Error("Failed to get messages by created_by", "created_by", createdBy, "error", err)
 		return nil, err
 	}
 
-	s.logger.Debug("Messages retrieved successfully", "actor_id", actorID, "count", len(messages))
+	s.logger.Debug("Messages retrieved successfully", "created_by", createdBy, "count", len(messages))
 	return messages, nil
 }
 
@@ -189,9 +188,9 @@ func (s *MessageService) GetMessageWithActor(ctx context.Context, messageID int6
 	}
 
 	// Get the related actor
-	actor, err := s.messageStore.GetActorByID(ctx, message.ActorID)
+	actor, err := s.messageStore.GetActorByID(ctx, message.CreatedBy)
 	if err != nil {
-		s.logger.Error("Failed to get actor for message", "message_id", messageID, "actor_id", message.ActorID, "error", err)
+		s.logger.Error("Failed to get actor for message", "message_id", messageID, "created_by", message.CreatedBy, "error", err)
 		return &message, nil, err
 	}
 
@@ -225,9 +224,9 @@ func (s *MessageService) GetMessageWithRelations(ctx context.Context, messageID 
 	}
 
 	// Get the related actor
-	actor, err := s.messageStore.GetActorByID(ctx, message.ActorID)
+	actor, err := s.messageStore.GetActorByID(ctx, message.CreatedBy)
 	if err != nil {
-		s.logger.Error("Failed to get actor for message", "message_id", messageID, "actor_id", message.ActorID, "error", err)
+		s.logger.Error("Failed to get actor for message", "message_id", messageID, "created_by", message.CreatedBy, "error", err)
 		return &message, &conversation, nil, err
 	}
 

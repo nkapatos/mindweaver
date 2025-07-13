@@ -11,11 +11,10 @@ import (
 )
 
 const createPrompt = `-- name: CreatePrompt :exec
-INSERT INTO prompts (actor_id, title, content, is_system, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO prompts (title, content, is_system, created_by, updated_by) VALUES (?, ?, ?, ?, ?)
 `
 
 type CreatePromptParams struct {
-	ActorID   sql.NullInt64 `json:"actor_id"`
 	Title     string        `json:"title"`
 	Content   string        `json:"content"`
 	IsSystem  sql.NullInt64 `json:"is_system"`
@@ -25,7 +24,6 @@ type CreatePromptParams struct {
 
 func (q *Queries) CreatePrompt(ctx context.Context, arg CreatePromptParams) error {
 	_, err := q.db.ExecContext(ctx, createPrompt,
-		arg.ActorID,
 		arg.Title,
 		arg.Content,
 		arg.IsSystem,
@@ -45,7 +43,7 @@ func (q *Queries) DeletePrompt(ctx context.Context, id int64) error {
 }
 
 const getAllPrompts = `-- name: GetAllPrompts :many
-SELECT id, actor_id, title, content, is_system, created_at, updated_at, created_by, updated_by FROM prompts
+SELECT id, title, content, is_system, created_at, updated_at, created_by, updated_by FROM prompts
 `
 
 func (q *Queries) GetAllPrompts(ctx context.Context) ([]Prompt, error) {
@@ -59,7 +57,6 @@ func (q *Queries) GetAllPrompts(ctx context.Context) ([]Prompt, error) {
 		var i Prompt
 		if err := rows.Scan(
 			&i.ID,
-			&i.ActorID,
 			&i.Title,
 			&i.Content,
 			&i.IsSystem,
@@ -82,7 +79,7 @@ func (q *Queries) GetAllPrompts(ctx context.Context) ([]Prompt, error) {
 }
 
 const getPromptById = `-- name: GetPromptById :one
-SELECT id, actor_id, title, content, is_system, created_at, updated_at, created_by, updated_by FROM prompts WHERE id = ? LIMIT 1
+SELECT id, title, content, is_system, created_at, updated_at, created_by, updated_by FROM prompts WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetPromptById(ctx context.Context, id int64) (Prompt, error) {
@@ -90,7 +87,6 @@ func (q *Queries) GetPromptById(ctx context.Context, id int64) (Prompt, error) {
 	var i Prompt
 	err := row.Scan(
 		&i.ID,
-		&i.ActorID,
 		&i.Title,
 		&i.Content,
 		&i.IsSystem,
@@ -103,11 +99,11 @@ func (q *Queries) GetPromptById(ctx context.Context, id int64) (Prompt, error) {
 }
 
 const getPromptsByActorID = `-- name: GetPromptsByActorID :many
-SELECT id, actor_id, title, content, is_system, created_at, updated_at, created_by, updated_by FROM prompts WHERE actor_id = ?
+SELECT id, title, content, is_system, created_at, updated_at, created_by, updated_by FROM prompts WHERE created_by = ?
 `
 
-func (q *Queries) GetPromptsByActorID(ctx context.Context, actorID sql.NullInt64) ([]Prompt, error) {
-	rows, err := q.db.QueryContext(ctx, getPromptsByActorID, actorID)
+func (q *Queries) GetPromptsByActorID(ctx context.Context, createdBy int64) ([]Prompt, error) {
+	rows, err := q.db.QueryContext(ctx, getPromptsByActorID, createdBy)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +113,6 @@ func (q *Queries) GetPromptsByActorID(ctx context.Context, actorID sql.NullInt64
 		var i Prompt
 		if err := rows.Scan(
 			&i.ID,
-			&i.ActorID,
 			&i.Title,
 			&i.Content,
 			&i.IsSystem,
@@ -140,7 +135,7 @@ func (q *Queries) GetPromptsByActorID(ctx context.Context, actorID sql.NullInt64
 }
 
 const getSystemPrompts = `-- name: GetSystemPrompts :many
-SELECT id, actor_id, title, content, is_system, created_at, updated_at, created_by, updated_by FROM prompts WHERE is_system = 1
+SELECT id, title, content, is_system, created_at, updated_at, created_by, updated_by FROM prompts WHERE is_system = 1
 `
 
 func (q *Queries) GetSystemPrompts(ctx context.Context) ([]Prompt, error) {
@@ -154,7 +149,6 @@ func (q *Queries) GetSystemPrompts(ctx context.Context) ([]Prompt, error) {
 		var i Prompt
 		if err := rows.Scan(
 			&i.ID,
-			&i.ActorID,
 			&i.Title,
 			&i.Content,
 			&i.IsSystem,
@@ -177,11 +171,10 @@ func (q *Queries) GetSystemPrompts(ctx context.Context) ([]Prompt, error) {
 }
 
 const updatePrompt = `-- name: UpdatePrompt :exec
-UPDATE prompts SET actor_id = ?, title = ?, content = ?, is_system = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ? WHERE id = ?
+UPDATE prompts SET title = ?, content = ?, is_system = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ? WHERE id = ?
 `
 
 type UpdatePromptParams struct {
-	ActorID   sql.NullInt64 `json:"actor_id"`
 	Title     string        `json:"title"`
 	Content   string        `json:"content"`
 	IsSystem  sql.NullInt64 `json:"is_system"`
@@ -191,7 +184,6 @@ type UpdatePromptParams struct {
 
 func (q *Queries) UpdatePrompt(ctx context.Context, arg UpdatePromptParams) error {
 	_, err := q.db.ExecContext(ctx, updatePrompt,
-		arg.ActorID,
 		arg.Title,
 		arg.Content,
 		arg.IsSystem,

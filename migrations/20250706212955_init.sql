@@ -82,7 +82,6 @@ CREATE INDEX idx_models_updated_by ON models(updated_by);
 -- Actors table (users, agents, services, system)
 -- Actors represent all participants in the system - humans, AI agents, services, etc.
 -- This unified approach allows for flexible conversation scenarios.
--- Note: created_by and updated_by are nullable to handle self-references
 CREATE TABLE actors (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT NOT NULL CHECK (type IN ('user', 'agent', 'service', 'system')),
@@ -93,10 +92,10 @@ CREATE TABLE actors (
     metadata TEXT,                                -- JSON: type-specific data (user preferences, agent capabilities, etc.)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by INTEGER,                           -- Foreign key to actors.id (nullable for self-references)
-    updated_by INTEGER,                           -- Foreign key to actors.id (nullable for self-references)
-    FOREIGN KEY (created_by) REFERENCES actors(id) ON DELETE SET NULL,
-    FOREIGN KEY (updated_by) REFERENCES actors(id) ON DELETE SET NULL
+    created_by INTEGER NOT NULL,                  -- Foreign key to actors.id
+    updated_by INTEGER NOT NULL,                  -- Foreign key to actors.id
+    FOREIGN KEY (created_by) REFERENCES actors(id) ON DELETE RESTRICT,
+    FOREIGN KEY (updated_by) REFERENCES actors(id) ON DELETE RESTRICT
 );
 
 -- Create indexes for actors

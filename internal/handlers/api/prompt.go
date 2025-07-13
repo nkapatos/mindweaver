@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/internal/services"
 )
 
@@ -20,204 +22,147 @@ func NewPromptHandler(promptService *services.PromptService) *PromptHandler {
 }
 
 // CreatePrompt handles POST /api/prompts
-func (h *PromptHandler) CreatePrompt(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func (h *PromptHandler) CreatePrompt(c echo.Context) error {
 	var req struct {
-		ActorID  *int64 `json:"actor_id,omitempty"`
-		Title    string `json:"title"`
-		Content  string `json:"content"`
-		IsSystem bool   `json:"is_system"`
+		CreatedBy *int64 `json:"created_by,omitempty"`
+		Title     string `json:"title"`
+		Content   string `json:"content"`
+		IsSystem  bool   `json:"is_system"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
+	if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 	}
 
 	if req.Title == "" || req.Content == "" {
-		http.Error(w, "Title and content are required", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Title and content are required"})
 	}
 
-	// TODO: Get actual actor ID from authentication/session
-	// For now, use system actor ID (1) for audit trail
-	systemActorID := int64(1)
+	// Get actor ID from session
+	sess, _ := session.Get("session", c)
+	createdBy, _ := sess.Values["actor_id"].(int64)
 
-	if err := h.promptService.CreatePrompt(r.Context(), req.ActorID, req.Title, req.Content, req.IsSystem, systemActorID, systemActorID); err != nil {
-		http.Error(w, "Failed to create prompt", http.StatusInternalServerError)
-		return
+	if err := h.promptService.CreatePrompt(c.Request().Context(), req.Title, req.Content, req.IsSystem, createdBy, createdBy); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create prompt"})
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	return c.JSON(http.StatusCreated, map[string]string{"message": "Prompt created successfully"})
 }
 
 // GetPrompt handles GET /api/prompts/{id}
-func (h *PromptHandler) GetPrompt(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	idStr := r.URL.Query().Get("id")
+func (h *PromptHandler) GetPrompt(c echo.Context) error {
+	idStr := c.Param("id")
 	if idStr == "" {
-		http.Error(w, "Prompt ID is required", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Prompt ID is required"})
 	}
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid prompt ID", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid prompt ID"})
 	}
 
-	prompt, err := h.promptService.GetPromptByID(r.Context(), id)
+	prompt, err := h.promptService.GetPromptByID(c.Request().Context(), id)
 	if err != nil {
-		http.Error(w, "Prompt not found", http.StatusNotFound)
-		return
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Prompt not found"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(prompt)
+	return c.JSON(http.StatusOK, prompt)
 }
 
 // GetAllPrompts handles GET /api/prompts
-func (h *PromptHandler) GetAllPrompts(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	prompts, err := h.promptService.GetAllPrompts(r.Context())
+func (h *PromptHandler) GetAllPrompts(c echo.Context) error {
+	prompts, err := h.promptService.GetAllPrompts(c.Request().Context())
 	if err != nil {
-		http.Error(w, "Failed to fetch prompts", http.StatusInternalServerError)
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch prompts"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(prompts)
+	return c.JSON(http.StatusOK, prompts)
 }
 
-// GetPromptsByActorID handles GET /api/prompts/by-actor?actor_id={id}
-func (h *PromptHandler) GetPromptsByActorID(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
+// GetPromptsByCreatedBy handles GET /api/prompts/by-actor?actor_id={id}
+func (h *PromptHandler) GetPromptsByCreatedBy(c echo.Context) error {
+	// Get the actor ID from query parameter
+	createdByStr := c.QueryParam("actor_id")
+	if createdByStr == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "actor_id parameter is required"})
 	}
 
-	actorIDStr := r.URL.Query().Get("actor_id")
-	if actorIDStr == "" {
-		http.Error(w, "Actor ID is required", http.StatusBadRequest)
-		return
-	}
-
-	actorID, err := strconv.ParseInt(actorIDStr, 10, 64)
+	createdBy, err := strconv.ParseInt(createdByStr, 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid actor ID", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid actor_id parameter"})
 	}
 
-	prompts, err := h.promptService.GetPromptsByActorID(r.Context(), actorID)
+	prompts, err := h.promptService.GetPromptsByCreatedBy(c.Request().Context(), createdBy)
 	if err != nil {
-		http.Error(w, "Failed to fetch prompts", http.StatusInternalServerError)
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch prompts"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(prompts)
+	return c.JSON(http.StatusOK, prompts)
 }
 
 // GetSystemPrompts handles GET /api/prompts/system
-func (h *PromptHandler) GetSystemPrompts(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	prompts, err := h.promptService.GetSystemPrompts(r.Context())
+func (h *PromptHandler) GetSystemPrompts(c echo.Context) error {
+	prompts, err := h.promptService.GetSystemPrompts(c.Request().Context())
 	if err != nil {
-		http.Error(w, "Failed to fetch system prompts", http.StatusInternalServerError)
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch system prompts"})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(prompts)
+	return c.JSON(http.StatusOK, prompts)
 }
 
 // UpdatePrompt handles PUT /api/prompts/{id}
-func (h *PromptHandler) UpdatePrompt(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	idStr := r.URL.Query().Get("id")
+func (h *PromptHandler) UpdatePrompt(c echo.Context) error {
+	idStr := c.Param("id")
 	if idStr == "" {
-		http.Error(w, "Prompt ID is required", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Prompt ID is required"})
 	}
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid prompt ID", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid prompt ID"})
 	}
 
 	var req struct {
-		ActorID  *int64 `json:"actor_id,omitempty"`
-		Title    string `json:"title"`
-		Content  string `json:"content"`
-		IsSystem bool   `json:"is_system"`
+		CreatedBy *int64 `json:"created_by,omitempty"`
+		Title     string `json:"title"`
+		Content   string `json:"content"`
+		IsSystem  bool   `json:"is_system"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
+	if err := json.NewDecoder(c.Request().Body).Decode(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 	}
 
 	if req.Title == "" || req.Content == "" {
-		http.Error(w, "Title and content are required", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Title and content are required"})
 	}
 
-	// TODO: Get actual actor ID from authentication/session
-	// For now, use system actor ID (1) for audit trail
-	systemActorID := int64(1)
+	// Get actor ID from session
+	sess, _ := session.Get("session", c)
+	updatedBy, _ := sess.Values["actor_id"].(int64)
 
-	if err := h.promptService.UpdatePrompt(r.Context(), id, req.ActorID, req.Title, req.Content, req.IsSystem, systemActorID); err != nil {
-		http.Error(w, "Failed to update prompt", http.StatusInternalServerError)
-		return
+	if err := h.promptService.UpdatePrompt(c.Request().Context(), id, req.CreatedBy, req.Title, req.Content, req.IsSystem, updatedBy); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update prompt"})
 	}
 
-	w.WriteHeader(http.StatusOK)
+	return c.JSON(http.StatusOK, map[string]string{"message": "Prompt updated successfully"})
 }
 
 // DeletePrompt handles DELETE /api/prompts/{id}
-func (h *PromptHandler) DeletePrompt(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	idStr := r.URL.Query().Get("id")
+func (h *PromptHandler) DeletePrompt(c echo.Context) error {
+	idStr := c.Param("id")
 	if idStr == "" {
-		http.Error(w, "Prompt ID is required", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Prompt ID is required"})
 	}
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid prompt ID", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid prompt ID"})
 	}
 
-	if err := h.promptService.DeletePrompt(r.Context(), id); err != nil {
-		http.Error(w, "Failed to delete prompt", http.StatusInternalServerError)
-		return
+	if err := h.promptService.DeletePrompt(c.Request().Context(), id); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete prompt"})
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	return c.JSON(http.StatusOK, map[string]string{"message": "Prompt deleted successfully"})
 }
