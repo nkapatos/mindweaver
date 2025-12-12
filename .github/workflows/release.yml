@@ -1,0 +1,170 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'cmd/mindweaver/**'
+      - 'internal/mind/**'
+      - 'internal/brain/**'
+      - 'pkg/**'
+      - 'migrations/**'
+      - 'go.mod'
+      - 'go.sum'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Release Mindweaver
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.5'
+          cache: true
+      
+      - name: Read current version
+        id: current_version
+        run: |
+          VERSION=$(cat cmd/mindweaver/VERSION)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+      
+      - name: Get latest commit message
+        id: commit_message
+        run: |
+          MESSAGE=$(git log -1 --pretty=%B)
+          echo "message<<EOF" >> $GITHUB_OUTPUT
+          echo "$MESSAGE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Determine version bump
+        id: version_bump
+        run: |
+          MESSAGE="${{ steps.commit_message.outputs.message }}"
+          CURRENT="${{ steps.current_version.outputs.version }}"
+          
+          # Check if this is a breaking change (MAJOR for 1.x.x+, MINOR for 0.x.x)
+          if echo "$MESSAGE" | grep -qE "(BREAKING CHANGE|feat.*!)"; then
+            if [[ "$CURRENT" == 0.* ]]; then
+              BUMP="minor"
+            else
+              BUMP="major"
+            fi
+          # Check if this is a feature (MINOR bump)
+          elif echo "$MESSAGE" | grep -q "^feat"; then
+            BUMP="minor"
+          # Check if this is a fix (PATCH bump)
+          elif echo "$MESSAGE" | grep -q "^fix"; then
+            BUMP="patch"
+          else
+            BUMP="none"
+          fi
+          
+          echo "bump=$BUMP" >> $GITHUB_OUTPUT
+          echo "Version bump type: $BUMP"
+      
+      - name: Calculate new version
+        id: new_version
+        if: steps.version_bump.outputs.bump != 'none'
+        run: |
+          CURRENT="${{ steps.current_version.outputs.version }}"
+          BUMP="${{ steps.version_bump.outputs.bump }}"
+          
+          IFS='.' read -r major minor patch <<< "$CURRENT"
+          
+          case $BUMP in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            patch)
+              patch=$((patch + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="$major.$minor.$patch"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+      
+      - name: Update VERSION file
+        if: steps.version_bump.outputs.bump != 'none'
+        run: |
+          echo "${{ steps.new_version.outputs.version }}" > cmd/mindweaver/VERSION
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cmd/mindweaver/VERSION
+          git commit -m "chore(mindweaver): bump version to ${{ steps.new_version.outputs.version }} [skip ci]"
+          git push
+      
+      - name: Create and push tag
+        if: steps.version_bump.outputs.bump != 'none'
+        run: |
+          TAG="mindweaver/v${{ steps.new_version.outputs.version }}"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+      
+      - name: Run GoReleaser
+        if: steps.version_bump.outputs.bump != 'none'
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Update CHANGELOG
+        if: steps.version_bump.outputs.bump != 'none'
+        run: |
+          VERSION="${{ steps.new_version.outputs.version }}"
+          DATE=$(date +%Y-%m-%d)
+          TAG="mindweaver/v$VERSION"
+          
+          echo "## [$VERSION] - $DATE" > CHANGELOG.new
+          echo "" >> CHANGELOG.new
+          echo "### Changes" >> CHANGELOG.new
+          
+          # Get commits since last tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            git log --pretty=format:"- %s" HEAD >> CHANGELOG.new
+          else
+            git log --pretty=format:"- %s" ${PREV_TAG}..HEAD >> CHANGELOG.new
+          fi
+          
+          echo "" >> CHANGELOG.new
+          
+          # Insert new entry after line 8 (after ## [Unreleased])
+          head -n 8 CHANGELOG.md > CHANGELOG.tmp
+          cat CHANGELOG.new >> CHANGELOG.tmp
+          tail -n +9 CHANGELOG.md >> CHANGELOG.tmp
+          mv CHANGELOG.tmp CHANGELOG.md
+          rm CHANGELOG.new
+          
+          git add CHANGELOG.md
+          git commit -m "docs(mindweaver): update CHANGELOG for v$VERSION [skip ci]"
+          git push
+      
+      - name: Skip release
+        if: steps.version_bump.outputs.bump == 'none'
+        run: |
+          echo "No version bump needed for this commit type"
+          echo "Commit does not start with feat:, fix:, or contain BREAKING CHANGE"
