@@ -7,6 +7,22 @@
 **Database:** `task mw:db:reset` (reset all) | `task mind:db:migrations:up` | `task mind:db:store:generate` (regenerate sqlc)  
 **Format:** Use `gofmt` (standard Go formatting) | Imports: stdlib → external → internal
 
+## ⚠️ CRITICAL RULE: Always Use Task Commands
+
+**NEVER run build commands directly (e.g., `go build ./cmd/mindweaver`)**  
+**ALWAYS use the Task runner for build, run, and database operations**
+
+- ✅ **Correct:** `task mw:build` (builds to `/bin/` directory, properly ignored)
+- ❌ **Wrong:** `go build ./cmd/mindweaver` (creates binary in root, not ignored, gets committed)
+- **Exception:** Testing with `go test` is allowed and encouraged
+- **If a task doesn't exist:** STOP and ask before running manual commands
+
+**Why this matters:**
+- Task commands output binaries to `/bin/` which is gitignored
+- Manual builds create binaries in root or current directory
+- Root-level binaries are NOT ignored and will be committed accidentally
+- This rule prevents polluting git history with compiled binaries
+
 ## Code Style
 
 **Imports:** Group stdlib, external packages, then internal (`github.com/nkapatos/mindweaver/...`) with blank lines between  
