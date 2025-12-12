@@ -7,17 +7,33 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	mindtesting "github.com/nkapatos/mindweaver/internal/mind/testing"
 	"github.com/nkapatos/mindweaver/internal/mind/store"
+	mindmigrations "github.com/nkapatos/mindweaver/migrations/mind"
+	"github.com/nkapatos/mindweaver/pkg/testdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func createStarterNote(t *testing.T, querier store.Querier) int64 {
+// setupTestService creates a TemplatesService with in-memory database for testing.
+func setupTestService(t *testing.T) (*TemplatesService, *store.Queries) {
 	t.Helper()
-	noteID, err := querier.CreateNote(context.Background(), store.CreateNoteParams{
+
+	db := testdb.SetupTestDB(t, mindmigrations.RunMigrations)
+	t.Cleanup(func() { db.Close() })
+
+	queries := store.New(db)
+	logger := testdb.NewTestLogger(t)
+	service := NewTemplatesService(queries, logger, "templates-test")
+
+	return service, queries
+}
+
+// createStarterNote creates a note for testing templates.
+func createStarterNote(t *testing.T, queries *store.Queries, title string) int64 {
+	t.Helper()
+	noteID, err := queries.CreateNote(context.Background(), store.CreateNoteParams{
 		Uuid:         uuid.New(),
-		Title:        "Starter Note",
+		Title:        title,
 		Body:         sql.NullString{String: "Template content", Valid: true},
 		CollectionID: 1,
 	})
@@ -27,11 +43,8 @@ func createStarterNote(t *testing.T, querier store.Querier) int64 {
 
 // TestTemplatesService_CreateTemplate tests creating a template
 func TestTemplatesService_CreateTemplate(t *testing.T) {
-	db, querier, logger := mindtesting.SetupTest(t)
-	defer db.Close()
-
-	svc := NewTemplatesService(querier, logger, "templates-test")
-	noteID := createStarterNote(t, querier)
+	svc, queries := setupTestService(t)
+	noteID := createStarterNote(t, queries, "Starter Note")
 
 	// Create template
 	params := store.CreateTemplateParams{
@@ -49,35 +62,36 @@ func TestTemplatesService_CreateTemplate(t *testing.T) {
 
 // TestTemplatesService_CreateTemplate_DuplicateName tests unique constraint
 func TestTemplatesService_CreateTemplate_DuplicateName(t *testing.T) {
-	db, querier, logger := mindtesting.SetupTest(t)
-	defer db.Close()
+	svc, queries := setupTestService(t)
+	noteID1 := createStarterNote(t, queries, "Starter Note 1")
+	noteID2 := createStarterNote(t, queries, "Starter Note 2")
 
-	svc := NewTemplatesService(querier, logger, "templates-test")
-	noteID := createStarterNote(t, querier)
-
-	params := store.CreateTemplateParams{
+	params1 := store.CreateTemplateParams{
 		Name:          "Duplicate Template",
 		Description:   sql.NullString{String: "First template", Valid: true},
-		StarterNoteID: noteID,
+		StarterNoteID: noteID1,
 		NoteTypeID:    sql.NullInt64{Valid: false},
 	}
 
 	// Create first template
-	_, err := svc.CreateTemplate(context.Background(), params)
+	_, err := svc.CreateTemplate(context.Background(), params1)
 	require.NoError(t, err)
 
-	// Try to create duplicate
-	_, err = svc.CreateTemplate(context.Background(), params)
+	// Try to create duplicate with same name but different starter note
+	params2 := store.CreateTemplateParams{
+		Name:          "Duplicate Template",
+		Description:   sql.NullString{String: "Second template", Valid: true},
+		StarterNoteID: noteID2,
+		NoteTypeID:    sql.NullInt64{Valid: false},
+	}
+	_, err = svc.CreateTemplate(context.Background(), params2)
 	assert.ErrorIs(t, err, ErrTemplateAlreadyExists)
 }
 
 // TestTemplatesService_GetTemplateByID tests retrieving a template
 func TestTemplatesService_GetTemplateByID(t *testing.T) {
-	db, querier, logger := mindtesting.SetupTest(t)
-	defer db.Close()
-
-	svc := NewTemplatesService(querier, logger, "templates-test")
-	noteID := createStarterNote(t, querier)
+	svc, queries := setupTestService(t)
+	noteID := createStarterNote(t, queries, "Starter Note")
 
 	params := store.CreateTemplateParams{
 		Name:          "Get Test Template",
@@ -101,10 +115,7 @@ func TestTemplatesService_GetTemplateByID(t *testing.T) {
 
 // TestTemplatesService_GetTemplateByID_NotFound tests not found error
 func TestTemplatesService_GetTemplateByID_NotFound(t *testing.T) {
-	db, querier, logger := mindtesting.SetupTest(t)
-	defer db.Close()
-
-	svc := NewTemplatesService(querier, logger, "templates-test")
+	svc, _ := setupTestService(t)
 
 	// Try to get non-existent template
 	_, err := svc.GetTemplateByID(context.Background(), 99999)
@@ -114,14 +125,11 @@ func TestTemplatesService_GetTemplateByID_NotFound(t *testing.T) {
 
 // TestTemplatesService_ListTemplates tests listing all templates
 func TestTemplatesService_ListTemplates(t *testing.T) {
-	db, querier, logger := mindtesting.SetupTest(t)
-	defer db.Close()
+	svc, queries := setupTestService(t)
 
-	svc := NewTemplatesService(querier, logger, "templates-test")
-	noteID := createStarterNote(t, querier)
-
-	// Create multiple templates
+	// Create multiple templates (each needs unique starter note)
 	for i := 1; i <= 3; i++ {
+		noteID := createStarterNote(t, queries, fmt.Sprintf("Starter Note %d", i))
 		params := store.CreateTemplateParams{
 			Name:          fmt.Sprintf("Template_%d", i),
 			Description:   sql.NullString{String: "Description", Valid: true},
@@ -141,19 +149,16 @@ func TestTemplatesService_ListTemplates(t *testing.T) {
 
 // TestTemplatesService_CountTemplates tests counting templates
 func TestTemplatesService_CountTemplates(t *testing.T) {
-	db, querier, logger := mindtesting.SetupTest(t)
-	defer db.Close()
-
-	svc := NewTemplatesService(querier, logger, "templates-test")
+	svc, queries := setupTestService(t)
 
 	// Initially should be 0
 	count, err := svc.CountTemplates(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, int64(0), count)
 
-	noteID := createStarterNote(t, querier)
-
+	// Create multiple templates (each needs unique starter note)
 	for i := 1; i <= 5; i++ {
+		noteID := createStarterNote(t, queries, fmt.Sprintf("Starter Note %d", i))
 		params := store.CreateTemplateParams{
 			Name:          fmt.Sprintf("Template_%d", i),
 			Description:   sql.NullString{String: "Description", Valid: true},
@@ -172,11 +177,8 @@ func TestTemplatesService_CountTemplates(t *testing.T) {
 
 // TestTemplatesService_UpdateTemplate tests updating a template
 func TestTemplatesService_UpdateTemplate(t *testing.T) {
-	db, querier, logger := mindtesting.SetupTest(t)
-	defer db.Close()
-
-	svc := NewTemplatesService(querier, logger, "templates-test")
-	noteID := createStarterNote(t, querier)
+	svc, queries := setupTestService(t)
+	noteID := createStarterNote(t, queries, "Starter Note")
 
 	params := store.CreateTemplateParams{
 		Name:          "Original Name",
@@ -209,10 +211,7 @@ func TestTemplatesService_UpdateTemplate(t *testing.T) {
 
 // TestTemplatesService_UpdateTemplate_NotFound tests update on non-existent template
 func TestTemplatesService_UpdateTemplate_NotFound(t *testing.T) {
-	db, querier, logger := mindtesting.SetupTest(t)
-	defer db.Close()
-
-	svc := NewTemplatesService(querier, logger, "templates-test")
+	svc, _ := setupTestService(t)
 
 	updateParams := store.UpdateTemplateByIDParams{
 		ID:            99999,
@@ -231,11 +230,8 @@ func TestTemplatesService_UpdateTemplate_NotFound(t *testing.T) {
 
 // TestTemplatesService_DeleteTemplate tests deleting a template
 func TestTemplatesService_DeleteTemplate(t *testing.T) {
-	db, querier, logger := mindtesting.SetupTest(t)
-	defer db.Close()
-
-	svc := NewTemplatesService(querier, logger, "templates-test")
-	noteID := createStarterNote(t, querier)
+	svc, queries := setupTestService(t)
+	noteID := createStarterNote(t, queries, "Starter Note")
 
 	params := store.CreateTemplateParams{
 		Name:          "To Delete",
@@ -258,10 +254,7 @@ func TestTemplatesService_DeleteTemplate(t *testing.T) {
 
 // TestTemplatesService_DeleteTemplate_NotFound tests delete on non-existent template
 func TestTemplatesService_DeleteTemplate_NotFound(t *testing.T) {
-	db, querier, logger := mindtesting.SetupTest(t)
-	defer db.Close()
-
-	svc := NewTemplatesService(querier, logger, "templates-test")
+	svc, _ := setupTestService(t)
 
 	err := svc.DeleteTemplate(context.Background(), 99999)
 	// SQLite DELETE with no rows affected returns nil error
@@ -271,14 +264,11 @@ func TestTemplatesService_DeleteTemplate_NotFound(t *testing.T) {
 
 // TestTemplatesService_ListTemplatesPaginated tests paginated listing
 func TestTemplatesService_ListTemplatesPaginated(t *testing.T) {
-	db, querier, logger := mindtesting.SetupTest(t)
-	defer db.Close()
+	svc, queries := setupTestService(t)
 
-	svc := NewTemplatesService(querier, logger, "templates-test")
-	noteID := createStarterNote(t, querier)
-
-	// Create 10 templates
+	// Create 10 templates (each needs unique starter note)
 	for i := 1; i <= 10; i++ {
+		noteID := createStarterNote(t, queries, fmt.Sprintf("Starter Note %d", i))
 		params := store.CreateTemplateParams{
 			Name:          fmt.Sprintf("Template_%d", i),
 			Description:   sql.NullString{String: "Description", Valid: true},
