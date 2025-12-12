@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-bin/
+/bin/
 dist/
 build/
 *.test
@@ -49,8 +49,8 @@ Thumbs.db
 *.db
 *.db-shm
 *.db-wal
-db/
-data/
+/db/
+/data/
 
 # Log files
 *.log
@@ -147,8 +147,8 @@ config.local.yaml
 # Misc
 *.orig
 .mise.local.toml
-mindweaver
 
-worklog/
-exploration/
+# Local development and reference directories (root-level only)
+/worklog/
+/exploration/
 /templates/
