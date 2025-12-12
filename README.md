@@ -1,5 +1,11 @@
 # Mindweaver
 
+[![CI](https://github.com/nkapatos/mindweaver/actions/workflows/ci.yml/badge.svg)](https://github.com/nkapatos/mindweaver/actions/workflows/ci.yml)
+[![Release](https://github.com/nkapatos/mindweaver/actions/workflows/release.yml/badge.svg)](https://github.com/nkapatos/mindweaver/actions/workflows/release.yml)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/nkapatos/mindweaver)](https://github.com/nkapatos/mindweaver)
+[![Latest Release](https://img.shields.io/github/v/release/nkapatos/mindweaver?include_prereleases)](https://github.com/nkapatos/mindweaver/releases)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
 > *Where your thoughts find structure, and AI brings clarity.*
 
 **Mindweaver** is a personal knowledge management system that helps you **do something** with your knowledge—not just collect it. Stop endlessly organizing your vault and start having conversations with your notes, finding unexpected connections, and turning scattered thoughts into actionable insights.
