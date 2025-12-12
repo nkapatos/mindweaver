@@ -1,0 +1,179 @@
+# GoReleaser configuration for Mindweaver
+# Documentation: https://goreleaser.com
+
+version: 2
+
+# Project metadata
+project_name: mindweaver
+
+# Before hooks - run before building
+before:
+  hooks:
+    # Ensure dependencies are up to date
+    - go mod tidy
+    # Run tests before building
+    - go test ./...
+
+# Build configuration
+builds:
+  - id: mindweaver
+    main: ./cmd/mindweaver
+    binary: mindweaver
+    
+    # Supported platforms
+    goos:
+      - darwin
+      - linux
+    
+    goarch:
+      - amd64
+      - arm64
+    
+    # Environment variables for build
+    env:
+      - CGO_ENABLED=1
+    
+    # Build flags
+    flags:
+      - -trimpath
+    
+    # Linker flags - embed version info
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -X main.builtBy=goreleaser
+    
+    # Build only for specific OS/arch combinations
+    ignore: []
+      # Currently no specific ignores, but can add if needed
+      # - goos: windows
+      #   goarch: arm64
+
+# Archives configuration
+archives:
+  - id: mindweaver
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    
+    # Files to include in archive
+    files:
+      - README.md
+      - LICENSE*
+      - docs/DEVELOPMENT.md
+      - .env.example
+
+# Checksums for verification
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+# Snapshot configuration (for development builds)
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+# Changelog configuration
+changelog:
+  sort: asc
+  abbrev: 7
+  
+  # Group commits by type in changelog
+  groups:
+    - title: 'Mind Service'
+      regexp: '^feat\(mind\):'
+      order: 0
+    - title: 'Brain Service'
+      regexp: '^feat\(brain\):'
+      order: 1
+    - title: 'Features'
+      regexp: '^feat(\(.*\))?:'
+      order: 2
+    - title: 'Bug Fixes'
+      regexp: '^fix(\(.*\))?:'
+      order: 3
+    - title: 'Documentation'
+      regexp: '^docs(\(.*\))?:'
+      order: 4
+    - title: 'Other Changes'
+      order: 999
+  
+  filters:
+    # Exclude commits from changelog
+    exclude:
+      - '^chore:'
+      - '^ci:'
+      - '^test:'
+      - 'merge conflict'
+      - 'Merge pull request'
+      - 'Merge branch'
+
+# GitHub Release configuration
+release:
+  github:
+    owner: nkapatos
+    name: mindweaver
+  
+  # Release as pre-release for 0.x.x versions
+  prerelease: auto
+  
+  # Release name template
+  name_template: "Mindweaver {{.Version}}"
+  
+  # Release notes configuration
+  header: |
+    ## Mindweaver {{.Version}}
+    
+    Welcome to this release of Mindweaver!
+    
+  footer: |
+    ## Installation
+    
+    Download the appropriate archive for your platform, extract it, and run:
+    
+    ```bash
+    # macOS ARM64 (Apple Silicon)
+    tar -xzf mindweaver_{{.Version}}_darwin_arm64.tar.gz
+    ./mindweaver --version
+    
+    # macOS AMD64 (Intel)
+    tar -xzf mindweaver_{{.Version}}_darwin_amd64.tar.gz
+    ./mindweaver --version
+    
+    # Linux
+    tar -xzf mindweaver_{{.Version}}_linux_amd64.tar.gz
+    ./mindweaver --version
+    ```
+    
+    ## Quick Start
+    
+    ```bash
+    # Run in combined mode (Mind + Brain services)
+    ./mindweaver
+    
+    # Server starts on http://localhost:9421
+    ```
+    
+    See [DEVELOPMENT.md](https://github.com/nkapatos/mindweaver/blob/main/docs/DEVELOPMENT.md) for full documentation.
+    
+    ---
+    
+    **Full Changelog**: https://github.com/nkapatos/mindweaver/compare/{{.PreviousTag}}...{{.Tag}}
+
+# Announce configuration (optional - for future use)
+# announce:
+#   skip: '{{gt .Patch 0}}'  # Skip patch releases
+#   twitter:
+#     enabled: false
+#   discord:
+#     enabled: false
+
+# Milestones configuration (optional)
+# milestones:
+#   - close: true
+#     fail_on_error: false
+#     name_template: "{{ .Tag }}"
