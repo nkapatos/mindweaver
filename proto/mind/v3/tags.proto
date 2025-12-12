@@ -1,0 +1,75 @@
+// Mind API V3 - Tags Service
+// Tags are derived from note content (frontmatter/body) - READ-ONLY
+// Tags are automatically managed when notes are created/updated
+syntax = "proto3";
+
+package mind.v3;
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/nkapatos/mindweaver/internal/mind/gen/v3;mindv3";
+
+// TagsService provides read-only access to tags
+// Tags are derived from note content and managed automatically
+service TagsService {
+  // Lists tags (AIP-132)
+  rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {
+    option (google.api.http) = {
+      get: "/api/mind/v3/tags"
+    };
+  }
+}
+
+// Tag resource following AIP-121 (resource-oriented design)
+message Tag {
+  // Resource name in format "tags/{id}" (AIP-122)
+  // Example: "tags/123"
+  string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Unique tag identifier
+  int64 id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Tag display name
+  string display_name = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Creation timestamp (RFC3339) - AIP-142
+  google.protobuf.Timestamp create_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Last update timestamp (RFC3339) - AIP-142
+  google.protobuf.Timestamp update_time = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Request to list tags (AIP-132)
+message ListTagsRequest {
+  // Maximum number of tags to return (AIP-158)
+  // Default: 50, Max: 1000
+  int32 page_size = 1 [
+    (buf.validate.field).int32 = {
+      gte: 1,
+      lte: 1000
+    }
+  ];
+
+  // Token for retrieving next page (AIP-158 cursor-based pagination)
+  string page_token = 2;
+
+  // Optional filter by note ID
+  optional int64 note_id = 3;
+}
+
+// Response for listing tags (AIP-132)
+message ListTagsResponse {
+  // List of tags
+  repeated Tag tags = 1;
+
+  // Token for next page (empty if no more pages) - AIP-158
+  string next_page_token = 2;
+
+  // Total number of tags (optional, may be expensive)
+  optional int32 total_size = 3;
+}
+
+

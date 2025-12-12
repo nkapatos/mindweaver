@@ -1,0 +1,47 @@
+meta {
+  name: Replace Note (PUT)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NotesService/ReplaceNote
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": {{noteId}},
+    "title": "Updated Note Title",
+    "body": "---\nauthor: Jane Smith\nisbn: 978-0-12-345678-9\nproject: mindweaver-v2\nstatus: completed\ntags: [updated, test]\n---\n\n# Updated Note\n\nThis note has been updated with new frontmatter.",
+    "description": "Updated description"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has correct note ID", function() {
+    expect(res.body.id).to.equal(bru.getEnvVar("noteId").toString());
+  });
+  
+  test("Title was updated", function() {
+    expect(res.body.title).to.equal("Updated Note Title");
+  });
+  
+  test("Body was updated", function() {
+    expect(res.body.body).to.include("Updated Note");
+    expect(res.body.body).to.include("author: Jane Smith");
+  });
+  
+  test("Description was updated", function() {
+    expect(res.body.description).to.equal("Updated description");
+  });
+}

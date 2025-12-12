@@ -1,0 +1,31 @@
+meta {
+  name: Delete Collection
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.CollectionsService/DeleteCollection
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": {{collectionId}}
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response is empty object", function() {
+    expect(Object.keys(res.body).length).to.equal(0);
+  });
+}

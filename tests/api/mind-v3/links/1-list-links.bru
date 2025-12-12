@@ -1,0 +1,45 @@
+meta {
+  name: List Links
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.LinksService/ListLinks
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "page_size": 50
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has links array", function() {
+    expect(res.body).to.have.property("links");
+    expect(res.body.links).to.be.an("array");
+  });
+  
+  test("Links have required fields", function() {
+    if (res.body.links.length > 0) {
+      const link = res.body.links[0];
+      expect(link).to.have.property("name");
+      expect(link).to.have.property("id");
+      expect(link).to.have.property("srcId");
+    }
+  });
+  
+  test("Response includes pagination fields", function() {
+    expect(res.body).to.have.property("nextPageToken");
+  });
+}

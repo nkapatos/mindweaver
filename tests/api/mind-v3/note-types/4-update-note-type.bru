@@ -1,0 +1,41 @@
+meta {
+  name: Update Note Type
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NoteTypesService/UpdateNoteType
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": {{noteTypeId}},
+    "type": "updated_type_{{$timestamp}}",
+    "display_name": "Updated Test Type",
+    "description": "Updated description",
+    "icon": "📚",
+    "color": "#3366FF"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has updated fields", function() {
+    expect(res.body).to.have.property("displayName");
+    expect(res.body.displayName).to.equal("Updated Test Type");
+  });
+  
+  test("Update time changed", function() {
+    expect(res.body).to.have.property("updateTime");
+  });
+}

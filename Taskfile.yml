@@ -1,0 +1,8 @@
+version: '3'
+
+dotenv: ['.env.local']
+
+includes:
+  mw: ./tasks/tasks.mw.yml
+  brain: ./tasks/tasks.brain.yml
+  mind: ./tasks/tasks.mind.yml

@@ -1,0 +1,52 @@
+meta {
+  name: List Note Types
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NoteTypesService/ListNoteTypes
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "page_size": 50
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has note types array", function() {
+    expect(res.body).to.have.property("noteTypes");
+    expect(res.body.noteTypes).to.be.an("array");
+  });
+  
+  test("Note types have required fields", function() {
+    if (res.body.noteTypes.length > 0) {
+      const noteType = res.body.noteTypes[0];
+      expect(noteType).to.have.property("name");
+      expect(noteType).to.have.property("id");
+      expect(noteType).to.have.property("type");
+      expect(noteType).to.have.property("displayName");
+    }
+  });
+  
+  test("System note types exist", function() {
+    const types = res.body.noteTypes.map(function(nt) { return nt.type; });
+    expect(types).to.include("default");
+    expect(types).to.include("quicknote");
+  });
+  
+  test("Response includes pagination fields", function() {
+    expect(res.body).to.have.property("nextPageToken");
+  });
+}

@@ -1,0 +1,238 @@
+package notes
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"strconv"
+
+	"connectrpc.com/connect"
+	mindv3 "github.com/nkapatos/mindweaver/internal/mind/gen/v3"
+	"github.com/nkapatos/mindweaver/internal/mind/gen/v3/mindv3connect"
+	"github.com/nkapatos/mindweaver/internal/mind/meta"
+	"github.com/nkapatos/mindweaver/internal/mind/store"
+	"github.com/nkapatos/mindweaver/internal/mind/tags"
+	"github.com/nkapatos/mindweaver/pkg/dberrors"
+	"github.com/nkapatos/mindweaver/pkg/pagination"
+	"github.com/nkapatos/mindweaver/pkg/utils"
+	"google.golang.org/protobuf/types/known/emptypb"
+)
+
+type NotesHandlerV3 struct {
+	mindv3connect.UnimplementedNotesServiceHandler
+	service      *NotesService
+	metaService  *meta.NoteMetaService
+	linksService *LinksService
+	tagsSvc      *tags.TagsService
+}
+
+func NewNotesHandlerV3(service *NotesService, metaService *meta.NoteMetaService, linksService *LinksService, tagsSvc *tags.TagsService) *NotesHandlerV3 {
+	return &NotesHandlerV3{
+		service:      service,
+		metaService:  metaService,
+		linksService: linksService,
+		tagsSvc:      tagsSvc,
+	}
+}
+
+func (h *NotesHandlerV3) CreateNote(
+	ctx context.Context,
+	req *connect.Request[mindv3.CreateNoteRequest],
+) (*connect.Response[mindv3.Note], error) {
+	params := ProtoCreateNoteToStore(req.Msg)
+
+	noteID, err := h.service.CreateNote(ctx, params)
+	if err != nil {
+		if errors.Is(err, ErrNoteAlreadyExists) {
+			return nil, newAlreadyExistsError("notes", "title", req.Msg.Title)
+		}
+		if dberrors.IsForeignKeyConstraintError(err) {
+			return nil, newInvalidArgumentError("collection_id or note_type_id", "referenced resource does not exist")
+		}
+		return nil, newInternalError("failed to create note", err)
+	}
+
+	note, err := h.service.GetNoteByID(ctx, noteID)
+	if err != nil {
+		return nil, newInternalError("failed to retrieve created note", err)
+	}
+
+	return connect.NewResponse(StoreNoteToProto(note)), nil
+}
+
+func (h *NotesHandlerV3) GetNote(
+	ctx context.Context,
+	req *connect.Request[mindv3.GetNoteRequest],
+) (*connect.Response[mindv3.Note], error) {
+	note, err := h.service.GetNoteByID(ctx, req.Msg.Id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.Id, 10))
+		}
+		return nil, newInternalError("failed to get note", err)
+	}
+
+	return connect.NewResponse(StoreNoteToProto(note)), nil
+}
+
+func (h *NotesHandlerV3) ReplaceNote(
+	ctx context.Context,
+	req *connect.Request[mindv3.ReplaceNoteRequest],
+) (*connect.Response[mindv3.Note], error) {
+	current, err := h.service.GetNoteByID(ctx, req.Msg.Id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.Id, 10))
+		}
+		return nil, newInternalError("failed to get note", err)
+	}
+
+	// Optimistic locking via ETag
+	if req.Header().Get("If-Match") != "" {
+		currentETag := utils.ComputeHashedETag(current.Version)
+		if req.Header().Get("If-Match") != currentETag {
+			return nil, connect.NewError(connect.CodeAborted, ErrStaleNote)
+		}
+	}
+
+	params := ProtoReplaceNoteToStore(req.Msg, current)
+
+	err = h.service.UpdateNote(ctx, params)
+	if err != nil {
+		if errors.Is(err, ErrNoteAlreadyExists) {
+			return nil, newAlreadyExistsError("notes", "title", req.Msg.Title)
+		}
+		if dberrors.IsForeignKeyConstraintError(err) {
+			return nil, newInvalidArgumentError("collection_id or note_type_id", "referenced resource does not exist")
+		}
+		return nil, newInternalError("failed to replace note", err)
+	}
+
+	updated, err := h.service.GetNoteByID(ctx, req.Msg.Id)
+	if err != nil {
+		return nil, newInternalError("failed to retrieve replaced note", err)
+	}
+
+	return connect.NewResponse(StoreNoteToProto(updated)), nil
+}
+
+func (h *NotesHandlerV3) DeleteNote(
+	ctx context.Context,
+	req *connect.Request[mindv3.DeleteNoteRequest],
+) (*connect.Response[emptypb.Empty], error) {
+	_, err := h.service.GetNoteByID(ctx, req.Msg.Id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.Id, 10))
+		}
+		return nil, newInternalError("failed to get note", err)
+	}
+
+	err = h.service.DeleteNote(ctx, req.Msg.Id)
+	if err != nil {
+		return nil, newInternalError("failed to delete note", err)
+	}
+
+	return connect.NewResponse(&emptypb.Empty{}), nil
+}
+
+func (h *NotesHandlerV3) ListNotes(
+	ctx context.Context,
+	req *connect.Request[mindv3.ListNotesRequest],
+) (*connect.Response[mindv3.ListNotesResponse], error) {
+	// Parse pagination request
+	pageReq := pagination.ParseRequest(req.Msg.PageSize, req.Msg.PageToken)
+	params := pageReq.ToParams()
+
+	var notes []store.Note
+	var totalCount int64
+	var err error
+
+	// Determine which query to use based on filters
+	// Priority: collection_id > note_type_id > is_template > all
+	if req.Msg.CollectionId != nil {
+		notes, err = h.service.ListNotesByCollectionIDPaginated(ctx, *req.Msg.CollectionId, params.Limit, params.Offset)
+		if err == nil && pageReq.IsFirstPage() {
+			totalCount, _ = h.service.CountNotesByCollectionID(ctx, *req.Msg.CollectionId)
+		}
+	} else if req.Msg.NoteTypeId != nil {
+		noteTypeID := sql.NullInt64{Int64: *req.Msg.NoteTypeId, Valid: true}
+		notes, err = h.service.ListNotesByNoteTypeIDPaginated(ctx, noteTypeID, params.Limit, params.Offset)
+		if err == nil && pageReq.IsFirstPage() {
+			totalCount, _ = h.service.CountNotesByNoteTypeID(ctx, noteTypeID)
+		}
+	} else if req.Msg.IsTemplate != nil {
+		isTemplate := sql.NullBool{Bool: *req.Msg.IsTemplate, Valid: true}
+		notes, err = h.service.ListNotesByIsTemplatePaginated(ctx, isTemplate, params.Limit, params.Offset)
+		if err == nil && pageReq.IsFirstPage() {
+			totalCount, _ = h.service.CountNotesByIsTemplate(ctx, isTemplate)
+		}
+	} else {
+		notes, err = h.service.ListNotesPaginated(ctx, params.Limit, params.Offset)
+		if err == nil && pageReq.IsFirstPage() {
+			totalCount, _ = h.service.CountNotes(ctx)
+		}
+	}
+
+	if err != nil {
+		return nil, newInternalError("failed to list notes", err)
+	}
+
+	// Build pagination response
+	pageResp := pageReq.BuildResponse(len(notes), totalCount)
+	notes = pagination.TrimResults(notes, pageReq.PageSize)
+
+	resp := &mindv3.ListNotesResponse{
+		Notes:         StoreNotesToProto(notes),
+		NextPageToken: pageResp.NextPageToken,
+	}
+
+	// Only include total_size on first page
+	if pageReq.IsFirstPage() {
+		totalSize := int32(pageResp.TotalCount)
+		resp.TotalSize = &totalSize
+	}
+
+	return connect.NewResponse(resp), nil
+}
+
+// TODO: GetNoteMeta and GetNoteRelationships need proto definitions
+// func (h *NotesHandlerV3) GetNoteMeta(
+// 	ctx context.Context,
+// 	req *connect.Request[mindv3.GetNoteMetaRequest],
+// ) (*connect.Response[mindv3.GetNoteMetaResponse], error) {
+// 	metadata, err := h.service.GetNoteMeta(ctx, req.Msg.NoteId, h.metaService)
+// 	if err != nil {
+// 		if errors.Is(err, sql.ErrNoRows) {
+// 			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.NoteId, 10))
+// 		}
+// 		return nil, newInternalError("failed to get note metadata", err)
+// 	}
+//
+// 	resp := &mindv3.GetNoteMetaResponse{
+// 		Metadata: metadata,
+// 	}
+//
+// 	return connect.NewResponse(resp), nil
+// }
+//
+// func (h *NotesHandlerV3) GetNoteRelationshipsLegacy(
+// 	ctx context.Context,
+// 	req *connect.Request[mindv3.GetNoteRelationshipsRequest],
+// ) (*connect.Response[mindv3.GetNoteRelationshipsResponse], error) {
+// 	relationships, err := h.service.GetNoteRelationships(ctx, req.Msg.NoteId, h.linksService, h.tagsSvc)
+// 	if err != nil {
+// 		if errors.Is(err, sql.ErrNoRows) {
+// 			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.NoteId, 10))
+// 		}
+// 		return nil, newInternalError("failed to get note relationships", err)
+// 	}
+//
+// 	resp := &mindv3.GetNoteRelationshipsResponse{
+// 		OutgoingLinks: relationships.OutgoingLinks,
+// 		IncomingLinks: relationships.IncomingLinks,
+// 		TagIds:        relationships.TagIDs,
+// 	}
+//
+// 	return connect.NewResponse(resp), nil
+// }

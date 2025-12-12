@@ -147,3 +147,8 @@ config.local.yaml
 # Misc
 *.orig
 .mise.local.toml
+mindweaver
+
+worklog/
+exploration/
+templates/

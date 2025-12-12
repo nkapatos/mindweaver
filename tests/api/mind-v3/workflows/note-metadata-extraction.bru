@@ -1,0 +1,123 @@
+meta {
+  name: Note Metadata Extraction Workflow
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NotesService/CreateNote
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Workflow Test Note {{$timestamp}}",
+    "body": "---\nauthor: John Doe\nisbn: 978-3-16-148410-0\nproject: mindweaver\nstatus: active\ntags: [workflow, integration, test]\n---\n\n# Workflow Test Note\n\nThis note tests the **metadata extraction workflow**:\n\n1. Create note with frontmatter metadata\n2. Retrieve note metadata via ListNoteMeta\n3. Verify frontmatter was parsed and stored correctly\n\nThe system should extract the frontmatter fields (author, isbn, project, status, tags) and store them as metadata entries.",
+    "description": "Integration test for note metadata extraction",
+    "collection_id": 1
+  }
+}
+
+script:post-response {
+  // Step 1: Create note with frontmatter
+  console.log("=== WORKFLOW: Note Metadata Extraction ===");
+  
+  if (res.status !== 200) {
+    throw new Error("Failed to create note: " + res.statusText);
+  }
+  
+  const noteId = res.body.name.split("/")[1];
+  bru.setEnvVar("noteId", noteId);
+  console.log("✓ Step 1: Created note with ID:", noteId);
+  console.log("  Title:", res.body.title);
+  console.log("  Body length:", res.body.body ? res.body.body.length : 0);
+  
+  // Verify note was created successfully
+  test("Note created successfully", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property("name");
+    expect(res.body).to.have.property("id");
+  });
+  
+  test("Note body contains frontmatter", function() {
+    expect(res.body.body).to.include("---");
+    expect(res.body.body).to.include("author:");
+    expect(res.body.body).to.include("isbn:");
+    expect(res.body.body).to.include("project:");
+  });
+  
+  // Step 2: Retrieve metadata using the sub-resource endpoint
+  console.log("\n✓ Step 2: Retrieving metadata for note", noteId);
+  
+  const metaResponse = await bru.runRequest("note-meta/1-list-note-meta");
+  
+  if (metaResponse.status !== 200) {
+    throw new Error("Failed to get metadata: " + metaResponse.statusText);
+  }
+  
+  console.log("  Metadata items count:", metaResponse.body.total);
+  
+  // Step 3: Verify metadata was extracted from frontmatter
+  const metadata = metaResponse.body.items || [];
+  
+  console.log("\n✓ Step 3: Verifying metadata extraction");
+  metadata.forEach(function(item) {
+    console.log("  -", item.key + ":", item.value);
+  });
+  
+  test("Metadata response is valid", function() {
+    expect(metaResponse.status).to.equal(200);
+    expect(metaResponse.body).to.have.property("items");
+    expect(metaResponse.body.items).to.be.an("array");
+  });
+  
+  test("Metadata was extracted from frontmatter", function() {
+    expect(metadata.length).to.be.greaterThan(0);
+  });
+  
+  // Verify specific frontmatter fields were extracted
+  const metaKeys = metadata.map(function(m) { return m.key; });
+  const metaByKey = {};
+  metadata.forEach(function(m) {
+    metaByKey[m.key] = m.value;
+  });
+  
+  test("Author metadata extracted", function() {
+    expect(metaKeys).to.include("author");
+    expect(metaByKey.author).to.equal("John Doe");
+  });
+  
+  test("ISBN metadata extracted", function() {
+    expect(metaKeys).to.include("isbn");
+    expect(metaByKey.isbn).to.equal("978-3-16-148410-0");
+  });
+  
+  test("Project metadata extracted", function() {
+    expect(metaKeys).to.include("project");
+    expect(metaByKey.project).to.equal("mindweaver");
+  });
+  
+  test("Status metadata extracted", function() {
+    expect(metaKeys).to.include("status");
+    expect(metaByKey.status).to.equal("active");
+  });
+  
+  test("Tags metadata extracted", function() {
+    expect(metaKeys).to.include("tags");
+    // Tags might be stored as JSON array or comma-separated
+    expect(metaByKey.tags).to.satisfy(function(val) {
+      return val.includes("workflow") || val.includes("integration") || val.includes("test");
+    });
+  });
+  
+  console.log("\n=== WORKFLOW COMPLETE ===");
+  console.log("✓ Note created with frontmatter");
+  console.log("✓ Metadata extracted and stored");
+  console.log("✓ Metadata retrieved successfully");
+  console.log("✓ All frontmatter fields present");
+}

@@ -1,0 +1,202 @@
+// Mind API V3 - Templates Service
+// Follows Google AIP standards for resource-oriented design
+syntax = "proto3";
+
+package mind.v3;
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/nkapatos/mindweaver/internal/mind/gen/v3;mindv3";
+
+// TemplatesService manages note templates
+// Follows AIP-131 through AIP-135 for standard methods
+service TemplatesService {
+  // Creates a new template (AIP-133)
+  rpc CreateTemplate(CreateTemplateRequest) returns (Template) {
+    option (google.api.http) = {
+      post: "/api/mind/v3/templates"
+      body: "*"
+    };
+  }
+
+  // Lists templates (AIP-132)
+  rpc ListTemplates(ListTemplatesRequest) returns (ListTemplatesResponse) {
+    option (google.api.http) = {
+      get: "/api/mind/v3/templates"
+    };
+  }
+
+  // Gets a template by ID (AIP-131)
+  rpc GetTemplate(GetTemplateRequest) returns (Template) {
+    option (google.api.http) = {
+      get: "/api/mind/v3/templates/{id}"
+    };
+  }
+
+  // Updates a template (AIP-134)
+  rpc UpdateTemplate(UpdateTemplateRequest) returns (Template) {
+    option (google.api.http) = {
+      put: "/api/mind/v3/templates/{id}"
+      body: "*"
+    };
+  }
+
+  // Deletes a template (AIP-135)
+  rpc DeleteTemplate(DeleteTemplateRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/mind/v3/templates/{id}"
+    };
+  }
+}
+
+// Template resource following AIP-121 (resource-oriented design)
+message Template {
+  // Resource name in format "templates/{id}" (AIP-122)
+  // Example: "templates/123"
+  string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Unique template identifier
+  int64 id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Template display name (required, 1-255 characters)
+  string display_name = 3 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {
+      min_len: 1,
+      max_len: 255
+    }
+  ];
+
+  // Optional template description (max 1000 characters)
+  optional string description = 4 [
+    (buf.validate.field).string.max_len = 1000
+  ];
+
+  // Starter note ID for template instantiation (required)
+  int64 starter_note_id = 5 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).int64.gt = 0
+  ];
+
+  // Optional note type ID for categorization
+  optional int64 note_type_id = 6 [
+    (buf.validate.field).int64.gt = 0
+  ];
+
+  // Creation timestamp (RFC3339) - AIP-142
+  google.protobuf.Timestamp create_time = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Last update timestamp (RFC3339) - AIP-142
+  google.protobuf.Timestamp update_time = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Request to create a template (AIP-133)
+message CreateTemplateRequest {
+  // Template display name (required, 1-255 characters)
+  string display_name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {
+      min_len: 1,
+      max_len: 255
+    }
+  ];
+
+  // Optional template description (max 1000 characters)
+  optional string description = 2 [
+    (buf.validate.field).string.max_len = 1000
+  ];
+
+  // Starter note ID (required)
+  int64 starter_note_id = 3 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).int64.gt = 0
+  ];
+
+  // Optional note type ID
+  optional int64 note_type_id = 4 [
+    (buf.validate.field).int64.gt = 0
+  ];
+}
+
+// Request to list templates (AIP-132)
+message ListTemplatesRequest {
+  // Maximum number of templates to return (AIP-158)
+  // Default: 50, Max: 1000
+  int32 page_size = 1 [
+    (buf.validate.field).int32 = {
+      gte: 1,
+      lte: 1000
+    }
+  ];
+
+  // Token for retrieving next page (AIP-158 cursor-based pagination)
+  string page_token = 2;
+}
+
+// Response for listing templates (AIP-132)
+message ListTemplatesResponse {
+  // List of templates
+  repeated Template templates = 1;
+
+  // Token for next page (empty if no more pages) - AIP-158
+  string next_page_token = 2;
+
+  // Total number of templates (optional, may be expensive)
+  optional int32 total_size = 3;
+}
+
+// Request to get a template (AIP-131)
+message GetTemplateRequest {
+  // Template ID (required)
+  int64 id = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).int64.gt = 0
+  ];
+}
+
+// Request to update a template (AIP-134)
+message UpdateTemplateRequest {
+  // Template ID (required)
+  int64 id = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).int64.gt = 0
+  ];
+
+  // New template display name (required, 1-255 characters)
+  string display_name = 2 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).string = {
+      min_len: 1,
+      max_len: 255
+    }
+  ];
+
+  // Optional template description (max 1000 characters)
+  optional string description = 3 [
+    (buf.validate.field).string.max_len = 1000
+  ];
+
+  // Starter note ID (required)
+  int64 starter_note_id = 4 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).int64.gt = 0
+  ];
+
+  // Optional note type ID
+  optional int64 note_type_id = 5 [
+    (buf.validate.field).int64.gt = 0
+  ];
+}
+
+// Request to delete a template (AIP-135)
+message DeleteTemplateRequest {
+  // Template ID (required)
+  int64 id = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (buf.validate.field).int64.gt = 0
+  ];
+}

@@ -1,0 +1,73 @@
+version: '3'
+
+env:
+  GOOSE_DRIVER: "sqlite3"
+  GOOSE_DBSTRING: "{{.MIND_DB_PATH}}"
+  GOOSE_MIGRATION_DIR: "./migrations/mind"
+
+tasks:
+  serve:
+    desc: Run Mindweaver server with mode=mind
+    cmds:
+      # When calling tasks from another file is important to prefix with : the task name, otherwise it will resolve in the current key of this taskfile
+      # with : calls mw:serve, without calls mind:mw:serve
+      - task: ":mw:serve"
+        vars: {MODE: "--mode=mind"}
+    silent: false
+
+  dev:
+    desc: Run mind service in development mode
+    cmds:
+      - task: ":mw:dev"
+        vars: {MODE: "--mode=mind"}
+    silent: false
+
+  db:store:generate:
+    desc: Generate source code from SQL
+    dir: store/mind
+    cmds:
+      - sqlc generate
+
+  db:store:reset:
+    desc: Delete generated store code and regenerate from SQL
+    cmds:
+      - rm -rf internal/mind/store
+      - task: db:store:generate
+
+  db:store:compile:
+    desc: Statically check SQL for syntax and type errors
+    dir: store/mind
+    cmds:
+      - sqlc compile
+
+  db:store:vet:
+    desc: Vet examines queries
+    dir: store/mind
+    cmds:
+      - sqlc vet
+
+  db:migrations:up:
+    desc: Migrate the DB to the most recent version available
+    cmds:
+      - goose up
+
+  db:migrations:down:
+    desc: Roll back the version by 1
+    cmds:
+      - goose down
+
+  db:migrations:reset:
+    desc: Roll back all migrations
+    cmds:
+      - goose reset
+
+  db:migrations:validate:
+    desc: Check migration files without running them
+    cmds:
+      - goose validate
+
+  db:migrations:create:
+    desc: Creates new migration file with the current timestamp
+    cmds:
+      - goose create {{.CLI_ARGS}} sql
+    silent: false

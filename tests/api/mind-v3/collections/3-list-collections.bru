@@ -1,0 +1,36 @@
+meta {
+  name: List Collections
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.CollectionsService/ListCollections
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "page_size": 50
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has collections array", function() {
+    expect(res.body).to.have.property("collections");
+    expect(res.body.collections).to.be.an("array");
+  });
+  
+  test("Collections list is not empty", function() {
+    expect(res.body.collections.length).to.be.greaterThan(0);
+  });
+}

@@ -1,0 +1,33 @@
+meta {
+  name: Get Tree
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.CollectionsService/GetCollectionTree
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "root_id": {{collectionId}},
+    "max_depth": 0
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has tree structure", function() {
+    expect(res.body).to.have.property("root");
+    expect(res.body).to.have.property("descendants");
+  });
+}

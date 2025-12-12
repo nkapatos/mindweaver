@@ -1,0 +1,33 @@
+meta {
+  name: List Children
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.CollectionsService/ListCollectionChildren
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "parent_id": {{collectionId}},
+    "page_size": 50
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has valid structure", function() {
+    expect(res.body).to.be.an("object");
+    // collections field may be absent if empty
+  });
+}

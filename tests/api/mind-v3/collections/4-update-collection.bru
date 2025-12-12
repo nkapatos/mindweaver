@@ -1,0 +1,35 @@
+meta {
+  name: Update Collection
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.CollectionsService/UpdateCollection
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": {{collectionId}},
+    "display_name": "Updated Test Collection {{$timestamp}}",
+    "description": "Updated description for testing"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has updated collection", function() {
+    expect(res.body).to.have.property("name");
+    expect(res.body).to.have.property("displayName");
+    expect(res.body.displayName).to.include("Updated");
+  });
+}

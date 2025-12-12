@@ -1,0 +1,58 @@
+version: '3'
+
+vars:
+  BIN_NAME: mindweaver
+  BIN_DIR: ./bin
+  CMD_DIR: ./cmd/mindweaver
+  DB_DIR: ./db
+  DB_MIND_NAME: mind
+  DB_BRAIN_NAME: brain
+
+tasks:
+  build:
+    desc: Build mindweaver binary
+    cmds: 
+      - mkdir -p {{.BIN_DIR}}
+      - go build -o {{.BIN_DIR}}/{{.BIN_NAME}} {{.CMD_DIR}}
+
+  serve:
+    desc: Serve Mindweaver server
+    deps: [build]
+    vars:
+      # Default if you want to have a default variable and also to be able to overwrite it from
+      # another task
+      MODE: '{{default "" .MODE}}' 
+    cmds:
+      - mkdir -p {{.DB_DIR}}
+      - "{{.BIN_DIR}}/{{.BIN_NAME}} {{.MODE}}"
+
+  dev:
+    desc: Run Mindweaver server on dev mode using Air for app reloading
+    cmds:
+      - go tool air -c ./.air.mindweaver.toml
+    silent: false
+
+  db:reset:
+    desc: Reset all databases - roll back migrations, migrate up, and regenerate store code
+    cmds:
+      - task: db:migrations:reset
+      - task: db:migrations:up
+      - task: db:store:reset
+
+  db:store:reset:
+    desc: Delete generated store code and regenerate from SQL for both mind and brain
+    cmds:
+      - task: :brain:db:store:reset
+      - task: :mind:db:store:reset
+
+  db:migrations:up:
+    desc: Migrate both mind and brain databases to the most recent version available
+    cmds:
+      - task: :brain:db:migrations:up
+      - task: :mind:db:migrations:up
+
+  db:migrations:reset:
+    desc: Roll back all migrations for both mind and brain databases
+    cmds:
+      - task: :brain:db:migrations:reset
+      - task: :mind:db:migrations:reset

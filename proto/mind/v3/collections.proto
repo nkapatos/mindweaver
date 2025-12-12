@@ -1,0 +1,226 @@
+// Copyright 2025 Mindweaver
+// SPDX-License-Identifier: Apache-2.0
+
+// Collections V3 API - Resource-oriented design following Google AIP standards
+// Manages hierarchical note organization and folder structure
+
+syntax = "proto3";
+
+package mind.v3;
+
+option go_package = "github.com/nkapatos/mindweaver/internal/mind/gen/v3;mindv3";
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+// Collection resource following AIP-121 (resource-oriented design)
+// Collections form a hierarchical tree structure for organizing notes
+message Collection {
+  // Resource name in format "collections/{id}" (AIP-122)
+  // Example: "collections/123"
+  string name = 1;
+  
+  // Unique collection identifier
+  int64 id = 2;
+  
+  // Display name (required, 1-255 characters)
+  string display_name = 3 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 255
+  }];
+  
+  // Optional parent collection ID (null for root collections)
+  // Creates hierarchical structure: parent -> child relationship
+  optional int64 parent_id = 4 [(buf.validate.field).int64.gt = 0];
+  
+  // Materialized path for efficient tree queries
+  // Format: "/root/child/grandchild" (read-only, auto-generated)
+  string path = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+  
+  // Optional description (max 1000 characters)
+  optional string description = 6 [(buf.validate.field).string.max_len = 1000];
+  
+  // Optional position/order within parent (for sorting)
+  optional int64 position = 7;
+  
+  // System-defined collection (cannot be deleted)
+  bool is_system = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
+  
+  // Creation timestamp (RFC3339) - AIP-142
+  google.protobuf.Timestamp create_time = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
+  
+  // Last update timestamp (RFC3339) - AIP-142
+  google.protobuf.Timestamp update_time = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Request message for CreateCollection (AIP-133)
+message CreateCollectionRequest {
+  // Display name (required)
+  string display_name = 1 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 255
+  }];
+  
+  // Optional parent collection ID (omit for root collection)
+  optional int64 parent_id = 2 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional description
+  optional string description = 3 [(buf.validate.field).string.max_len = 1000];
+  
+  // Optional position within parent
+  optional int64 position = 4;
+}
+
+// Request message for GetCollection (AIP-131)
+message GetCollectionRequest {
+  // Collection ID (required)
+  int64 id = 1 [(buf.validate.field).int64.gt = 0];
+}
+
+// Request message for UpdateCollection (AIP-134)
+message UpdateCollectionRequest {
+  // Collection ID (required)
+  int64 id = 1 [(buf.validate.field).int64.gt = 0];
+  
+  // Display name (required)
+  string display_name = 2 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 255
+  }];
+  
+  // Optional parent collection ID (omit to keep as root)
+  // Note: Moving collections updates materialized path automatically
+  optional int64 parent_id = 3 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional description
+  optional string description = 4 [(buf.validate.field).string.max_len = 1000];
+  
+  // Optional position within parent
+  optional int64 position = 5;
+}
+
+// Request message for DeleteCollection (AIP-135)
+message DeleteCollectionRequest {
+  // Collection ID (required)
+  int64 id = 1 [(buf.validate.field).int64.gt = 0];
+}
+
+// Request message for ListCollections (AIP-132, AIP-158)
+message ListCollectionsRequest {
+  // Maximum number of collections to return (default: 50, max: 100)
+  int32 page_size = 1 [(buf.validate.field).int32 = {
+    gte: 0,
+    lte: 100
+  }];
+  
+  // Page token from previous ListCollectionsResponse.next_page_token
+  string page_token = 2;
+  
+  // Optional: Filter by parent_id (returns direct children only)
+  // Omit to return all collections
+  optional int64 parent_id = 3 [(buf.validate.field).int64.gt = 0];
+}
+
+// Response message for ListCollections (AIP-132, AIP-158)
+message ListCollectionsResponse {
+  // List of collections
+  repeated Collection collections = 1;
+  
+  // Token to retrieve the next page of results (empty if no more results)
+  string next_page_token = 2;
+  
+  // Total number of collections (optional, for UI pagination)
+  optional int32 total_size = 3;
+}
+
+// Request message for ListCollectionChildren
+// Returns direct children of a collection (one level deep)
+message ListCollectionChildrenRequest {
+  // Parent collection ID (required)
+  int64 parent_id = 1 [(buf.validate.field).int64.gt = 0];
+  
+  // Maximum number to return
+  int32 page_size = 2 [(buf.validate.field).int32 = {
+    gte: 0,
+    lte: 100
+  }];
+  
+  string page_token = 3;
+}
+
+// Request message for GetCollectionTree
+// Returns entire subtree rooted at collection (all descendants)
+message GetCollectionTreeRequest {
+  // Root collection ID (required)
+  int64 root_id = 1 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional: Maximum depth to traverse (0 = unlimited)
+  int32 max_depth = 2 [(buf.validate.field).int32.gte = 0];
+}
+
+// Response message for GetCollectionTree
+message GetCollectionTreeResponse {
+  // Root collection
+  Collection root = 1;
+  
+  // All descendants (flattened tree)
+  repeated Collection descendants = 2;
+}
+
+// Collections service definition (Connect-RPC compatible)
+service CollectionsService {
+  // Create a new collection (AIP-133)
+  rpc CreateCollection(CreateCollectionRequest) returns (Collection) {
+    option (google.api.http) = {
+      post: "/v3/collections"
+      body: "*"
+    };
+  }
+  
+  // Get a collection by ID (AIP-131)
+  rpc GetCollection(GetCollectionRequest) returns (Collection) {
+    option (google.api.http) = {
+      get: "/v3/collections/{id}"
+    };
+  }
+  
+  // Update a collection (AIP-134)
+  rpc UpdateCollection(UpdateCollectionRequest) returns (Collection) {
+    option (google.api.http) = {
+      patch: "/v3/collections/{id}"
+      body: "*"
+    };
+  }
+  
+  // Delete a collection (AIP-135)
+  rpc DeleteCollection(DeleteCollectionRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v3/collections/{id}"
+    };
+  }
+  
+  // List collections (AIP-132)
+  // Can filter by parent_id to get children
+  rpc ListCollections(ListCollectionsRequest) returns (ListCollectionsResponse) {
+    option (google.api.http) = {
+      get: "/v3/collections"
+    };
+  }
+  
+  // List direct children of a collection
+  rpc ListCollectionChildren(ListCollectionChildrenRequest) returns (ListCollectionsResponse) {
+    option (google.api.http) = {
+      get: "/v3/collections/{parent_id}/children"
+    };
+  }
+  
+  // Get entire collection tree (subtree)
+  rpc GetCollectionTree(GetCollectionTreeRequest) returns (GetCollectionTreeResponse) {
+    option (google.api.http) = {
+      get: "/v3/collections/{root_id}/tree"
+    };
+  }
+}

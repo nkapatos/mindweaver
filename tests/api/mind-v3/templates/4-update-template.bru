@@ -1,0 +1,36 @@
+meta {
+  name: Update Template
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.TemplatesService/UpdateTemplate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": {{templateId}},
+    "display_name": "Updated Daily Note Template {{$timestamp}}",
+    "description": "Updated template description",
+    "starter_note_id": 11
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has updated template", function() {
+    expect(res.body).to.have.property("name");
+    expect(res.body).to.have.property("displayName");
+    expect(res.body.displayName).to.include("Updated");
+  });
+}

@@ -1,0 +1,109 @@
+meta {
+  name: Note Metadata Removal Workflow
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NotesService/CreateNote
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Metadata Removal Test {{$timestamp}}",
+    "body": "---\nauthor: Test Author\nisbn: 978-1-23-456789-0\nproject: test-project\nstatus: active\ntags: [metadata, test]\n---\n\n# Initial Content\n\nThis note starts with metadata that will be removed.",
+    "description": "Testing metadata removal",
+    "collection_id": 1
+  }
+}
+
+script:post-response {
+  console.log("=== WORKFLOW: Note Metadata Removal ===");
+  
+  // Step 1: Create note with metadata
+  if (res.status !== 200) {
+    throw new Error("Step 1 FAILED - Create note: " + res.statusText);
+  }
+  
+  const noteId = res.body.name.split("/")[1];
+  bru.setEnvVar("noteId", noteId);
+  console.log("✓ Step 1: Created note with ID:", noteId);
+  
+  // Step 2: List metadata - should have 5 items
+  console.log("\n✓ Step 2: Checking initial metadata exists");
+  
+  const meta1Response = await bru.runRequest("note-meta/1-list-note-meta");
+  const meta1 = meta1Response.data || meta1Response.body || meta1Response;
+  
+  console.log("  Initial metadata count:", meta1.total || 0);
+  if (meta1.total !== 5) {
+    throw new Error("Step 2 FAILED - Expected 5 metadata items, got: " + meta1.total);
+  }
+  
+  // Step 3: Replace note with NO frontmatter (inline request)
+  console.log("\n✓ Step 3: Replacing note with NO frontmatter");
+  
+  let replaceSuccess = false;
+  await bru.sendRequest({
+    method: 'POST',
+    url: bru.getEnvVar('baseUrl') + '/mind.v3.NotesService/ReplaceNote',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data: {
+      id: parseInt(noteId),
+      title: res.body.title + " (Updated)",
+      body: "# Updated Content\n\nThis note now has NO frontmatter.",
+      description: "Testing metadata removal - updated",
+      collection_id: 1
+    }
+  }, function(err, res) {
+    if (err) {
+      throw new Error("Step 3 FAILED - ReplaceNote error: " + err.message);
+    }
+    if (res.status !== 200) {
+      throw new Error("Step 3 FAILED - ReplaceNote status: " + res.status);
+    }
+    console.log("  Replace successful");
+    replaceSuccess = true;
+  });
+  
+  if (!replaceSuccess) {
+    throw new Error("Step 3 FAILED - ReplaceNote did not complete");
+  }
+  
+  // Step 4: List metadata - should have 0 items (no ghost metadata)
+  console.log("\n✓ Step 4: Verifying NO ghost metadata left behind");
+  
+  const meta2Response = await bru.runRequest("note-meta/1-list-note-meta");
+  const meta2 = meta2Response.data || meta2Response.body || meta2Response;
+  
+  const finalMetaCount = meta2.total || 0;
+  console.log("  Final metadata count:", finalMetaCount);
+  
+  if (finalMetaCount !== 0) {
+    console.log("\n❌ FAILURE: Ghost metadata found!");
+    if (meta2.items && meta2.items.length > 0) {
+      meta2.items.forEach(function(m) {
+        console.log("    - GHOST:", m.key + ":", m.value);
+      });
+    }
+    throw new Error("Step 4 FAILED - Expected 0 metadata items, found " + finalMetaCount + " ghost entries");
+  }
+  
+  console.log("\n=== WORKFLOW COMPLETE ===");
+  console.log("✅ All steps passed");
+  console.log("✅ No ghost metadata in database");
+}
+
+tests {
+  test("Workflow completed successfully", function() {
+    expect(res.status).to.equal(200);
+  });
+}

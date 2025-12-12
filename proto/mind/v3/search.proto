@@ -1,0 +1,90 @@
+// Copyright 2025 Mindweaver
+// SPDX-License-Identifier: Apache-2.0
+
+// Search V3 API - Full-text search for notes using FTS5
+// Read-only service providing fast text search across note titles and bodies
+
+syntax = "proto3";
+
+package mind.v3;
+
+option go_package = "github.com/nkapatos/mindweaver/internal/mind/gen/v3;mindv3";
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+// SearchNotesRequest - Request for full-text search
+message SearchNotesRequest {
+  // Search query text (required)
+  string query = 1 [(buf.validate.field).string.min_len = 1];
+  
+  // Maximum results to return (default: 10, max: 100)
+  optional int32 limit = 2 [(buf.validate.field).int32 = {
+    gte: 1,
+    lte: 100
+  }];
+  
+  // Pagination offset (default: 0)
+  optional int32 offset = 3 [(buf.validate.field).int32.gte = 0];
+  
+  // Include full body in results (default: false, returns snippets)
+  optional bool include_body = 4;
+  
+  // Minimum relevance score filter (0-1, default: 0)
+  optional double min_score = 5 [(buf.validate.field).double = {
+    gte: 0.0,
+    lte: 1.0
+  }];
+}
+
+// SearchResult - Single search result with relevance scoring
+message SearchResult {
+  // Note ID
+  int64 id = 1;
+  
+  // Note title
+  string title = 2;
+  
+  // Body snippet or full body (depending on include_body)
+  string snippet = 3;
+  
+  // Relevance score (0-1, higher is more relevant)
+  double score = 4;
+  
+  // Note creation timestamp (RFC3339)
+  google.protobuf.Timestamp create_time = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// SearchNotesResponse - Search results with metadata
+message SearchNotesResponse {
+  // List of search results
+  repeated SearchResult results = 1;
+  
+  // Total number of matches (for pagination)
+  int32 total = 2;
+  
+  // Original query
+  string query = 3;
+  
+  // Search duration in milliseconds
+  int64 duration_ms = 4;
+  
+  // Applied limit
+  int32 limit = 5;
+  
+  // Applied offset
+  int32 offset = 6;
+}
+
+// SearchService - Full-text search for notes
+// Read-only service using FTS5 (SQLite Full-Text Search)
+service SearchService {
+  // Search notes by full-text query
+  rpc SearchNotes(SearchNotesRequest) returns (SearchNotesResponse) {
+    option (google.api.http) = {
+      get: "/v3/search/notes"
+    };
+  }
+}

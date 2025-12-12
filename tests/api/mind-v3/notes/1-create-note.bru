@@ -1,0 +1,69 @@
+meta {
+  name: Create Note
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NotesService/CreateNote
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Test Note {{$timestamp}}",
+    "body": "---\nauthor: Test Author\ntags: [test, integration]\nstatus: draft\n---\n\n# Test Note\n\nThis is a test note with **frontmatter** metadata.\n\nIt has some content for testing.",
+    "description": "A test note for API testing",
+    "collection_id": 1
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.name) {
+    // Extract note ID from resource name (format: "notes/{id}")
+    const noteId = res.body.name.split("/")[1];
+    bru.setEnvVar("noteId", noteId);
+    console.log("Note created with ID:", noteId);
+    
+    // Also save the full note for workflow tests
+    bru.setVar("createdNote", res.body);
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has name field", function() {
+    expect(res.body).to.have.property("name");
+  });
+  
+  test("Response has note ID", function() {
+    expect(res.body.name).to.match(/^notes\//);
+  });
+  
+  test("Note has title", function() {
+    expect(res.body).to.have.property("title");
+  });
+  
+  test("Note has uuid", function() {
+    expect(res.body).to.have.property("uuid");
+    expect(res.body.uuid).to.be.a("string");
+  });
+  
+  test("Note has etag", function() {
+    expect(res.body).to.have.property("etag");
+    expect(res.body.etag).to.match(/^W\//);
+  });
+  
+  test("Note body contains frontmatter", function() {
+    expect(res.body.body).to.include("---");
+    expect(res.body.body).to.include("author:");
+  });
+}

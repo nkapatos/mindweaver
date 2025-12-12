@@ -1,0 +1,196 @@
+// Copyright 2025 Mindweaver
+// SPDX-License-Identifier: Apache-2.0
+
+// NoteTypes V3 API - Resource-oriented design following Google AIP standards
+// Manages note type categorization and classification
+
+syntax = "proto3";
+
+package mind.v3;
+
+option go_package = "github.com/nkapatos/mindweaver/internal/mind/gen/v3;mindv3";
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+// NoteType resource following AIP-121 (resource-oriented design)
+message NoteType {
+  // Resource name in format "note_types/{id}" (AIP-122)
+  // Example: "note_types/123"
+  string name = 1;
+  
+  // Unique note type identifier
+  int64 id = 2;
+  
+  // Type identifier (e.g., "task", "meeting", "journal") - required, 1-100 characters
+  string type = 3 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 100,
+    pattern: "^[a-z0-9_-]+$"  // lowercase, numbers, underscores, hyphens only
+  }];
+  
+  // Human-readable display name (required, 1-255 characters)
+  string display_name = 4 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 255
+  }];
+  
+  // Optional description (max 1000 characters)
+  optional string description = 5 [(buf.validate.field).string.max_len = 1000];
+  
+  // Optional icon identifier (e.g., emoji or icon name)
+  optional string icon = 6 [(buf.validate.field).string.max_len = 50];
+  
+  // Optional color code (hex format: #RRGGBB)
+  optional string color = 7 [(buf.validate.field).string = {
+    max_len: 7,
+    pattern: "^#[0-9A-Fa-f]{6}$"
+  }];
+  
+  // System-defined type (cannot be deleted)
+  bool is_system = 8;
+  
+  // Creation timestamp (RFC3339) - AIP-142
+  google.protobuf.Timestamp create_time = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
+  
+  // Last update timestamp (RFC3339) - AIP-142
+  google.protobuf.Timestamp update_time = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Request message for CreateNoteType (AIP-133)
+message CreateNoteTypeRequest {
+  // Type identifier (required)
+  string type = 1 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 100,
+    pattern: "^[a-z0-9_-]+$"
+  }];
+  
+  // Display name (required)
+  string display_name = 2 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 255
+  }];
+  
+  // Optional description
+  optional string description = 3 [(buf.validate.field).string.max_len = 1000];
+  
+  // Optional icon
+  optional string icon = 4 [(buf.validate.field).string.max_len = 50];
+  
+  // Optional color
+  optional string color = 5 [(buf.validate.field).string = {
+    max_len: 7,
+    pattern: "^#[0-9A-Fa-f]{6}$"
+  }];
+}
+
+// Request message for GetNoteType (AIP-131)
+message GetNoteTypeRequest {
+  // Note type ID (required)
+  int64 id = 1 [(buf.validate.field).int64.gt = 0];
+}
+
+// Request message for UpdateNoteType (AIP-134)
+message UpdateNoteTypeRequest {
+  // Note type ID (required)
+  int64 id = 1 [(buf.validate.field).int64.gt = 0];
+  
+  // Type identifier (required)
+  string type = 2 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 100,
+    pattern: "^[a-z0-9_-]+$"
+  }];
+  
+  // Display name (required)
+  string display_name = 3 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 255
+  }];
+  
+  // Optional description
+  optional string description = 4 [(buf.validate.field).string.max_len = 1000];
+  
+  // Optional icon
+  optional string icon = 5 [(buf.validate.field).string.max_len = 50];
+  
+  // Optional color
+  optional string color = 6 [(buf.validate.field).string = {
+    max_len: 7,
+    pattern: "^#[0-9A-Fa-f]{6}$"
+  }];
+}
+
+// Request message for DeleteNoteType (AIP-135)
+message DeleteNoteTypeRequest {
+  // Note type ID (required)
+  int64 id = 1 [(buf.validate.field).int64.gt = 0];
+}
+
+// Request message for ListNoteTypes (AIP-132, AIP-158)
+message ListNoteTypesRequest {
+  // Maximum number of note types to return (default: 50, max: 100)
+  int32 page_size = 1 [(buf.validate.field).int32 = {
+    gte: 0,
+    lte: 100
+  }];
+  
+  // Page token from previous ListNoteTypesResponse.next_page_token
+  string page_token = 2;
+}
+
+// Response message for ListNoteTypes (AIP-132, AIP-158)
+message ListNoteTypesResponse {
+  // List of note types
+  repeated NoteType note_types = 1;
+  
+  // Token to retrieve the next page of results (empty if no more results)
+  string next_page_token = 2;
+  
+  // Total number of note types (optional, for UI pagination)
+  optional int32 total_size = 3;
+}
+
+// NoteTypes service definition (Connect-RPC compatible)
+service NoteTypesService {
+  // Create a new note type (AIP-133)
+  rpc CreateNoteType(CreateNoteTypeRequest) returns (NoteType) {
+    option (google.api.http) = {
+      post: "/v3/note_types"
+      body: "*"
+    };
+  }
+  
+  // Get a note type by ID (AIP-131)
+  rpc GetNoteType(GetNoteTypeRequest) returns (NoteType) {
+    option (google.api.http) = {
+      get: "/v3/note_types/{id}"
+    };
+  }
+  
+  // Update a note type (AIP-134)
+  rpc UpdateNoteType(UpdateNoteTypeRequest) returns (NoteType) {
+    option (google.api.http) = {
+      patch: "/v3/note_types/{id}"
+      body: "*"
+    };
+  }
+  
+  // Delete a note type (AIP-135)
+  rpc DeleteNoteType(DeleteNoteTypeRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v3/note_types/{id}"
+    };
+  }
+  
+  // List note types (AIP-132)
+  rpc ListNoteTypes(ListNoteTypesRequest) returns (ListNoteTypesResponse) {
+    option (google.api.http) = {
+      get: "/v3/note_types"
+    };
+  }
+}

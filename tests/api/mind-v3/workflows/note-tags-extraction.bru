@@ -1,0 +1,86 @@
+meta {
+  name: Note Tags Extraction Workflow
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NotesService/CreateNote
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Tags Test {{$timestamp}}",
+    "body": "---\ntags: [workflow, testing, automation]\n---\n\n# Tags Test\n\nThis note has tags in the frontmatter.",
+    "description": "Testing tag extraction from body",
+    "collection_id": 1
+  }
+}
+
+script:post-response {
+  console.log("=== WORKFLOW: Note Tags Extraction ===");
+  
+  // Step 1: Create note with tags in body
+  if (res.status !== 200) {
+    throw new Error("Step 1 FAILED - Create note: " + res.statusText);
+  }
+  
+  const noteId = res.body.name.split("/")[1];
+  bru.setEnvVar("noteId", noteId);
+  console.log("✓ Step 1: Created note with ID:", noteId);
+  console.log("  Title:", res.body.title);
+  
+  // Step 2: Verify tags were extracted and saved
+  console.log("\n✓ Step 2: Verifying tags were extracted");
+  
+  await bru.sendRequest({
+    method: 'POST',
+    url: '{{baseUrl}}/mind.v3.TagsService/ListTags',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
+  }, function(err, res) {
+    if (err) {
+      throw new Error("Step 2 FAILED - List tags error: " + err.message);
+    }
+    if (res.status !== 200) {
+      throw new Error("Step 2 FAILED - List tags status: " + res.status);
+    }
+    
+    const tags = res.data.tags || [];
+    console.log("  Found " + tags.length + " total tags");
+    
+    const expectedTags = ["workflow", "testing", "automation"];
+    const foundTags = tags.filter(function(tag) {
+      return expectedTags.indexOf(tag.display_name) !== -1;
+    });
+    
+    console.log("  Tags found:");
+    foundTags.forEach(function(tag) {
+      console.log("    - " + tag.display_name);
+    });
+    
+    if (foundTags.length !== 3) {
+      throw new Error("Step 2 FAILED - Expected 3 tags, found " + foundTags.length);
+    }
+    
+    console.log("  ✓ All expected tags extracted correctly");
+  });
+  
+  console.log("\n=== WORKFLOW COMPLETE ===");
+  console.log("✅ Note created with tags in body");
+  console.log("✅ All tags extracted and saved");
+}
+
+tests {
+  test("Workflow completed successfully", function() {
+    expect(res.status).to.equal(200);
+  });
+}

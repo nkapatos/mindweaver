@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Mind V3 API",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

@@ -1,0 +1,88 @@
+// Mind API V3 - Links Service
+// Links are derived from wikilinks in note body - READ-ONLY
+// Links are automatically managed when notes are created/updated
+syntax = "proto3";
+
+package mind.v3;
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+option go_package = "github.com/nkapatos/mindweaver/internal/mind/gen/v3;mindv3";
+
+// LinksService provides read-only access to note links
+// Links are derived from wikilinks [[Note Title]] in note body
+service LinksService {
+  // Lists all links (AIP-132)
+  rpc ListLinks(ListLinksRequest) returns (ListLinksResponse) {
+    option (google.api.http) = {
+      get: "/api/mind/v3/links"
+    };
+  }
+}
+
+// Link resource - represents a note-to-note link
+message Link {
+  // Resource name in format "links/{id}"
+  string name = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Unique link identifier
+  int64 id = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Source note ID (where the link originates)
+  int64 src_id = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Destination note ID (where the link points to, null if unresolved)
+  optional int64 dest_id = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Destination note title (from wikilink)
+  optional string dest_title = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Display text (if different from dest_title)
+  optional string display_text = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Whether this is an embedded link (![[link]])
+  optional bool is_embed = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Context text around the link
+  optional string context = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Whether link is resolved (0=unresolved, 1=resolved)
+  optional int64 resolved = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Creation timestamp
+  google.protobuf.Timestamp create_time = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Last update timestamp
+  google.protobuf.Timestamp update_time = 11 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Request to list all links
+message ListLinksRequest {
+  // Maximum number of links to return
+  int32 page_size = 1 [
+    (buf.validate.field).int32 = {
+      gte: 1,
+      lte: 1000
+    }
+  ];
+
+  // Token for retrieving next page
+  string page_token = 2;
+}
+
+// Response for listing links
+message ListLinksResponse {
+  // List of links
+  repeated Link links = 1;
+
+  // Token for next page (empty if no more pages)
+  string next_page_token = 2;
+
+  // Total number of links (optional)
+  optional int32 total_size = 3;
+}
+
+

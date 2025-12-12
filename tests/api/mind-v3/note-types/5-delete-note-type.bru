@@ -1,0 +1,32 @@
+meta {
+  name: Delete Note Type
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NoteTypesService/DeleteNoteType
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": {{noteTypeId}}
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response is empty (successful deletion)", function() {
+    // Connect-RPC returns {} for Empty messages
+    expect(res.body).to.be.an("object");
+  });
+}

@@ -1,0 +1,35 @@
+meta {
+  name: Get Collection
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.CollectionsService/GetCollection
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": {{collectionId}}
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has correct collection ID", function() {
+    expect(res.body.name).to.include(bru.getEnvVar("collectionId"));
+  });
+  
+  test("Collection has display_name field", function() {
+    expect(res.body).to.have.property("displayName");
+  });
+}

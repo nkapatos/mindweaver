@@ -1,0 +1,49 @@
+meta {
+  name: Create Collection
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.CollectionsService/CreateCollection
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "display_name": "Test Collection {{$timestamp}}",
+    "description": "A test collection for API testing"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.name) {
+    // Extract collection ID from resource name (format: "collections/{id}")
+    const collectionId = res.body.name.split("/")[1];
+    bru.setEnvVar("collectionId", collectionId);
+    console.log("Collection created with ID:", collectionId);
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has name field", function() {
+    expect(res.body).to.have.property("name");
+  });
+  
+  test("Response has collection ID", function() {
+    expect(res.body.name).to.match(/^collections\//);
+  });
+  
+  test("Collection has display_name", function() {
+    expect(res.body).to.have.property("displayName");
+  });
+}

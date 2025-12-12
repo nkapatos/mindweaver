@@ -1,0 +1,46 @@
+meta {
+  name: Get Note
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NotesService/GetNote
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": {{noteId}}
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has correct note ID", function() {
+    expect(res.body.id).to.equal(bru.getEnvVar("noteId").toString());
+  });
+  
+  test("Note has required fields", function() {
+    expect(res.body).to.have.property("name");
+    expect(res.body).to.have.property("title");
+    expect(res.body).to.have.property("uuid");
+  });
+  
+  test("Note has body field", function() {
+    expect(res.body).to.have.property("body");
+  });
+  
+  test("Note has timestamps", function() {
+    expect(res.body).to.have.property("createTime");
+    expect(res.body).to.have.property("updateTime");
+  });
+}

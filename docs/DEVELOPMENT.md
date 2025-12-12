@@ -181,6 +181,7 @@ mindweaver/
 ├── pkg/              # Public packages
 │   ├── config/       # Configuration management
 │   ├── logging/      # Structured logging
+│   ├── types/        # API response wrappers
 │   └── ...
 ├── sql/              # Database schemas
 │   ├── mind/         # Notes database
@@ -188,6 +189,146 @@ mindweaver/
 ├── docs/             # Documentation
 └── tasks/            # Task runner configs
 ```
+
+## API Design Guidelines
+
+Mindweaver follows [Google's API Improvement Proposals (AIP)](https://google.aip.dev/) for REST API design. AIP provides comprehensive, battle-tested guidance for building consistent, scalable APIs.
+
+### Core Principles
+
+We adhere to these key AIPs:
+
+- **[AIP-121: Resource-oriented design](https://google.aip.dev/121)** - APIs are organized around resources (notes, collections, assistants)
+- **[AIP-122: Resource names](https://google.aip.dev/122)** - Consistent resource naming (`notes/123`, `collections/456`)
+- **[AIP-131-135: Standard methods](https://google.aip.dev/131)** - GET, LIST, CREATE, UPDATE, DELETE
+- **[AIP-158: Pagination](https://google.aip.dev/158)** - Cursor-based pagination with `page_token`
+- **[AIP-160: Filtering](https://google.aip.dev/160)** - Structured filtering syntax
+- **[AIP-193: Errors](https://google.aip.dev/193)** - Standardized error responses
+
+### Response Wrappers
+
+For improved developer experience, we wrap responses in a consistent envelope structure:
+
+```json
+{
+  "data": { /* resource or list */ },
+  "error": { /* error details if failed */ }
+}
+```
+
+**Single resource** (GET, CREATE, UPDATE):
+```json
+{
+  "data": {
+    "id": 123,
+    "title": "My Note",
+    "content": "...",
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+**Collection** (LIST):
+```json
+{
+  "data": {
+    "kind": "note#list",
+    "items": [...],
+    "next_page_token": "abc123"
+  }
+}
+```
+
+**DELETE** (AIP-135):
+```
+HTTP/1.1 204 No Content
+(empty body)
+```
+
+**Error**:
+```json
+{
+  "error": {
+    "code": 400,
+    "message": "Invalid note_id parameter",
+    "status": "INVALID_ARGUMENT",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+        "reason": "INVALID_PARAMETER_FORMAT",
+        "domain": "mind.mindweaver.com",
+        "metadata": {
+          "parameter": "note_id",
+          "error": "strconv.ParseInt: parsing \"invalid\": invalid syntax"
+        }
+      }
+    ]
+  }
+}
+```
+
+This wrapper provides:
+- **Consistency** - All responses have the same top-level structure
+- **Type safety** - Generic `Response[T]` types in Go
+- **Error handling** - Unified error format across all endpoints
+- **Partial success** - Can return both `data` and `error` for batch operations
+
+### Standard Methods (AIP-131 to AIP-135)
+
+Following AIP standard methods:
+
+| Method | HTTP | Returns | Status Code |
+|--------|------|---------|-------------|
+| **List** (AIP-132) | GET /notes | `Response[ListResult[Note]]` | 200 |
+| **Get** (AIP-131) | GET /notes/123 | `Response[Note]` | 200 |
+| **Create** (AIP-133) | POST /notes | `Response[Note]` (full created resource) | 201 |
+| **Update** (AIP-134) | PUT /notes/123 | `Response[Note]` (full updated resource) | 200 |
+| **Delete** (AIP-135) | DELETE /notes/123 | Empty body | 204 |
+
+### ETags and Versioning (AIP-154)
+
+ETags are used for optimistic concurrency control to prevent conflicting updates:
+
+**Flow:**
+1. Client GETs resource: `GET /notes/123`
+2. Server responds with ETag in **header**: `ETag: "v1-abc123"`
+3. Client updates with condition: `PUT /notes/123` with `If-Match: "v1-abc123"`
+4. Server validates:
+   - If ETag matches → update succeeds, returns new ETag
+   - If ETag mismatched → `412 Precondition Failed` (conflict detected)
+
+**Important**: ETags are exchanged via HTTP headers, not in response bodies.
+
+### Field Naming
+
+We use **snake_case** for all JSON fields (following AIP-140):
+
+```go
+type Note struct {
+    ID        int64  `json:"id"`
+    Title     string `json:"title"`
+    CreatedAt string `json:"created_at"`  // snake_case
+    UpdatedAt string `json:"updated_at"`  // snake_case
+}
+```
+
+### Implementation
+
+Response wrappers are defined in `pkg/types/types.go`:
+
+```go
+// Single resource
+Response[Note]
+
+// Collection
+Response[ListResult[Note]]
+
+// Operation result (minimal response)
+Response[OperationResult]
+```
+
+See `pkg/types/types.go` for complete type definitions and usage examples.
 
 ## Configuration Deep Dive
 

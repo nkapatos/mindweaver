@@ -1,0 +1,103 @@
+[
+  {
+    "iterationIndex": 0,
+    "results": [
+      {
+        "test": {
+          "filename": "notes/4-replace-note-no-meta.bru"
+        },
+        "request": {
+          "method": "POST",
+          "url": "http://localhost:9421/mind.v3.NotesService/ReplaceNote",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "data": "{\n  \"id\": 23,\n  \"title\": \"Updated Note - No Metadata\",\n  \"body\": \"# Updated Content\\n\\nThis note has NO frontmatter.\\n\\nAll metadata should be removed.\",\n  \"description\": \"Updated - no metadata\"\n}"
+        },
+        "response": {
+          "status": 409,
+          "statusText": "Conflict",
+          "headers": {
+            "accept-encoding": "gzip",
+            "content-type": "application/json",
+            "x-request-id": "dca9da46-c3d2-4999-a55e-8b8dd5f2dbe4",
+            "date": "Wed, 10 Dec 2025 15:43:38 GMT",
+            "content-length": "466"
+          },
+          "data": {
+            "code": "already_exists",
+            "message": "notes already exists: title=Updated Note - No Metadata",
+            "details": [
+              {
+                "type": "google.rpc.ErrorInfo",
+                "value": "ChdSRVNPVVJDRV9BTFJFQURZX0VYSVNUUxITbWluZC5taW5kd2VhdmVyLmNvbRoOCgVmaWVsZBIFdGl0bGUaIwoFdmFsdWUSGlVwZGF0ZWQgTm90ZSAtIE5vIE1ldGFkYXRhGhEKCHJlc291cmNlEgVub3Rlcw",
+                "debug": {
+                  "reason": "RESOURCE_ALREADY_EXISTS",
+                  "domain": "mind.mindweaver.com",
+                  "metadata": {
+                    "field": "title",
+                    "resource": "notes",
+                    "value": "Updated Note - No Metadata"
+                  }
+                }
+              }
+            ]
+          },
+          "url": "http://localhost/mind.v3.NotesService/ReplaceNote",
+          "responseTime": 9
+        },
+        "error": null,
+        "status": "pass",
+        "assertionResults": [],
+        "testResults": [
+          {
+            "description": "Status is 200",
+            "status": "fail",
+            "error": "expected 409 to equal 200",
+            "actual": 409,
+            "expected": 200,
+            "uid": "ZdGsf-yPK7IT4QIPN8d2V"
+          },
+          {
+            "description": "Response has correct note ID",
+            "status": "fail",
+            "error": "expected undefined to equal '23'",
+            "expected": "23",
+            "uid": "_Oe4WbXj6gv4yFoXyJIbJ"
+          },
+          {
+            "description": "Body has NO frontmatter",
+            "status": "pass",
+            "uid": "TNmdzbeElxaXf5kytnhwM"
+          }
+        ],
+        "preRequestTestResults": [],
+        "postResponseTestResults": [],
+        "shouldStopRunnerExecution": false,
+        "runDuration": 0.12893875,
+        "name": "Replace Note (No Frontmatter)",
+        "path": "notes/4-replace-note-no-meta",
+        "iterationIndex": 0
+      }
+    ],
+    "summary": {
+      "totalRequests": 1,
+      "passedRequests": 0,
+      "failedRequests": 1,
+      "errorRequests": 0,
+      "skippedRequests": 0,
+      "totalAssertions": 0,
+      "passedAssertions": 0,
+      "failedAssertions": 0,
+      "totalTests": 3,
+      "passedTests": 1,
+      "failedTests": 2,
+      "totalPreRequestTests": 0,
+      "passedPreRequestTests": 0,
+      "failedPreRequestTests": 0,
+      "totalPostResponseTests": 0,
+      "passedPostResponseTests": 0,
+      "failedPostResponseTests": 0
+    }
+  }
+]

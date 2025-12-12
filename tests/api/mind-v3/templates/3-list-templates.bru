@@ -1,0 +1,36 @@
+meta {
+  name: List Templates
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.TemplatesService/ListTemplates
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "page_size": 50
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has templates array", function() {
+    expect(res.body).to.have.property("templates");
+    expect(res.body.templates).to.be.an("array");
+  });
+  
+  test("Templates list is not empty", function() {
+    expect(res.body.templates.length).to.be.greaterThan(0);
+  });
+}

@@ -1,0 +1,60 @@
+// Copyright 2025 Mindweaver
+// SPDX-License-Identifier: Apache-2.0
+
+// NoteMeta V3 API - Read-only sub-resource for note metadata
+// Metadata is managed via note CUD operations (CreateNote, ReplaceNote, DeleteNote)
+// Two types: frontmatter-derived (from note body) and system-managed (auto-captured)
+
+syntax = "proto3";
+
+package mind.v3;
+
+option go_package = "github.com/nkapatos/mindweaver/internal/mind/gen/v3;mindv3";
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+// NoteMeta represents a single key-value metadata entry for a note
+// Stored in EAV pattern: (note_id, key, value)
+message NoteMeta {
+  // Metadata key (e.g., "author", "isbn", "imported_from", "project")
+  string key = 1;
+  
+  // Metadata value (string-typed for flexibility)
+  string value = 2;
+  
+  // Creation timestamp (when this meta entry was created)
+  google.protobuf.Timestamp create_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  
+  // Last update timestamp (when this meta entry was updated)
+  google.protobuf.Timestamp update_time = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Request message for ListMeta
+// Returns all metadata entries for a specific note (frontmatter + system)
+message ListMetaRequest {
+  // Note ID (required)
+  int64 note_id = 1 [(buf.validate.field).int64.gt = 0];
+}
+
+// Response message for ListMeta
+message ListMetaResponse {
+  // Metadata entries for the note
+  repeated NoteMeta items = 1;
+  
+  // Total count of metadata entries
+  int32 total = 2;
+}
+
+// NoteMeta service - read-only sub-resource of notes
+service NoteMetaService {
+  // List all metadata for a specific note
+  // GET /v3/notes/{note_id}/meta
+  rpc ListMeta(ListMetaRequest) returns (ListMetaResponse) {
+    option (google.api.http) = {
+      get: "/v3/notes/{note_id}/meta"
+    };
+  }
+}

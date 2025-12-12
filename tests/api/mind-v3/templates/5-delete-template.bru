@@ -1,0 +1,31 @@
+meta {
+  name: Delete Template
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.TemplatesService/DeleteTemplate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": {{templateId}}
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response is empty object", function() {
+    expect(Object.keys(res.body).length).to.equal(0);
+  });
+}

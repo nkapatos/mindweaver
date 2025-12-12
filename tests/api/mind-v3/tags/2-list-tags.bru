@@ -1,0 +1,32 @@
+meta {
+  name: List Tags
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.TagsService/ListTags
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "page_size": 50
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has tags array", function() {
+    expect(res.body).to.have.property("tags");
+    expect(res.body.tags).to.be.an("array");
+  });
+}

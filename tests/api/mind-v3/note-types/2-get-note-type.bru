@@ -1,0 +1,42 @@
+meta {
+  name: Get Note Type
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NoteTypesService/GetNoteType
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": {{noteTypeId}}
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has correct note type ID", function() {
+    expect(res.body.id).to.equal(bru.getEnvVar("noteTypeId").toString());
+  });
+  
+  test("Note type has required fields", function() {
+    expect(res.body).to.have.property("name");
+    expect(res.body).to.have.property("type");
+    expect(res.body).to.have.property("displayName");
+  });
+  
+  test("Note type has timestamps", function() {
+    expect(res.body).to.have.property("createTime");
+    expect(res.body).to.have.property("updateTime");
+  });
+}

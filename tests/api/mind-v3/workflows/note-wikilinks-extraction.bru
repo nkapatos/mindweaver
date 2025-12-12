@@ -1,0 +1,91 @@
+meta {
+  name: Note WikiLinks Extraction Workflow
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NotesService/CreateNote
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "WikiLinks Test {{$timestamp}}",
+    "body": "# Document\n\nThis references [[Target Note One]] and [[Target Note Two]].\n\nAlso mentions [[Third Reference]].",
+    "description": "Testing wikilink extraction",
+    "collection_id": 1
+  }
+}
+
+script:post-response {
+  console.log("=== WORKFLOW: Note WikiLinks Extraction ===");
+  
+  // Step 1: Create note with wikilinks
+  if (res.status !== 200) {
+    throw new Error("Step 1 FAILED - Create note: " + res.statusText);
+  }
+  
+  const noteId = res.body.name.split("/")[1];
+  bru.setEnvVar("noteId", noteId);
+  console.log("✓ Step 1: Created note with ID:", noteId);
+  console.log("  Title:", res.body.title);
+  
+  // Step 2: Verify wikilinks were extracted
+  console.log("\n✓ Step 2: Verifying wikilinks were extracted");
+  
+  await bru.sendRequest({
+    method: 'GET',
+    url: 'http://localhost:9421/api/mind/notes/' + noteId + '/links'
+  }, function(err, res) {
+    if (err) {
+      throw new Error("Step 2 FAILED - Get links error: " + err.message);
+    }
+    if (res.status !== 200) {
+      throw new Error("Step 2 FAILED - Get links status: " + res.status);
+    }
+    
+    const linksData = res.data;
+    const links = linksData.data ? linksData.data.items : [];
+    
+    console.log("  Found " + links.length + " wikilinks");
+    
+    if (links.length === 0) {
+      throw new Error("Step 2 FAILED - Expected 3 wikilinks, found 0");
+    }
+    
+    const linkTexts = links.map(function(link) {
+      return link.dest_title || link.display_text;
+    });
+    
+    console.log("  Links extracted:");
+    linkTexts.forEach(function(text) {
+      console.log("    - [[" + text + "]]");
+    });
+    
+    // Verify expected links
+    const expectedLinks = ["Target Note One", "Target Note Two", "Third Reference"];
+    expectedLinks.forEach(function(expected) {
+      if (linkTexts.indexOf(expected) === -1) {
+        throw new Error("Step 2 FAILED - Expected link not found: " + expected);
+      }
+    });
+    
+    console.log("  ✓ All expected wikilinks extracted correctly");
+  });
+  
+  console.log("\n=== WORKFLOW COMPLETE ===");
+  console.log("✅ Note created with wikilinks");
+  console.log("✅ All wikilinks extracted and verified");
+}
+
+tests {
+  test("Workflow completed successfully", function() {
+    expect(res.status).to.equal(200);
+  });
+}

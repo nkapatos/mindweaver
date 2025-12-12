@@ -1,0 +1,146 @@
+meta {
+  name: Note Metadata Update Workflow
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NotesService/CreateNote
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Metadata Update Test {{$timestamp}}",
+    "body": "---\nauthor: Alice Johnson\ntags: [initial, test]\nstatus: draft\nproject: alpha\n---\n\n# Initial Content\n\nThis note starts with initial frontmatter.",
+    "description": "Testing metadata updates",
+    "collection_id": 1
+  }
+}
+
+script:post-response {
+  console.log("=== WORKFLOW: Note Metadata Update ===");
+  
+  // Step 1: Create note with initial frontmatter
+  if (res.status !== 200) {
+    throw new Error("Failed to create note: " + res.statusText);
+  }
+  
+  const noteId = res.body.name.split("/")[1];
+  bru.setEnvVar("noteId", noteId);
+  console.log("✓ Step 1: Created note with ID:", noteId);
+  console.log("  Title:", res.body.title);
+  
+  test("Step 1: Note created successfully", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body).to.have.property("name");
+    expect(res.body).to.have.property("id");
+  });
+  
+  test("Step 1: Note has initial frontmatter", function() {
+    expect(res.body.body).to.include("author: Alice Johnson");
+    expect(res.body.body).to.include("tags: [initial, test]");
+    expect(res.body.body).to.include("status: draft");
+    expect(res.body.body).to.include("project: alpha");
+  });
+  
+  // Step 2: Verify initial metadata was extracted
+  console.log("\n✓ Step 2: Retrieving initial metadata for note", noteId);
+  
+  const initialMetaResponse = await bru.runRequest("note-meta/1-list-note-meta");
+  
+  if (!initialMetaResponse || initialMetaResponse.status !== 200) {
+    throw new Error("Failed to get metadata: " + (initialMetaResponse ? initialMetaResponse.statusText : "No response"));
+  }
+  
+  // bru.runRequest returns {status, data} where data is the response body
+  const initialMetaBody = initialMetaResponse.data || initialMetaResponse.body || initialMetaResponse;
+  console.log("  Initial metadata items count:", initialMetaBody.total || 0);
+  
+  const initialMetadata = initialMetaBody.items || [];
+  const initialMetaMap = {};
+  initialMetadata.forEach(function(m) {
+    initialMetaMap[m.key] = m.value;
+    console.log("  -", m.key + ":", m.value);
+  });
+  
+  test("Step 2: Initial metadata extracted correctly", function() {
+    expect(initialMetaResponse.status).to.equal(200);
+    expect(initialMetadata.length).to.be.greaterThan(0);
+    expect(initialMetaMap["author"]).to.equal("Alice Johnson");
+    expect(initialMetaMap["status"]).to.equal("draft");
+    expect(initialMetaMap["project"]).to.equal("alpha");
+  });
+  
+  // Step 3: Update note with NEW frontmatter using ReplaceNote
+  console.log("\n✓ Step 3: Updating note with NEW frontmatter");
+  
+  const replaceResponse = await bru.runRequest("notes/3-replace-note");
+  
+  if (!replaceResponse || replaceResponse.status !== 200) {
+    throw new Error("Failed to replace note: " + (replaceResponse ? replaceResponse.statusText : "No response"));
+  }
+  
+  const replaceBody = replaceResponse.data || replaceResponse.body || replaceResponse;
+  console.log("  Replace successful, checking body...");
+  
+  test("Step 3: ReplaceNote succeeds", function() {
+    expect(replaceResponse.status).to.equal(200);
+    expect(replaceBody.id).to.equal(noteId.toString());
+  });
+  
+  test("Step 3: Body contains new frontmatter", function() {
+    expect(replaceBody.body).to.include("author: Jane Smith");
+    expect(replaceBody.body).to.include("isbn: 978-0-12-345678-9");
+    expect(replaceBody.body).to.include("project: mindweaver-v2");
+    expect(replaceBody.body).to.include("status: completed");
+  });
+  
+  // Step 4: Verify metadata was UPDATED (not just appended)
+  console.log("\n✓ Step 4: Verifying metadata was UPDATED");
+  
+  const updatedMetaResponse = await bru.runRequest("note-meta/1-list-note-meta");
+  
+  if (!updatedMetaResponse || updatedMetaResponse.status !== 200) {
+    throw new Error("Failed to get updated metadata: " + (updatedMetaResponse ? updatedMetaResponse.statusText : "No response"));
+  }
+  
+  const updatedMetaBody = updatedMetaResponse.data || updatedMetaResponse.body || updatedMetaResponse;
+  console.log("  Updated metadata items count:", updatedMetaBody.total || 0);
+  
+  const updatedMetadata = updatedMetaBody.items || [];
+  const updatedMetaMap = {};
+  updatedMetadata.forEach(function(m) {
+    updatedMetaMap[m.key] = m.value;
+    console.log("  -", m.key + ":", m.value);
+  });
+  
+  test("Step 4: Metadata was UPDATED correctly", function() {
+    expect(updatedMetaResponse.status).to.equal(200);
+    expect(updatedMetadata.length).to.be.greaterThan(0);
+    
+    // Verify NEW values
+    expect(updatedMetaMap["author"]).to.equal("Jane Smith");
+    expect(updatedMetaMap["status"]).to.equal("completed");
+    expect(updatedMetaMap["project"]).to.equal("mindweaver-v2");
+    expect(updatedMetaMap["isbn"]).to.equal("978-0-12-345678-9");
+    
+    // Verify OLD values NOT present
+    expect(updatedMetaMap["author"]).to.not.equal("Alice Johnson");
+    expect(updatedMetaMap["project"]).to.not.equal("alpha");
+    expect(updatedMetaMap["status"]).to.not.equal("draft");
+  });
+  
+  console.log("\n=== WORKFLOW COMPLETE ===");
+  console.log("✓ Note created with initial frontmatter");
+  console.log("✓ Initial metadata extracted and verified");
+  console.log("✓ Note updated with NEW frontmatter");
+  console.log("✓ Metadata UPDATED (not appended)");
+  console.log("✓ All NEW metadata values correct");
+  console.log("✓ All OLD metadata values replaced");
+}

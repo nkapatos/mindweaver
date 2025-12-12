@@ -1,0 +1,61 @@
+meta {
+  name: Create Note Type
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NoteTypesService/CreateNoteType
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "type": "test_type_{{$timestamp}}",
+    "display_name": "Test Type {{$timestamp}}",
+    "description": "A test note type for API testing",
+    "icon": "📝",
+    "color": "#FF5733"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.id) {
+    bru.setEnvVar("noteTypeId", res.body.id);
+    console.log("Note type created with ID:", res.body.id);
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has id", function() {
+    expect(res.body).to.have.property("id");
+  });
+  
+  test("Response has name field", function() {
+    expect(res.body).to.have.property("name");
+    expect(res.body.name).to.match(/^note_types\//);
+  });
+  
+  test("Note type has required fields", function() {
+    expect(res.body).to.have.property("type");
+    expect(res.body).to.have.property("displayName");
+  });
+  
+  test("Note type has timestamps", function() {
+    expect(res.body).to.have.property("createTime");
+    expect(res.body).to.have.property("updateTime");
+  });
+  
+  test("Note type is not system type", function() {
+    expect(res.body.isSystem).to.be.false;
+  });
+}

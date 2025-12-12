@@ -1,0 +1,265 @@
+// Copyright 2025 Mindweaver
+// SPDX-License-Identifier: Apache-2.0
+
+// Notes V3 API - Resource-oriented design following Google AIP standards
+// Manages note content with markdown, frontmatter, and relationships
+
+syntax = "proto3";
+
+package mind.v3;
+
+option go_package = "github.com/nkapatos/mindweaver/internal/mind/gen/v3;mindv3";
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+// Note resource following AIP-121 (resource-oriented design)
+// Represents a markdown note with metadata and relationships
+message Note {
+  // Resource name in format "notes/{id}" (AIP-122)
+  // Example: "notes/456"
+  string name = 1;
+  
+  // Unique note identifier
+  int64 id = 2;
+  
+  // UUIDv7 for sync and time-ordering (read-only, server-generated)
+  string uuid = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
+  
+  // Note title (required, unique within collection, max 255 chars)
+  string title = 4 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 255
+  }];
+  
+  // Note body in markdown format (optional)
+  // Contains both frontmatter and content composed together
+  // Example: "---\nauthor: John\n---\n\n# Content here"
+  // Server parses frontmatter on write, composes on read
+  optional string body = 5;
+  
+  // Optional description/summary (max 600 chars)
+  optional string description = 6 [(buf.validate.field).string.max_len = 600];
+  
+  // Optional note type ID (FK to note_types)
+  optional int64 note_type_id = 7 [(buf.validate.field).int64.gt = 0];
+  
+  // Collection ID where note belongs (required, defaults to 1 in DB)
+  int64 collection_id = 8 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional flag indicating if this note is a template
+  optional bool is_template = 9;
+  
+  // ETag for optimistic concurrency control (AIP-154)
+  // Format: W/"<hash>" computed from version + salt
+  // Client sends this in If-Match header on updates
+  string etag = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
+  
+  // Creation timestamp (RFC3339) - AIP-142
+  google.protobuf.Timestamp create_time = 11 [(google.api.field_behavior) = OUTPUT_ONLY];
+  
+  // Last update timestamp (RFC3339) - AIP-142
+  google.protobuf.Timestamp update_time = 12 [(google.api.field_behavior) = OUTPUT_ONLY];
+  
+  // System-managed metadata (read-only)
+  // Combined frontmatter-derived and system metadata
+  // Use GET /v3/notes/{note}/meta sub-resource to read
+  map<string, string> metadata = 13 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Request message for CreateNote (AIP-133)
+message CreateNoteRequest {
+  // Note title (required)
+  string title = 1 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 255
+  }];
+  
+  // Note body with optional frontmatter (optional)
+  optional string body = 2;
+  
+  // Optional description
+  optional string description = 3 [(buf.validate.field).string.max_len = 600];
+  
+  // Optional note type ID
+  optional int64 note_type_id = 4 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional collection ID (defaults to 1 if omitted)
+  optional int64 collection_id = 5 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional template flag
+  optional bool is_template = 6;
+  
+  // Optional system-managed metadata
+  // Key-value pairs for enrichment from plugins, importers, etc.
+  // Stored separately in note_meta table
+  map<string, string> metadata = 7;
+}
+
+// Request message for GetNote (AIP-131)
+message GetNoteRequest {
+  // Note ID (required)
+  int64 id = 1 [(buf.validate.field).int64.gt = 0];
+}
+
+// Request message for ReplaceNote (PUT operation - full replacement)
+// Client must send If-Match header with ETag for optimistic locking
+message ReplaceNoteRequest {
+  // Note ID (required)
+  int64 id = 1 [(buf.validate.field).int64.gt = 0];
+  
+  // Note title (required)
+  string title = 2 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 255
+  }];
+  
+  // Note body (optional - can be empty for notes without content)
+  optional string body = 3;
+  
+  // Description (optional)
+  optional string description = 4 [(buf.validate.field).string.max_len = 600];
+  
+  // Note type ID (optional)
+  optional int64 note_type_id = 5 [(buf.validate.field).int64.gt = 0];
+  
+  // Collection ID (required - defaults to 1 if not provided)
+  optional int64 collection_id = 6 [(buf.validate.field).int64.gt = 0];
+  
+  // Template flag (optional)
+  optional bool is_template = 7;
+  
+  // Optional system-managed metadata
+  // Key-value pairs for enrichment from plugins, importers, etc.
+  // Stored separately in note_meta table
+  map<string, string> metadata = 8;
+}
+
+// Request message for DeleteNote (AIP-135)
+message DeleteNoteRequest {
+  // Note ID (required)
+  int64 id = 1 [(buf.validate.field).int64.gt = 0];
+}
+
+// Request message for ListNotes (AIP-132, AIP-158)
+message ListNotesRequest {
+  // Maximum number of notes to return (default: 50, max: 100)
+  int32 page_size = 1 [(buf.validate.field).int32 = {
+    gte: 0,
+    lte: 100
+  }];
+  
+  // Page token from previous ListNotesResponse.next_page_token
+  string page_token = 2;
+  
+  // Optional: Filter by collection_id (returns notes in collection only)
+  optional int64 collection_id = 3 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional: Filter by note_type_id
+  optional int64 note_type_id = 4 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional: Filter by is_template flag
+  optional bool is_template = 5;
+}
+
+// Response message for ListNotes (AIP-132, AIP-158)
+message ListNotesResponse {
+  // List of notes
+  repeated Note notes = 1;
+  
+  // Token to retrieve the next page of results (empty if no more results)
+  string next_page_token = 2;
+  
+  // Total number of notes matching filter (optional, for UI pagination)
+  optional int32 total_size = 3;
+}
+
+// Notes service definition (Connect-RPC compatible)
+service NotesService {
+  // Create a new note (AIP-133)
+  rpc CreateNote(CreateNoteRequest) returns (Note) {
+    option (google.api.http) = {
+      post: "/v3/notes"
+      body: "*"
+    };
+  }
+  
+  // Get a note by ID (AIP-131)
+  rpc GetNote(GetNoteRequest) returns (Note) {
+    option (google.api.http) = {
+      get: "/v3/notes/{id}"
+    };
+  }
+  
+  // Replace a note (AIP-134) - PUT operation for full replacement
+  // Requires If-Match header with ETag for optimistic locking
+  // All fields are replaced; title is required, others optional
+  rpc ReplaceNote(ReplaceNoteRequest) returns (Note) {
+    option (google.api.http) = {
+      put: "/v3/notes/{id}"
+      body: "*"
+    };
+  }
+  
+  // Delete a note (AIP-135)
+  rpc DeleteNote(DeleteNoteRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v3/notes/{id}"
+    };
+  }
+  
+  // List notes with optional filters (AIP-132)
+  rpc ListNotes(ListNotesRequest) returns (ListNotesResponse) {
+    option (google.api.http) = {
+      get: "/v3/notes"
+    };
+  }
+
+  // Get note metadata (read-only sub-resource)
+  rpc GetNoteMeta(GetNoteMetaRequest) returns (GetNoteMetaResponse) {
+    option (google.api.http) = {
+      get: "/v3/notes/{note_id}/meta"
+    };
+  }
+
+  // Get note relationships (read-only sub-resource)
+  // Returns outgoing links, backlinks, and tags for a note
+  rpc GetNoteRelationships(GetNoteRelationshipsRequest) returns (GetNoteRelationshipsResponse) {
+    option (google.api.http) = {
+      get: "/v3/notes/{note_id}/relationships"
+    };
+  }
+}
+
+// Request message for GetNoteMeta
+message GetNoteMetaRequest {
+  // Note ID (required)
+  int64 note_id = 1 [(buf.validate.field).int64.gt = 0];
+}
+
+// Response message for GetNoteMeta
+message GetNoteMetaResponse {
+  // Metadata key-value pairs
+  map<string, string> metadata = 1;
+}
+
+// Request message for GetNoteRelationships
+message GetNoteRelationshipsRequest {
+  // Note ID (required)
+  int64 note_id = 1 [(buf.validate.field).int64.gt = 0];
+}
+
+// Response message for GetNoteRelationships
+message GetNoteRelationshipsResponse {
+  // Outgoing link IDs (notes this note links to)
+  repeated int64 outgoing_links = 1;
+  
+  // Incoming link IDs (notes that link to this note)
+  repeated int64 incoming_links = 2;
+  
+  // Tag IDs associated with this note
+  repeated int64 tag_ids = 3;
+}

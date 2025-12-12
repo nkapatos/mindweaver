@@ -1,0 +1,52 @@
+meta {
+  name: List Note Metadata
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NoteMetaService/ListNoteMeta
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "note_id": {{noteId}}
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response is valid (empty or with data)", function() {
+    // API returns {} when no metadata, or {items: [], total: N} when metadata exists
+    if (Object.keys(res.body).length === 0) {
+      // Empty response is valid (no metadata)
+      expect(res.body).to.be.an("object");
+    } else {
+      // Response with metadata
+      expect(res.body).to.have.property("items");
+      expect(res.body.items).to.be.an("array");
+      expect(res.body).to.have.property("total");
+      expect(res.body.total).to.be.a("number");
+    }
+  });
+  
+  test("Metadata items have required properties", function() {
+    if (res.body.items && res.body.items.length > 0) {
+      res.body.items.forEach(function(item) {
+        expect(item).to.have.property("key");
+        expect(item).to.have.property("value");
+        expect(item).to.have.property("createTime");
+        expect(item).to.have.property("updateTime");
+      });
+    }
+  });
+}

@@ -1,0 +1,12 @@
+# buf.yaml - Main buf configuration
+version: v2
+modules:
+  - path: mind
+lint:
+  use:
+    - STANDARD
+  except:
+    - PACKAGE_DIRECTORY_MATCH # Allow flexible directory structure
+breaking:
+  use:
+    - FILE

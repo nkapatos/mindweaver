@@ -1,0 +1,10 @@
+test_author: integration-test-suite
+test_environment: local-development
+test_timestamp: 2024-03-20T10:30:00Z
+test_run_id: test-run-12345
+test_case: note-creation-with-metadata
+verified: true
+status: draft
+priority: low
+version: 1.0
+language: en

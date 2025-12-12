@@ -1,0 +1,46 @@
+meta {
+  name: Create Template
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.TemplatesService/CreateTemplate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "display_name": "Daily Note Template {{$timestamp}}",
+    "description": "Template for daily notes",
+    "starter_note_id": 11
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.name) {
+    // Extract template ID from resource name (format: "templates/{id}")
+    const templateId = res.body.name.split("/")[1];
+    bru.setEnvVar("templateId", templateId);
+    console.log("Template created with ID:", templateId);
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has name field", function() {
+    expect(res.body).to.have.property("name");
+  });
+  
+  test("Response has template ID", function() {
+    expect(res.body.name).to.match(/^templates\//);
+  });
+}

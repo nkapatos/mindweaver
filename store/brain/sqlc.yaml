@@ -1,0 +1,12 @@
+version: "2"
+sql:
+  - engine: sqlite
+    queries: ./sql
+    schema: ../../migrations/brain/
+    gen:
+      go:
+        package: store
+        out: ../../internal/brain/store
+        emit_interface: true
+        emit_json_tags: true
+        json_tags_case_style: snake
