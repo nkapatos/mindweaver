@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
-	"path/filepath"
 
 	"github.com/nkapatos/mindweaver/internal/mind/collections"
 	"github.com/nkapatos/mindweaver/internal/mind/links"
@@ -18,7 +17,6 @@ import (
 	"github.com/nkapatos/mindweaver/internal/mind/store"
 	"github.com/nkapatos/mindweaver/internal/mind/tags"
 	"github.com/nkapatos/mindweaver/internal/mind/templates"
-	"github.com/nkapatos/mindweaver/internal/mind/titleindex"
 	mindmigrations "github.com/nkapatos/mindweaver/migrations/mind"
 
 	"github.com/labstack/echo/v4"
@@ -83,11 +81,11 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 	}
 
 	// Extract directory from database path for title index
-	dbDir := filepath.Dir(dbPath)
+	// dbDir := filepath.Dir(dbPath)
 
 	// Initialize title index (BadgerDB for title→uuid lookup)
-	titleIndexPath := filepath.Join(dbDir, "titleindex")
-	titleIndex, err := titleindex.NewTitleIndex(titleIndexPath, logger)
+	// titleIndexPath := filepath.Join(dbDir, "titleindex")
+	// titleIndex, err := titleindex.NewTitleIndex(titleIndexPath, logger)
 	if err != nil {
 		db.Close()
 		return nil, nil, fmt.Errorf("failed to initialize title index: %w", err)
