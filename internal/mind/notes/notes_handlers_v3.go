@@ -9,6 +9,7 @@ import (
 	"connectrpc.com/connect"
 	mindv3 "github.com/nkapatos/mindweaver/internal/mind/gen/v3"
 	"github.com/nkapatos/mindweaver/internal/mind/gen/v3/mindv3connect"
+	"github.com/nkapatos/mindweaver/internal/mind/links"
 	"github.com/nkapatos/mindweaver/internal/mind/meta"
 	"github.com/nkapatos/mindweaver/internal/mind/store"
 	"github.com/nkapatos/mindweaver/internal/mind/tags"
@@ -18,15 +19,18 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+// NotesHandlerV3 implements the Connect-RPC NotesService handlers.
+// Orchestrates multiple services (notes, meta, links, tags) for sub-resource endpoints.
 type NotesHandlerV3 struct {
 	mindv3connect.UnimplementedNotesServiceHandler
 	service      *NotesService
 	metaService  *meta.NoteMetaService
-	linksService *LinksService
+	linksService *links.LinksService
 	tagsSvc      *tags.TagsService
 }
 
-func NewNotesHandlerV3(service *NotesService, metaService *meta.NoteMetaService, linksService *LinksService, tagsSvc *tags.TagsService) *NotesHandlerV3 {
+// NewNotesHandlerV3 creates a new NotesHandlerV3.
+func NewNotesHandlerV3(service *NotesService, metaService *meta.NoteMetaService, linksService *links.LinksService, tagsSvc *tags.TagsService) *NotesHandlerV3 {
 	return &NotesHandlerV3{
 		service:      service,
 		metaService:  metaService,
@@ -196,43 +200,42 @@ func (h *NotesHandlerV3) ListNotes(
 	return connect.NewResponse(resp), nil
 }
 
-// TODO: GetNoteMeta and GetNoteRelationships need proto definitions
-// func (h *NotesHandlerV3) GetNoteMeta(
-// 	ctx context.Context,
-// 	req *connect.Request[mindv3.GetNoteMetaRequest],
-// ) (*connect.Response[mindv3.GetNoteMetaResponse], error) {
-// 	metadata, err := h.service.GetNoteMeta(ctx, req.Msg.NoteId, h.metaService)
-// 	if err != nil {
-// 		if errors.Is(err, sql.ErrNoRows) {
-// 			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.NoteId, 10))
-// 		}
-// 		return nil, newInternalError("failed to get note metadata", err)
-// 	}
-//
-// 	resp := &mindv3.GetNoteMetaResponse{
-// 		Metadata: metadata,
-// 	}
-//
-// 	return connect.NewResponse(resp), nil
-// }
-//
-// func (h *NotesHandlerV3) GetNoteRelationshipsLegacy(
-// 	ctx context.Context,
-// 	req *connect.Request[mindv3.GetNoteRelationshipsRequest],
-// ) (*connect.Response[mindv3.GetNoteRelationshipsResponse], error) {
-// 	relationships, err := h.service.GetNoteRelationships(ctx, req.Msg.NoteId, h.linksService, h.tagsSvc)
-// 	if err != nil {
-// 		if errors.Is(err, sql.ErrNoRows) {
-// 			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.NoteId, 10))
-// 		}
-// 		return nil, newInternalError("failed to get note relationships", err)
-// 	}
-//
-// 	resp := &mindv3.GetNoteRelationshipsResponse{
-// 		OutgoingLinks: relationships.OutgoingLinks,
-// 		IncomingLinks: relationships.IncomingLinks,
-// 		TagIds:        relationships.TagIDs,
-// 	}
-//
-// 	return connect.NewResponse(resp), nil
-// }
+func (h *NotesHandlerV3) GetNoteMeta(
+	ctx context.Context,
+	req *connect.Request[mindv3.GetNoteMetaRequest],
+) (*connect.Response[mindv3.GetNoteMetaResponse], error) {
+	metadata, err := h.service.GetNoteMeta(ctx, req.Msg.NoteId, h.metaService)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.NoteId, 10))
+		}
+		return nil, newInternalError("failed to get note metadata", err)
+	}
+
+	resp := &mindv3.GetNoteMetaResponse{
+		Metadata: metadata,
+	}
+
+	return connect.NewResponse(resp), nil
+}
+
+func (h *NotesHandlerV3) GetNoteRelationships(
+	ctx context.Context,
+	req *connect.Request[mindv3.GetNoteRelationshipsRequest],
+) (*connect.Response[mindv3.GetNoteRelationshipsResponse], error) {
+	outgoingLinks, incomingLinks, tagIDs, err := h.service.GetNoteRelationships(ctx, req.Msg.NoteId, h.linksService, h.tagsSvc)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.NoteId, 10))
+		}
+		return nil, newInternalError("failed to get note relationships", err)
+	}
+
+	resp := &mindv3.GetNoteRelationshipsResponse{
+		OutgoingLinks: outgoingLinks,
+		IncomingLinks: incomingLinks,
+		TagIds:        tagIDs,
+	}
+
+	return connect.NewResponse(resp), nil
+}

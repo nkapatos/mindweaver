@@ -2,10 +2,12 @@ package links
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 
 	"github.com/nkapatos/mindweaver/internal/mind/store"
 	"github.com/nkapatos/mindweaver/pkg/middleware"
+	"github.com/nkapatos/mindweaver/pkg/utils"
 )
 
 // LinksService provides business logic for links resource operations.
@@ -25,132 +27,187 @@ func NewLinksService(store store.Querier, logger *slog.Logger, serviceName strin
 	}
 }
 
-// ListLinks returns all links (matches ListLinks in proto).
-func (s *LinksService) ListLinks(ctx context.Context) ([]store.NotesLink, error) {
-	items, err := s.store.ListNotesLinks(ctx)
+// ============================================================================
+// Basic CRUD Operations
+// ============================================================================
+
+// CreateLink creates a resolved link between two notes.
+func (s *LinksService) CreateLink(ctx context.Context, params store.CreateLinkParams) (int64, error) {
+	id, err := s.store.CreateLink(ctx, params)
 	if err != nil {
-		s.logger.Error("failed to list notes_links", "err", err, "request_id", middleware.GetRequestID(ctx))
+		s.logger.Error("failed to create link", "src_id", params.SrcID, "dest_id", params.DestID, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return 0, err
 	}
-	return items, err
+	s.logger.Info("link created", "id", id, "src_id", params.SrcID, "dest_id", params.DestID, "request_id", middleware.GetRequestID(ctx))
+	return id, nil
+}
+
+// CreateUnresolvedLink creates an unresolved link (target note doesn't exist yet).
+func (s *LinksService) CreateUnresolvedLink(ctx context.Context, params store.CreateUnresolvedLinkParams) (int64, error) {
+	id, err := s.store.CreateUnresolvedLink(ctx, params)
+	if err != nil {
+		s.logger.Error("failed to create unresolved link", "src_id", params.SrcID, "dest_title", params.DestTitle, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return 0, err
+	}
+	s.logger.Info("unresolved link created", "id", id, "src_id", params.SrcID, "dest_title", params.DestTitle, "request_id", middleware.GetRequestID(ctx))
+	return id, nil
 }
 
 // GetLinkByID returns a link by ID.
-func (s *LinksService) GetLinkByID(ctx context.Context, id int64) (store.NotesLink, error) {
-	item, err := s.store.GetNotesLinkByID(ctx, id)
+func (s *LinksService) GetLinkByID(ctx context.Context, id int64) (store.Link, error) {
+	link, err := s.store.GetLinkByID(ctx, id)
 	if err != nil {
-		s.logger.Error("failed to get notes_link by id", "id", id, "err", err, "request_id", middleware.GetRequestID(ctx))
+		if err == sql.ErrNoRows {
+			s.logger.Warn("link not found", "id", id, "request_id", middleware.GetRequestID(ctx))
+		} else {
+			s.logger.Error("failed to get link by id", "id", id, "err", err, "request_id", middleware.GetRequestID(ctx))
+		}
+		return store.Link{}, err
 	}
-	return item, err
+	return link, nil
+}
+
+// ListLinks returns all links.
+func (s *LinksService) ListLinks(ctx context.Context) ([]store.Link, error) {
+	links, err := s.store.ListLinks(ctx)
+	if err != nil {
+		s.logger.Error("failed to list links", "err", err, "request_id", middleware.GetRequestID(ctx))
+		return nil, err
+	}
+	return links, nil
+}
+
+// DeleteLinksBySrcID deletes all outgoing links from a note.
+func (s *LinksService) DeleteLinksBySrcID(ctx context.Context, srcID int64) error {
+	err := s.store.DeleteLinksBySrcID(ctx, srcID)
+	if err != nil {
+		s.logger.Error("failed to delete links by src_id", "src_id", srcID, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return err
+	}
+	s.logger.Info("links deleted by src_id", "src_id", srcID, "request_id", middleware.GetRequestID(ctx))
+	return nil
 }
 
 // ============================================================================
-// TODO: Move the following methods to notes service
-// These operations are triggered by note creation/update, not link management
+// Query Operations
 // ============================================================================
 
-// // DeleteLinksBySourceID deletes all outgoing links from a note.
-// // Used when updating a note's body to remove old links before adding new ones.
-// func (s *LinksService) DeleteLinksBySourceID(ctx context.Context, srcID int64) error {
-// 	err := s.store.DeleteNotesLinksBySrcID(ctx, srcID)
-// 	if err != nil {
-// 		s.logger.Error("failed to delete links by src_id", "src_id", srcID, "err", err, "request_id", middleware.GetRequestID(ctx))
-// 		return err
-// 	}
-// 	s.logger.Info("links deleted by src_id", "src_id", srcID, "request_id", middleware.GetRequestID(ctx))
-// 	return nil
-// }
+// ListLinksBySrcID returns all outgoing links from a note (forward links).
+func (s *LinksService) ListLinksBySrcID(ctx context.Context, srcID int64) ([]store.Link, error) {
+	links, err := s.store.ListLinksBySrcID(ctx, srcID)
+	if err != nil {
+		s.logger.Error("failed to list links by src_id", "src_id", srcID, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return nil, err
+	}
+	return links, nil
+}
 
-// // ListLinksBySrcID returns all outgoing links from a note (where note is the source).
-// func (s *LinksService) ListLinksBySrcID(ctx context.Context, srcID int64) ([]store.NotesLink, error) {
-// 	links, err := s.store.ListNotesLinksBySrcID(ctx, srcID)
-// 	if err != nil {
-// 		s.logger.Error("failed to list links by src_id", "src_id", srcID, "err", err, "request_id", middleware.GetRequestID(ctx))
-// 	}
-// 	return links, err
-// }
+// ListLinksByDestID returns all incoming links to a note (backlinks).
+func (s *LinksService) ListLinksByDestID(ctx context.Context, destID sql.NullInt64) ([]store.Link, error) {
+	links, err := s.store.ListLinksByDestID(ctx, destID)
+	if err != nil {
+		s.logger.Error("failed to list links by dest_id", "dest_id", destID, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return nil, err
+	}
+	return links, nil
+}
 
-// // ListLinksByDestID returns all incoming links to a note (backlinks, where note is the destination).
-// func (s *LinksService) ListLinksByDestID(ctx context.Context, destID int64) ([]store.NotesLink, error) {
-// 	links, err := s.store.ListNotesLinksByDestID(ctx, utils.ToNullInt64(&destID))
-// 	if err != nil {
-// 		s.logger.Error("failed to list links by dest_id", "dest_id", destID, "err", err, "request_id", middleware.GetRequestID(ctx))
-// 	}
-// 	return links, err
-// }
+// SearchLinksByDisplayText searches for links by display text pattern.
+func (s *LinksService) SearchLinksByDisplayText(ctx context.Context, pattern string) ([]store.Link, error) {
+	links, err := s.store.SearchLinksByDisplayText(ctx, utils.NullString(pattern))
+	if err != nil {
+		s.logger.Error("failed to search links by display text", "pattern", pattern, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return nil, err
+	}
+	return links, nil
+}
 
-// // CreateLinksForNote creates notes_links entries from parsed WikiLinks.
-// // It attempts to resolve links to existing notes by title.
-// // If a target note exists, creates a resolved link (dest_id set, dest_title NULL).
-// // If target doesn't exist, creates an unresolved link (dest_id NULL, dest_title set).
-// func (s *LinksService) CreateLinksForNote(ctx context.Context, noteID int64, wikiLinks []markdown.WikiLink) error {
-// 	for _, link := range wikiLinks {
-// 		// Try to find target note by title (search globally across all collections)
-// 		targetNote, err := s.store.GetNoteByTitleGlobal(ctx, link.Target)
+// ============================================================================
+// WikiLink Resolution Operations
+// ============================================================================
 
-// 		if err == nil {
-// 			// Target exists - create resolved link
-// 			params := store.CreateNotesLinkParams{
-// 				SrcID:       noteID,
-// 				DestID:      utils.ToNullInt64(&targetNote.ID),
-// 				DisplayText: utils.ToNullString(&link.DisplayText),
-// 				IsEmbed:     sql.NullBool{Bool: link.Embed, Valid: true},
-// 			}
-// 			_, err = s.store.CreateNotesLink(ctx, params)
-// 			if err != nil {
-// 				s.logger.Error("failed to create resolved link", "src_id", noteID, "dest_id", targetNote.ID, "target", link.Target, "err", err, "request_id", middleware.GetRequestID(ctx))
-// 				return err
-// 			}
-// 			s.logger.Info("resolved link created", "src_id", noteID, "dest_id", targetNote.ID, "target", link.Target, "request_id", middleware.GetRequestID(ctx))
-// 		} else if err == sql.ErrNoRows {
-// 			// Target doesn't exist - create unresolved link
-// 			params := store.CreateUnresolvedNotesLinkParams{
-// 				SrcID:       noteID,
-// 				DestTitle:   utils.ToNullString(&link.Target),
-// 				DisplayText: utils.ToNullString(&link.DisplayText),
-// 				IsEmbed:     sql.NullBool{Bool: link.Embed, Valid: true},
-// 			}
-// 			_, err = s.store.CreateUnresolvedNotesLink(ctx, params)
-// 			if err != nil {
-// 				s.logger.Error("failed to create unresolved link", "src_id", noteID, "target", link.Target, "err", err, "request_id", middleware.GetRequestID(ctx))
-// 				return err
-// 			}
-// 			s.logger.Info("unresolved link created", "src_id", noteID, "target", link.Target, "request_id", middleware.GetRequestID(ctx))
-// 		} else {
-// 			// Database error
-// 			s.logger.Error("failed to check if target note exists", "target", link.Target, "err", err, "request_id", middleware.GetRequestID(ctx))
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
+// ListUnresolvedLinks returns pending and broken links for resolution.
+func (s *LinksService) ListUnresolvedLinks(ctx context.Context, limit int64) ([]store.Link, error) {
+	links, err := s.store.ListUnresolvedLinks(ctx, limit)
+	if err != nil {
+		s.logger.Error("failed to list unresolved links", "limit", limit, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return nil, err
+	}
+	return links, nil
+}
 
-// // ResolveBacklinksForNote finds and resolves any unresolved links pointing to this note.
-// // This should be called after creating a new note to resolve any pending WikiLinks.
-// func (s *LinksService) ResolveBacklinksForNote(ctx context.Context, noteID int64, noteTitle string) error {
-// 	// Find unresolved links with matching dest_title
-// 	unresolvedLinks, err := s.store.FindUnresolvedLinksByDestTitle(ctx, utils.ToNullString(&noteTitle))
-// 	if err != nil {
-// 		s.logger.Error("failed to find unresolved links", "title", noteTitle, "err", err, "request_id", middleware.GetRequestID(ctx))
-// 		return err
-// 	}
+// FindUnresolvedLinksByDestTitle finds unresolved links pointing to a specific note title.
+func (s *LinksService) FindUnresolvedLinksByDestTitle(ctx context.Context, destTitle sql.NullString) ([]store.Link, error) {
+	links, err := s.store.FindUnresolvedLinksByDestTitle(ctx, destTitle)
+	if err != nil {
+		s.logger.Error("failed to find unresolved links by dest_title", "dest_title", destTitle, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return nil, err
+	}
+	return links, nil
+}
 
-// 	// Resolve each link
-// 	for _, link := range unresolvedLinks {
-// 		params := store.ResolveLinkParams{
-// 			ID:     link.ID,
-// 			DestID: utils.ToNullInt64(&noteID),
-// 		}
-// 		err = s.store.ResolveLink(ctx, params)
-// 		if err != nil {
-// 			s.logger.Error("failed to resolve link", "link_id", link.ID, "dest_id", noteID, "err", err, "request_id", middleware.GetRequestID(ctx))
-// 			return err
-// 		}
-// 		s.logger.Info("link resolved", "link_id", link.ID, "src_id", link.SrcID, "dest_id", noteID, "request_id", middleware.GetRequestID(ctx))
-// 	}
+// CountUnresolvedLinks returns the count of pending links.
+func (s *LinksService) CountUnresolvedLinks(ctx context.Context) (int64, error) {
+	count, err := s.store.CountUnresolvedLinks(ctx)
+	if err != nil {
+		s.logger.Error("failed to count unresolved links", "err", err, "request_id", middleware.GetRequestID(ctx))
+		return 0, err
+	}
+	return count, nil
+}
 
-// 	if len(unresolvedLinks) > 0 {
-// 		s.logger.Info("resolved backlinks for new note", "note_id", noteID, "title", noteTitle, "count", len(unresolvedLinks), "request_id", middleware.GetRequestID(ctx))
-// 	}
+// ResolveLink resolves a pending link by setting the destination note ID.
+func (s *LinksService) ResolveLink(ctx context.Context, params store.ResolveLinkParams) error {
+	err := s.store.ResolveLink(ctx, params)
+	if err != nil {
+		s.logger.Error("failed to resolve link", "link_id", params.ID, "dest_id", params.DestID, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return err
+	}
+	s.logger.Info("link resolved", "link_id", params.ID, "dest_id", params.DestID, "request_id", middleware.GetRequestID(ctx))
+	return nil
+}
 
-// 	return nil
-// }
+// MarkLinkBroken marks a link as broken (resolved = -1).
+func (s *LinksService) MarkLinkBroken(ctx context.Context, id int64) error {
+	err := s.store.MarkLinkBroken(ctx, id)
+	if err != nil {
+		s.logger.Error("failed to mark link broken", "link_id", id, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return err
+	}
+	s.logger.Info("link marked as broken", "link_id", id, "request_id", middleware.GetRequestID(ctx))
+	return nil
+}
+
+// ============================================================================
+// Broken/Orphaned Links Operations
+// ============================================================================
+
+// ListBrokenLinks returns all broken links (resolved = -1).
+func (s *LinksService) ListBrokenLinks(ctx context.Context) ([]store.Link, error) {
+	links, err := s.store.ListBrokenLinks(ctx)
+	if err != nil {
+		s.logger.Error("failed to list broken links", "err", err, "request_id", middleware.GetRequestID(ctx))
+		return nil, err
+	}
+	return links, nil
+}
+
+// CountBrokenLinks returns the count of broken links.
+func (s *LinksService) CountBrokenLinks(ctx context.Context) (int64, error) {
+	count, err := s.store.CountBrokenLinks(ctx)
+	if err != nil {
+		s.logger.Error("failed to count broken links", "err", err, "request_id", middleware.GetRequestID(ctx))
+		return 0, err
+	}
+	return count, nil
+}
+
+// ListOrphanedLinks returns links where destination note no longer exists.
+func (s *LinksService) ListOrphanedLinks(ctx context.Context) ([]store.Link, error) {
+	links, err := s.store.ListOrphanedLinks(ctx)
+	if err != nil {
+		s.logger.Error("failed to list orphaned links", "err", err, "request_id", middleware.GetRequestID(ctx))
+		return nil, err
+	}
+	return links, nil
+}

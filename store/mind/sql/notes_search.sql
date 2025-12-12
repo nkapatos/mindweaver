@@ -22,7 +22,7 @@ SELECT DISTINCT
     n.note_type_id,
     n.created_at
 FROM notes n
-JOIN notes_links nl ON n.id = nl.dest_id
+JOIN links nl ON n.id = nl.dest_id
 WHERE nl.src_id = :note_id
 LIMIT :limit_count;
 
@@ -35,7 +35,7 @@ SELECT DISTINCT
     n.note_type_id,
     n.created_at
 FROM notes n
-JOIN notes_links nl ON n.id = nl.src_id
+JOIN links nl ON n.id = nl.src_id
 WHERE nl.dest_id = :note_id
 LIMIT :limit_count;
 

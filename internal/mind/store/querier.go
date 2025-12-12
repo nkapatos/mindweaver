@@ -36,6 +36,7 @@ type Querier interface {
 	// collections.sql
 	// CRUD operations for collections (hierarchical folders/paths for notes)
 	CreateCollection(ctx context.Context, arg CreateCollectionParams) (int64, error)
+	CreateLink(ctx context.Context, arg CreateLinkParams) (int64, error)
 	// notes.sql
 	// Pass 4: CRUD + composite queries for notes (SQLite, sqlc compatible)
 	// sqlc annotations added for code generation
@@ -51,7 +52,6 @@ type Querier interface {
 	// Included: insert, select by id, select all, update by id, delete by id, filter by type(s)
 	// Next: Add composite queries with notes count per type
 	CreateNoteType(ctx context.Context, arg CreateNoteTypeParams) (int64, error)
-	CreateNotesLink(ctx context.Context, arg CreateNotesLinkParams) (int64, error)
 	// tags.sql
 	// Pass 3: CRUD + advanced queries for tags and note_tags (SQLite, sqlc compatible)
 	// sqlc annotations added for code generation
@@ -66,15 +66,15 @@ type Querier interface {
 	// Note: Search queries removed - use general search with filters instead
 	// Next: Add advanced queries if needed (filter by note_type, etc.)
 	CreateTemplate(ctx context.Context, arg CreateTemplateParams) (int64, error)
-	CreateUnresolvedNotesLink(ctx context.Context, arg CreateUnresolvedNotesLinkParams) (int64, error)
+	CreateUnresolvedLink(ctx context.Context, arg CreateUnresolvedLinkParams) (int64, error)
 	DeleteCollection(ctx context.Context, id int64) error
+	DeleteLinksBySrcID(ctx context.Context, srcID int64) error
 	DeleteNoteByID(ctx context.Context, id int64) error
 	DeleteNoteMetaByID(ctx context.Context, id int64) error
 	DeleteNoteMetaByNoteID(ctx context.Context, noteID int64) error
 	DeleteNoteTag(ctx context.Context, arg DeleteNoteTagParams) error
 	DeleteNoteTagsByNoteID(ctx context.Context, noteID int64) error
 	DeleteNoteTypeByID(ctx context.Context, id int64) error
-	DeleteNotesLinksBySrcID(ctx context.Context, srcID int64) error
 	DeleteTagByID(ctx context.Context, id int64) error
 	DeleteTemplateByID(ctx context.Context, id int64) error
 	// This is a helper query to find existing collection by path
@@ -82,7 +82,7 @@ type Querier interface {
 	FindOrCreateCollectionByPath(ctx context.Context, path string) (Collection, error)
 	// Finds unresolved links that point to a specific note title
 	// Used when creating a note to resolve pending links
-	FindUnresolvedLinksByDestTitle(ctx context.Context, destTitle sql.NullString) ([]NotesLink, error)
+	FindUnresolvedLinksByDestTitle(ctx context.Context, destTitle sql.NullString) ([]Link, error)
 	// Get all ancestors of a collection by walking up the parent_id chain
 	GetCollectionAncestors(ctx context.Context, collectionID int64) ([]GetCollectionAncestorsRow, error)
 	GetCollectionByID(ctx context.Context, id int64) (Collection, error)
@@ -91,6 +91,7 @@ type Querier interface {
 	// Get all descendants of a collection by walking down the parent_id chain
 	GetCollectionDescendants(ctx context.Context, collectionID int64) ([]GetCollectionDescendantsRow, error)
 	GetCollectionStats(ctx context.Context) ([]GetCollectionStatsRow, error)
+	GetLinkByID(ctx context.Context, id int64) (Link, error)
 	GetNoteByID(ctx context.Context, id int64) (Note, error)
 	// notes_search.sql
 	// Search and related queries for notes
@@ -125,11 +126,6 @@ type Querier interface {
 	// ========================================
 	GetNoteWithMetaByID(ctx context.Context, id int64) (GetNoteWithMetaByIDRow, error)
 	GetNoteWithTypeByID(ctx context.Context, id int64) (GetNoteWithTypeByIDRow, error)
-	GetNotesLinkByID(ctx context.Context, id int64) (NotesLink, error)
-	// ========================================
-	// Composite Queries - Notes Links with Note Details
-	// ========================================
-	GetNotesLinkWithNoteTitles(ctx context.Context, id int64) (GetNotesLinkWithNoteTitlesRow, error)
 	// Find notes linking to this note (backward links)
 	GetRelatedNotesByBackwardLinks(ctx context.Context, arg GetRelatedNotesByBackwardLinksParams) ([]GetRelatedNotesByBackwardLinksRow, error)
 	// Find notes linked from this note (forward links)
@@ -139,7 +135,7 @@ type Querier interface {
 	GetTagByID(ctx context.Context, id int64) (Tag, error)
 	GetTagByName(ctx context.Context, name string) (Tag, error)
 	GetTemplateByID(ctx context.Context, id int64) (Template, error)
-	ListBrokenLinks(ctx context.Context) ([]NotesLink, error)
+	ListBrokenLinks(ctx context.Context) ([]Link, error)
 	ListCollections(ctx context.Context) ([]Collection, error)
 	ListCollectionsByParent(ctx context.Context, parentID interface{}) ([]Collection, error)
 	ListCollectionsByParentPaginated(ctx context.Context, arg ListCollectionsByParentPaginatedParams) ([]Collection, error)
@@ -148,6 +144,9 @@ type Querier interface {
 	// ========================================
 	ListCollectionsPaginated(ctx context.Context, arg ListCollectionsPaginatedParams) ([]Collection, error)
 	ListDistinctNoteMetaKeys(ctx context.Context) ([]string, error)
+	ListLinks(ctx context.Context) ([]Link, error)
+	ListLinksByDestID(ctx context.Context, destID sql.NullInt64) ([]Link, error)
+	ListLinksBySrcID(ctx context.Context, srcID int64) ([]Link, error)
 	ListNoteMeta(ctx context.Context) ([]NoteMetum, error)
 	// note_meta.sql
 	// Pass 4: CRUD + advanced queries for note_meta (SQLite, sqlc compatible)
@@ -193,23 +192,13 @@ type Querier interface {
 	// Example: tag_ids = [1,2,3] returns notes tagged with 1 OR 2 OR 3
 	ListNotesByTagIDsOR(ctx context.Context, tagIds []int64) ([]Note, error)
 	ListNotesForTag(ctx context.Context, tagID int64) ([]Note, error)
-	ListNotesLinks(ctx context.Context) ([]NotesLink, error)
-	ListNotesLinksByDestID(ctx context.Context, destID sql.NullInt64) ([]NotesLink, error)
-	// Batch query for multiple notes (graph view construction)
-	// Example usage: GetLinks for notes 1,2,3 to build subgraph
-	ListNotesLinksByNoteIDs(ctx context.Context, noteIds []int64) ([]NotesLink, error)
-	// TODO: Add composite queries with note titles for display
-	ListNotesLinksBySrcID(ctx context.Context, srcID int64) ([]NotesLink, error)
 	// ========================================
 	// Paginated Queries (AIP-158)
 	// ========================================
 	ListNotesPaginated(ctx context.Context, arg ListNotesPaginatedParams) ([]Note, error)
-	// ========================================
-	// Additional Query Patterns (FR-LINKS-02)
-	// ========================================
 	// Returns links where destination note no longer exists (dest_id IS NULL)
 	// Used for "broken links" UI view (BR-03: Knowledge Preservation)
-	ListOrphanedLinks(ctx context.Context) ([]NotesLink, error)
+	ListOrphanedLinks(ctx context.Context) ([]Link, error)
 	ListRootCollections(ctx context.Context) ([]Collection, error)
 	ListTags(ctx context.Context) ([]Tag, error)
 	ListTagsForNote(ctx context.Context, noteID int64) ([]Tag, error)
@@ -228,12 +217,12 @@ type Querier interface {
 	// ========================================
 	// Gets both pending (0) and broken (-1) links for resolution
 	// Broken links can become resolved if the target note is created later
-	ListUnresolvedLinks(ctx context.Context, limit int64) ([]NotesLink, error)
+	ListUnresolvedLinks(ctx context.Context, limit int64) ([]Link, error)
 	MarkLinkBroken(ctx context.Context, id int64) error
 	// Resolves a pending link by setting dest_id and clearing dest_title
 	// dest_title is only kept for unresolved (0) and broken (-1) links
 	ResolveLink(ctx context.Context, arg ResolveLinkParams) error
-	SearchNotesLinksByDisplayText(ctx context.Context, displayTextPattern sql.NullString) ([]NotesLink, error)
+	SearchLinksByDisplayText(ctx context.Context, displayTextPattern sql.NullString) ([]Link, error)
 	SearchTagsByName(ctx context.Context, namePattern string) ([]Tag, error)
 	TagUsageCount(ctx context.Context) ([]TagUsageCountRow, error)
 	UpdateCollection(ctx context.Context, arg UpdateCollectionParams) error

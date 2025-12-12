@@ -55,7 +55,7 @@ SELECT DISTINCT
     n.note_type_id,
     n.created_at
 FROM notes n
-JOIN notes_links nl ON n.id = nl.src_id
+JOIN links nl ON n.id = nl.src_id
 WHERE nl.dest_id = ?1
 LIMIT ?2
 `
@@ -111,7 +111,7 @@ SELECT DISTINCT
     n.note_type_id,
     n.created_at
 FROM notes n
-JOIN notes_links nl ON n.id = nl.dest_id
+JOIN links nl ON n.id = nl.dest_id
 WHERE nl.src_id = ?1
 LIMIT ?2
 `

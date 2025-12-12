@@ -22,6 +22,18 @@ type Collection struct {
 	UpdatedAt   sql.NullTime   `json:"updated_at"`
 }
 
+type Link struct {
+	ID          int64          `json:"id"`
+	SrcID       int64          `json:"src_id"`
+	DestID      sql.NullInt64  `json:"dest_id"`
+	DestTitle   sql.NullString `json:"dest_title"`
+	DisplayText sql.NullString `json:"display_text"`
+	IsEmbed     sql.NullBool   `json:"is_embed"`
+	Resolved    sql.NullInt64  `json:"resolved"`
+	CreatedAt   sql.NullTime   `json:"created_at"`
+	UpdatedAt   sql.NullTime   `json:"updated_at"`
+}
+
 type Note struct {
 	ID           int64          `json:"id"`
 	Uuid         uuid.UUID      `json:"uuid"`
@@ -66,18 +78,6 @@ type NoteType struct {
 type NotesFt struct {
 	Title string `json:"title"`
 	Body  string `json:"body"`
-}
-
-type NotesLink struct {
-	ID          int64          `json:"id"`
-	SrcID       int64          `json:"src_id"`
-	DestID      sql.NullInt64  `json:"dest_id"`
-	DestTitle   sql.NullString `json:"dest_title"`
-	DisplayText sql.NullString `json:"display_text"`
-	IsEmbed     sql.NullBool   `json:"is_embed"`
-	Resolved    sql.NullInt64  `json:"resolved"`
-	CreatedAt   sql.NullTime   `json:"created_at"`
-	UpdatedAt   sql.NullTime   `json:"updated_at"`
 }
 
 type Tag struct {

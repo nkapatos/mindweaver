@@ -1,12 +1,36 @@
 version: '3'
 
+# Configuration comes from .env.example (defaults) and .env.local (overrides)
+# See .env.example for all available environment variables
+# 
+# Vars use `sh:` to evaluate at runtime, allowing them to access dotenv variables.
+# This creates a single source of truth: .env.example for defaults, .env.local for overrides.
+
 vars:
+  # Build configuration (structural, rarely changed)
   BIN_NAME: mindweaver
   BIN_DIR: ./bin
   CMD_DIR: ./cmd/mindweaver
   DB_DIR: ./db
   DB_MIND_NAME: mind
   DB_BRAIN_NAME: brain
+  # DevTool configuration - pulled from dotenv (.env.example + .env.local)
+  MIND_STORE_DIR:
+    sh: echo "${MIND_STORE_DIR:-store/mind}"
+  BRAIN_STORE_DIR:
+    sh: echo "${BRAIN_STORE_DIR:-store/brain}"
+  MIND_INTERNAL_STORE_DIR:
+    sh: echo "${MIND_INTERNAL_STORE_DIR:-internal/mind/store}"
+  BRAIN_INTERNAL_STORE_DIR:
+    sh: echo "${BRAIN_INTERNAL_STORE_DIR:-internal/brain/store}"
+  MIND_MIGRATION_DIR:
+    sh: echo "${MIND_MIGRATION_DIR:-./migrations/mind}"
+  BRAIN_MIGRATION_DIR:
+    sh: echo "${BRAIN_MIGRATION_DIR:-./migrations/brain}"
+  GOOSE_DRIVER:
+    sh: echo "${GOOSE_DRIVER:-sqlite3}"
+  AIR_CONFIG:
+    sh: echo "${AIR_CONFIG:-./.air.mindweaver.toml}"
 
 tasks:
   build:
@@ -29,8 +53,7 @@ tasks:
   dev:
     desc: Run Mindweaver server on dev mode using Air for app reloading
     cmds:
-      - go tool air -c ./.air.mindweaver.toml
-    silent: false
+      - go tool air -c {{.AIR_CONFIG}}
 
   db:reset:
     desc: Reset all databases - roll back migrations, migrate up, and regenerate store code

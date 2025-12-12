@@ -1,6 +1,11 @@
 version: '3'
 
-dotenv: ['.env.local']
+# Load configuration in layers:
+# 1. .env.example provides defaults (committed, works out-of-box)
+# 2. .env.local overrides for individual developer needs (gitignored, optional)
+dotenv:
+  - .env.example
+  - .env.local
 
 includes:
   mw: ./tasks/tasks.mw.yml

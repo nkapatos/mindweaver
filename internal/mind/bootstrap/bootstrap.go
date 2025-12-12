@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/nkapatos/mindweaver/internal/mind/collections"
+	"github.com/nkapatos/mindweaver/internal/mind/links"
 	"github.com/nkapatos/mindweaver/internal/mind/meta"
 	"github.com/nkapatos/mindweaver/internal/mind/notes"
 	"github.com/nkapatos/mindweaver/internal/mind/notetypes"
@@ -96,7 +97,7 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 	notesService := notes.NewNotesService(db, querier, logger, "Notes Service")
 	tagService := tags.NewTagsService(querier, logger, "Tags Service")
 	templateService := templates.NewTemplatesService(querier, logger, "Templates Service")
-	linksService := NewLinksService(querier, logger, "Links Service")
+	linksService := links.NewLinksService(querier, logger, "Links Service")
 	noteTypesService := notetypes.NewNoteTypesService(querier, logger, "NoteTypes Service")
 	collectionsService := collections.NewCollectionsService(db, querier, logger, "Collections Service")
 	searchService := search.NewSearchService(db, querier, logger)

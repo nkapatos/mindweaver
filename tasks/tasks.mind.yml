@@ -1,9 +1,7 @@
 version: '3'
 
-env:
-  GOOSE_DRIVER: "sqlite3"
-  GOOSE_DBSTRING: "{{.MIND_DB_PATH}}"
-  GOOSE_MIGRATION_DIR: "./migrations/mind"
+# NOTE: env variables are NOT isolated between included Taskfiles when defined at file level.
+# We use task-level env to ensure proper isolation and prevent variable leaking between mind/brain tasks.
 
 tasks:
   serve:
@@ -13,61 +11,108 @@ tasks:
       # with : calls mw:serve, without calls mind:mw:serve
       - task: ":mw:serve"
         vars: {MODE: "--mode=mind"}
-    silent: false
 
   dev:
     desc: Run mind service in development mode
     cmds:
       - task: ":mw:dev"
         vars: {MODE: "--mode=mind"}
-    silent: false
 
   db:store:generate:
     desc: Generate source code from SQL
-    dir: store/mind
+    aliases: [db:gen]
+    dir: '{{.MIND_STORE_DIR}}'
+    preconditions:
+      - sh: command -v sqlc
+        msg: "sqlc is not installed. Please install it first: https://docs.sqlc.dev/en/latest/overview/install.html"
     cmds:
       - sqlc generate
 
   db:store:reset:
     desc: Delete generated store code and regenerate from SQL
     cmds:
-      - rm -rf internal/mind/store
+      - rm -rf {{.MIND_INTERNAL_STORE_DIR}}
       - task: db:store:generate
 
   db:store:compile:
     desc: Statically check SQL for syntax and type errors
-    dir: store/mind
+    dir: '{{.MIND_STORE_DIR}}'
+    preconditions:
+      - sh: command -v sqlc
+        msg: "sqlc is not installed. Please install it first: https://docs.sqlc.dev/en/latest/overview/install.html"
     cmds:
       - sqlc compile
 
   db:store:vet:
     desc: Vet examines queries
-    dir: store/mind
+    dir: '{{.MIND_STORE_DIR}}'
+    preconditions:
+      - sh: command -v sqlc
+        msg: "sqlc is not installed. Please install it first: https://docs.sqlc.dev/en/latest/overview/install.html"
     cmds:
       - sqlc vet
 
   db:migrations:up:
     desc: Migrate the DB to the most recent version available
+    aliases: [db:mig:up]
+    env:
+      GOOSE_DRIVER: "{{.GOOSE_DRIVER}}"
+      GOOSE_DBSTRING: "{{.MIND_DB_PATH}}"
+      GOOSE_MIGRATION_DIR: "{{.MIND_MIGRATION_DIR}}"
+    preconditions:
+      - sh: command -v goose
+        msg: "goose is not installed. Please install it first: https://github.com/pressly/goose"
     cmds:
       - goose up
 
   db:migrations:down:
     desc: Roll back the version by 1
+    aliases: [db:mig:down]
+    env:
+      GOOSE_DRIVER: "{{.GOOSE_DRIVER}}"
+      GOOSE_DBSTRING: "{{.MIND_DB_PATH}}"
+      GOOSE_MIGRATION_DIR: "{{.MIND_MIGRATION_DIR}}"
+    preconditions:
+      - sh: command -v goose
+        msg: "goose is not installed. Please install it first: https://github.com/pressly/goose"
     cmds:
       - goose down
 
   db:migrations:reset:
     desc: Roll back all migrations
+    aliases: [db:mig:reset]
+    env:
+      GOOSE_DRIVER: "{{.GOOSE_DRIVER}}"
+      GOOSE_DBSTRING: "{{.MIND_DB_PATH}}"
+      GOOSE_MIGRATION_DIR: "{{.MIND_MIGRATION_DIR}}"
+    preconditions:
+      - sh: command -v goose
+        msg: "goose is not installed. Please install it first: https://github.com/pressly/goose"
     cmds:
       - goose reset
 
   db:migrations:validate:
     desc: Check migration files without running them
+    aliases: [db:mig:validate]
+    env:
+      GOOSE_DRIVER: "{{.GOOSE_DRIVER}}"
+      GOOSE_DBSTRING: "{{.MIND_DB_PATH}}"
+      GOOSE_MIGRATION_DIR: "{{.MIND_MIGRATION_DIR}}"
+    preconditions:
+      - sh: command -v goose
+        msg: "goose is not installed. Please install it first: https://github.com/pressly/goose"
     cmds:
       - goose validate
 
   db:migrations:create:
     desc: Creates new migration file with the current timestamp
+    aliases: [db:mig:new, mig:new]
+    env:
+      GOOSE_DRIVER: "{{.GOOSE_DRIVER}}"
+      GOOSE_DBSTRING: "{{.MIND_DB_PATH}}"
+      GOOSE_MIGRATION_DIR: "{{.MIND_MIGRATION_DIR}}"
+    preconditions:
+      - sh: command -v goose
+        msg: "goose is not installed. Please install it first: https://github.com/pressly/goose"
     cmds:
       - goose create {{.CLI_ARGS}} sql
-    silent: false

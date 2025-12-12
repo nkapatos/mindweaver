@@ -11,21 +11,14 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// Default collection ID for notes when not specified.
-// This is the root/default collection created during DB initialization.
+// DefaultCollectionID is the root collection ID used when none is specified.
 const DefaultCollectionID = int64(1)
 
+// StoreNoteToProto converts a store.Note to the proto Note message.
 func StoreNoteToProto(note store.Note) *mindv3.Note {
-	// Reconstruct full markdown with frontmatter for API response
 	var body *string
 	if note.Body.Valid {
-		var fullBody string
-		// FIXME: when the mind api stabilises just add a helper reconstruct function here. it just combines the frontmatter with the body with the necesary markers before and after teh frontmatter ---
-		// if note.Frontmatter.Valid && note.Frontmatter.String != "" {
-		// 	fullBody = markdown.ReconstructFullMarkdown(note.Body.String, note.Frontmatter.String)
-		// } else {
-		// 	fullBody = note.Body.String
-		// }
+		fullBody := note.Body.String
 		body = &fullBody
 	}
 
@@ -48,6 +41,7 @@ func StoreNoteToProto(note store.Note) *mindv3.Note {
 	}
 }
 
+// StoreNotesToProto converts a slice of store.Note to proto Note messages.
 func StoreNotesToProto(notes []store.Note) []*mindv3.Note {
 	result := make([]*mindv3.Note, len(notes))
 	for i, note := range notes {
@@ -57,8 +51,7 @@ func StoreNotesToProto(notes []store.Note) []*mindv3.Note {
 }
 
 // ProtoCreateNoteToStore converts a CreateNoteRequest to store params.
-// Note: UUID is generated here as it's required for every new note.
-// CollectionID defaults to DefaultCollectionID if not specified.
+// Generates a new UUID for the note. Defaults collectionID to DefaultCollectionID if not specified.
 func ProtoCreateNoteToStore(req *mindv3.CreateNoteRequest) store.CreateNoteParams {
 	collectionID := DefaultCollectionID
 	if req.CollectionId != nil {
@@ -77,8 +70,8 @@ func ProtoCreateNoteToStore(req *mindv3.CreateNoteRequest) store.CreateNoteParam
 }
 
 // ProtoReplaceNoteToStore converts a ReplaceNoteRequest to store params.
-// Current note is needed for UUID preservation and optimistic locking via version.
-// CollectionID defaults to DefaultCollectionID if not specified.
+// Preserves UUID and version from current note for optimistic locking.
+// Defaults collectionID to DefaultCollectionID if not specified.
 func ProtoReplaceNoteToStore(req *mindv3.ReplaceNoteRequest, current store.Note) store.UpdateNoteByIDParams {
 	collectionID := DefaultCollectionID
 	if req.CollectionId != nil {

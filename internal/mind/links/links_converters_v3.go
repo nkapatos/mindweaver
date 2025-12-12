@@ -1,15 +1,17 @@
 package links
 
 import (
+	"fmt"
+
 	mindv3 "github.com/nkapatos/mindweaver/internal/mind/gen/v3"
 	"github.com/nkapatos/mindweaver/internal/mind/store"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// StoreLinkToProto converts a store.NotesLink to a proto Link
-func StoreLinkToProto(link store.NotesLink) *mindv3.Link {
+// StoreLinkToProto converts a store.Link to a proto Link
+func StoreLinkToProto(link store.Link) *mindv3.Link {
 	proto := &mindv3.Link{
-		Name:       "links/" + string(link.ID),
+		Name:       fmt.Sprintf("links/%d", link.ID),
 		Id:         link.ID,
 		SrcId:      link.SrcID,
 		CreateTime: timestamppb.New(link.CreatedAt.Time),
@@ -39,8 +41,8 @@ func StoreLinkToProto(link store.NotesLink) *mindv3.Link {
 	return proto
 }
 
-// StoreLinksToProto converts a slice of store.NotesLink to proto Links
-func StoreLinksToProto(links []store.NotesLink) []*mindv3.Link {
+// StoreLinksToProto converts a slice of store.Link to proto Links
+func StoreLinksToProto(links []store.Link) []*mindv3.Link {
 	if links == nil {
 		return nil
 	}
