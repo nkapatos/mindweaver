@@ -11,3 +11,4 @@ includes:
   mw: ./packages/mindweaver/tasks/tasks.mw.yml
   brain: ./packages/mindweaver/tasks/tasks.brain.yml
   mind: ./packages/mindweaver/tasks/tasks.mind.yml
+  neoweaver: ./clients/neoweaver/tasks/tasks.neoweaver.yml
