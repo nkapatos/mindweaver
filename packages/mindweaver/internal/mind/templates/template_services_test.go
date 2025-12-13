@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/nkapatos/mindweaver/internal/mind/store"
-	mindmigrations "github.com/nkapatos/mindweaver/migrations/mind"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
+	mindmigrations "github.com/nkapatos/mindweaver/packages/mindweaver/migrations/mind"
 	"github.com/nkapatos/mindweaver/pkg/testdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

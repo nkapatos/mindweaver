@@ -9,7 +9,7 @@ import (
 	"buf.build/go/protovalidate"
 	"connectrpc.com/connect"
 	"github.com/labstack/echo/v4"
-	"github.com/nkapatos/mindweaver/internal/mind/gen/v3/mindv3connect"
+	"github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3/mindv3connect"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/protobuf/reflect/protoreflect"

@@ -12,18 +12,18 @@ import (
 	"syscall"
 	"time"
 
-	// brainadapters "github.com/nkapatos/mindweaver/internal/brain/adapters"
-	// brainbootstrap "github.com/nkapatos/mindweaver/internal/brain/bootstrap"
-	mindbootstrap "github.com/nkapatos/mindweaver/internal/mind/bootstrap"
-	mindnotes "github.com/nkapatos/mindweaver/internal/mind/notes"
-	mindscheduler "github.com/nkapatos/mindweaver/internal/mind/scheduler"
+	// brainadapters "github.com/nkapatos/mindweaver/packages/mindweaver/internal/brain/adapters"
+	// brainbootstrap "github.com/nkapatos/mindweaver/packages/mindweaver/internal/brain/bootstrap"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/bootstrap"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/notes"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/scheduler"
 	"github.com/nkapatos/mindweaver/pkg/config"
 	"github.com/nkapatos/mindweaver/pkg/logging"
-	nvmwmw "github.com/nkapatos/mindweaver/pkg/middleware"
+	mwmiddleware "github.com/nkapatos/mindweaver/pkg/middleware"
 	"github.com/nkapatos/mindweaver/pkg/utils"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echomiddleware "github.com/labstack/echo/v4/middleware"
 )
 
 // Mindweaver - unified binary for Mind and Brain services
@@ -81,12 +81,12 @@ func main() {
 	e.HideBanner = true
 
 	// Global middleware (applied to all routes)
-	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+	e.Use(echomiddleware.LoggerWithConfig(echomiddleware.LoggerConfig{
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
 	}))
-	e.Use(middleware.Recover())
-	e.Use(nvmwmw.ErrorHandlerMiddleware)
-	e.Use(nvmwmw.RequestIDMiddleware)
+	e.Use(echomiddleware.Recover())
+	e.Use(mwmiddleware.ErrorHandlerMiddleware)
+	e.Use(mwmiddleware.RequestIDMiddleware)
 
 	// Health check endpoint
 	e.GET("/health", func(c echo.Context) error {
@@ -109,9 +109,9 @@ func main() {
 	api := e.Group("/api")
 
 	// Initialize Mind service if needed
-	var mindNotesService *mindnotes.NotesService
+	var mindNotesService *notes.NotesService
 	if enableMind {
-		db, notesSvc, err := mindbootstrap.Initialize(e, api, cfg.Mind.DBPath, logger)
+		db, notesSvc, err := bootstrap.Initialize(e, api, cfg.Mind.DBPath, logger)
 		if err != nil {
 			logger.Error("Failed to initialize mind service", "error", err)
 			os.Exit(1)
@@ -192,19 +192,19 @@ func main() {
 	}()
 
 	// Initialize scheduler (Mind → Brain sync) if both services enabled
-	var changeScheduler *mindscheduler.ChangeAccumulator
+	var changeScheduler *scheduler.ChangeAccumulator
 	if enableMind && enableBrain && mindNotesService != nil {
 		logger.Info("🔄 Initializing Mind→Brain scheduler")
 
 		// Use localhost for combined mode
 		port := cfg.GetCombinedPort()
-		schedulerCfg := mindscheduler.Config{
+		schedulerCfg := scheduler.Config{
 			BrainURL:      fmt.Sprintf("http://localhost:%d", port),
 			FlushInterval: 5 * time.Minute, // Batch changes every 5 minutes
 			BatchSize:     100,             // Max 100 changes per batch
 		}
 
-		changeScheduler = mindscheduler.NewChangeAccumulator(schedulerCfg, logger)
+		changeScheduler = scheduler.NewChangeAccumulator(schedulerCfg, logger)
 		mindNotesService.SetScheduler(changeScheduler)
 		changeScheduler.Start()
 

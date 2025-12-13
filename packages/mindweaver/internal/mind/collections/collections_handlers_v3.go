@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"connectrpc.com/connect"
-	"github.com/nkapatos/mindweaver/internal/mind/gen/v3"
-	"github.com/nkapatos/mindweaver/internal/mind/store"
+	"github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
 	"github.com/nkapatos/mindweaver/pkg/dberrors"
 	"github.com/nkapatos/mindweaver/pkg/pagination"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
