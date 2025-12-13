@@ -7,6 +7,19 @@
 **Database:** `task mw:db:reset` (reset all) | `task mind:db:migrations:up` | `task mind:db:store:generate` (regenerate sqlc)  
 **Format:** Use `gofmt` (standard Go formatting) | Imports: stdlib → external → internal
 
+## ⚠️ CRITICAL RULE: Use Project-Defined Versions
+
+**NEVER assume or change dependency versions. ALWAYS check the project's configuration files first.**
+
+- **Go version**: Check `go.mod` and `.mise.toml` - currently `1.25.5`
+- **Other tools**: Check `.mise.toml` for pinned versions
+- **CI workflows**: Must use the same versions as defined in project config
+
+**When writing CI workflows or any configuration that specifies versions:**
+1. Read the `go.mod` file to get the Go version
+2. Read `.mise.toml` for tool versions
+3. Use those exact versions - do not substitute or "correct" them
+
 ## ⚠️ CRITICAL RULE: Always Use Task Commands
 
 **NEVER run build commands directly (e.g., `go build ./cmd/mindweaver`)**  
