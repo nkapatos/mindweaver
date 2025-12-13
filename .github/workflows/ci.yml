@@ -80,7 +80,7 @@ jobs:
           cache: true
       
       - name: Setup Task
-        uses: go-task/setup-task@v2
+        uses: go-task/setup-task@v1
       
       - name: Build binary
         run: task mw:build
