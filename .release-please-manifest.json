@@ -1,3 +1,4 @@
 {
-  "packages/mindweaver": "0.0.0"
+  "packages/mindweaver": "0.0.0",
+  "clients/neoweaver": "0.0.0"
 }
