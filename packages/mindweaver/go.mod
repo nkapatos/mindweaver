@@ -2,22 +2,24 @@ module github.com/nkapatos/mindweaver/packages/mindweaver
 
 go 1.25.5
 
+replace github.com/nkapatos/mindweaver/pkg => ../../pkg
+
 require (
 	buf.build/go/protovalidate v1.0.1
 	connectrpc.com/connect v1.19.1
 	github.com/dgraph-io/badger/v4 v4.8.0
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.13.4
-	github.com/nkapatos/mindweaver v0.0.0-20251212215927-ed264df17ea7
+	github.com/nkapatos/mindweaver/pkg v0.0.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/net v0.43.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c
-	google.golang.org/protobuf v1.36.10
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251124214823-79d6a2a48846
+	google.golang.org/protobuf v1.36.11
 	modernc.org/sqlite v1.40.1
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.10-20250912141014-52f32327d4b0.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20251209175733-2a1774d88802.1 // indirect
 	cel.dev/expr v0.24.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -58,7 +60,7 @@ require (
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250811230008-5f3141c8851a // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20251213004720-97cd9d5aeac2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.66.10 // indirect
