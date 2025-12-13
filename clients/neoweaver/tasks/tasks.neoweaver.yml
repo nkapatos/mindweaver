@@ -1,0 +1,19 @@
+version: '3'
+
+vars:
+  NEOWEAVER_DIR: ./clients/neoweaver
+  PROTO_DIR: ./pkg/proto/mind/v3
+  TYPES_OUTPUT: '{{.NEOWEAVER_DIR}}/lua/neoweaver/types.lua'
+  SCRIPTS_DIR: '{{.NEOWEAVER_DIR}}/scripts'
+
+tasks:
+  types:generate:
+    desc: Generate Lua type annotations from protobuf definitions
+    aliases: [types:gen]
+    cmds:
+      - '{{.SCRIPTS_DIR}}/generate-types.sh {{.PROTO_DIR}} {{.TYPES_OUTPUT}}'
+
+  types:clean:
+    desc: Remove generated Lua type annotations
+    cmds:
+      - rm -f {{.TYPES_OUTPUT}}
