@@ -8,6 +8,6 @@ dotenv:
   - .env.local
 
 includes:
-  mw: ./tasks/tasks.mw.yml
-  brain: ./tasks/tasks.brain.yml
-  mind: ./tasks/tasks.mind.yml
+  mw: ./packages/mindweaver/tasks/tasks.mw.yml
+  brain: ./packages/mindweaver/tasks/tasks.brain.yml
+  mind: ./packages/mindweaver/tasks/tasks.mind.yml
