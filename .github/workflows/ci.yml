@@ -79,8 +79,11 @@ jobs:
           go-version: '1.25.5'
           cache: true
       
+      - name: Setup Task
+        uses: go-task/setup-task@v2
+      
       - name: Build binary
-        run: go build -v -o mindweaver ./packages/mindweaver/cmd/mindweaver
+        run: task mw:build
       
       - name: Verify binary
-        run: ./mindweaver --version || true
+        run: ./bin/mindweaver --version || true

@@ -52,8 +52,11 @@ tasks:
 
   dev:
     desc: Run Mindweaver server on dev mode using Air for app reloading
+    preconditions:
+      - sh: command -v air
+        msg: "air is not installed. Install with: go install github.com/air-verse/air@latest"
     cmds:
-      - go tool air -c {{.AIR_CONFIG}}
+      - air -c {{.AIR_CONFIG}}
 
   db:reset:
     desc: Reset all databases - roll back migrations, migrate up, and regenerate store code
