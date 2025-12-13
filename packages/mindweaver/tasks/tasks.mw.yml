@@ -10,27 +10,27 @@ vars:
   # Build configuration (structural, rarely changed)
   BIN_NAME: mindweaver
   BIN_DIR: ./bin
-  CMD_DIR: ./cmd/mindweaver
+  CMD_DIR: ./packages/mindweaver/cmd/mindweaver
   DB_DIR: ./db
   DB_MIND_NAME: mind
   DB_BRAIN_NAME: brain
   # DevTool configuration - pulled from dotenv (.env.example + .env.local)
   MIND_STORE_DIR:
-    sh: echo "${MIND_STORE_DIR:-store/mind}"
+    sh: echo "${MIND_STORE_DIR:-packages/mindweaver/store/mind}"
   BRAIN_STORE_DIR:
-    sh: echo "${BRAIN_STORE_DIR:-store/brain}"
+    sh: echo "${BRAIN_STORE_DIR:-packages/mindweaver/store/brain}"
   MIND_INTERNAL_STORE_DIR:
-    sh: echo "${MIND_INTERNAL_STORE_DIR:-internal/mind/store}"
+    sh: echo "${MIND_INTERNAL_STORE_DIR:-packages/mindweaver/internal/mind/store}"
   BRAIN_INTERNAL_STORE_DIR:
-    sh: echo "${BRAIN_INTERNAL_STORE_DIR:-internal/brain/store}"
+    sh: echo "${BRAIN_INTERNAL_STORE_DIR:-packages/mindweaver/internal/brain/store}"
   MIND_MIGRATION_DIR:
-    sh: echo "${MIND_MIGRATION_DIR:-./migrations/mind}"
+    sh: echo "${MIND_MIGRATION_DIR:-./packages/mindweaver/migrations/mind}"
   BRAIN_MIGRATION_DIR:
-    sh: echo "${BRAIN_MIGRATION_DIR:-./migrations/brain}"
+    sh: echo "${BRAIN_MIGRATION_DIR:-./packages/mindweaver/migrations/brain}"
   GOOSE_DRIVER:
     sh: echo "${GOOSE_DRIVER:-sqlite3}"
   AIR_CONFIG:
-    sh: echo "${AIR_CONFIG:-./.air.mindweaver.toml}"
+    sh: echo "${AIR_CONFIG:-./packages/mindweaver/.air.toml}"
 
 tasks:
   build:
