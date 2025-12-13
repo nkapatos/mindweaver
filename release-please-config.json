@@ -7,6 +7,11 @@
       "release-type": "go",
       "component": "mindweaver",
       "changelog-path": "CHANGELOG.md"
+    },
+    "clients/neoweaver": {
+      "release-type": "simple",
+      "component": "neoweaver",
+      "changelog-path": "CHANGELOG.md"
     }
   },
   "changelog-sections": [
