@@ -27,6 +27,9 @@ jobs:
           go-version: '1.25.5'
           cache: true
       
+      - name: Setup Go workspace
+        run: go work init ./packages/mindweaver ./pkg
+      
       - name: Run tests (packages/mindweaver)
         run: go test -v -race -coverprofile=coverage-mindweaver.out ./...
         working-directory: packages/mindweaver
@@ -81,6 +84,9 @@ jobs:
       
       - name: Setup Task
         uses: go-task/setup-task@v1
+      
+      - name: Setup Go workspace
+        run: go work init ./packages/mindweaver ./pkg
       
       - name: Build binary
         run: task mw:build
