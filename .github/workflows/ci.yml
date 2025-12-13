@@ -27,14 +27,19 @@ jobs:
           go-version: '1.25.5'
           cache: true
       
-      - name: Run tests
-        run: go test -v -race -coverprofile=coverage.out ./...
+      - name: Run tests (packages/mindweaver)
+        run: go test -v -race -coverprofile=coverage-mindweaver.out ./...
+        working-directory: packages/mindweaver
+      
+      - name: Run tests (pkg)
+        run: go test -v -race -coverprofile=coverage-pkg.out ./...
+        working-directory: pkg
       
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         if: github.event_name == 'pull_request'
         with:
-          files: ./coverage.out
+          files: ./packages/mindweaver/coverage-mindweaver.out,./pkg/coverage-pkg.out
           flags: unittests
           fail_ci_if_error: false
         env:
@@ -75,7 +80,7 @@ jobs:
           cache: true
       
       - name: Build binary
-        run: go build -v ./cmd/mindweaver
+        run: go build -v -o mindweaver ./packages/mindweaver/cmd/mindweaver
       
       - name: Verify binary
         run: ./mindweaver --version || true

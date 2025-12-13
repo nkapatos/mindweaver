@@ -9,9 +9,7 @@ project_name: mindweaver
 # Before hooks - run before building
 before:
   hooks:
-    # Ensure dependencies are up to date
     - go mod tidy
-    # Run tests before building
     - go test ./...
 
 # Build configuration
@@ -44,12 +42,6 @@ builds:
       - -X main.commit={{.Commit}}
       - -X main.date={{.Date}}
       - -X main.builtBy=goreleaser
-    
-    # Build only for specific OS/arch combinations
-    ignore: []
-      # Currently no specific ignores, but can add if needed
-      # - goos: windows
-      #   goarch: arm64
 
 # Archives configuration
 archives:
@@ -63,10 +55,13 @@ archives:
     
     # Files to include in archive
     files:
-      - README.md
-      - LICENSE*
-      - docs/DEVELOPMENT.md
-      - .env.example
+      - src: ../../README.md
+        dst: README.md
+      - src: ../../LICENSE*
+      - src: ../../docs/DEVELOPMENT.md
+        dst: docs/DEVELOPMENT.md
+      - src: ../../.env.example
+        dst: .env.example
 
 # Checksums for verification
 checksum:
@@ -163,17 +158,3 @@ release:
     ---
     
     **Full Changelog**: https://github.com/nkapatos/mindweaver/compare/{{.PreviousTag}}...{{.Tag}}
-
-# Announce configuration (optional - for future use)
-# announce:
-#   skip: '{{gt .Patch 0}}'  # Skip patch releases
-#   twitter:
-#     enabled: false
-#   discord:
-#     enabled: false
-
-# Milestones configuration (optional)
-# milestones:
-#   - close: true
-#     fail_on_error: false
-#     name_template: "{{ .Tag }}"
