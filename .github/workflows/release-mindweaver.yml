@@ -1,4 +1,4 @@
-name: Release
+name: Release Mindweaver
 
 on:
   push:
@@ -12,6 +12,10 @@ jobs:
   release:
     name: Release Mindweaver
     runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: packages/mindweaver
     
     steps:
       - name: Checkout code
@@ -31,5 +35,6 @@ jobs:
           distribution: goreleaser
           version: latest
           args: release --clean
+          workdir: packages/mindweaver
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
