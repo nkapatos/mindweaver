@@ -4,92 +4,202 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - 'docs/**'
+      - 'exploration/**'
+      - 'worklog/**'
+      - 'templates/**'
+      - '*.md'
+      - 'LICENSE'
+      - 'packages/*/tests/**'
   push:
     branches:
       - main
+    paths-ignore:
+      - 'docs/**'
+      - 'exploration/**'
+      - 'worklog/**'
+      - 'templates/**'
+      - '*.md'
+      - 'LICENSE'
+      - 'packages/*/tests/**'
 
 permissions:
   contents: read
   pull-requests: write
 
+# =============================================================================
+# CI Pipeline Architecture
+# =============================================================================
+# This workflow uses path filtering at two levels:
+#
+# 1. Workflow-level (paths-ignore): Skips CI entirely for documentation-only changes
+# 2. Job-level (dorny/paths-filter): Runs specific jobs based on which code changed
+#
+# Path groups:
+#   - mindweaver: packages/mindweaver/** (excluding tests/)
+#   - pkg: pkg/** (shared code - triggers all Go package tests)
+#   - root-config: Taskfile.yml, .mise.toml (triggers all jobs)
+#
+# Adding a new Go package (e.g., packages/imex):
+#   1. Add filter in 'changes' job: imex: 'packages/imex/**'
+#   2. Add test-imex job with: if: needs.changes.outputs.imex == 'true' || needs.changes.outputs.pkg == 'true'
+#   3. Add build-imex job if needed
+#   4. Update go work init to include new package
+# =============================================================================
+
 jobs:
-  test:
-    name: Test
+  # ---------------------------------------------------------------------------
+  # Detect which areas of the codebase changed
+  # ---------------------------------------------------------------------------
+  changes:
+    name: Detect Changes
     runs-on: ubuntu-latest
-    
+    outputs:
+      mindweaver: ${{ steps.filter.outputs.mindweaver }}
+      pkg: ${{ steps.filter.outputs.pkg }}
+      root-config: ${{ steps.filter.outputs.root-config }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
+      - name: Check paths
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            mindweaver:
+              - 'packages/mindweaver/**'
+              - '!packages/mindweaver/tests/**'
+            pkg:
+              - 'pkg/**'
+            root-config:
+              - 'Taskfile.yml'
+              - '.mise.toml'
+
+  # ---------------------------------------------------------------------------
+  # Test mindweaver package
+  # Runs when: mindweaver code changes OR shared pkg changes OR root config changes
+  # ---------------------------------------------------------------------------
+  test-mindweaver:
+    name: Test (mindweaver)
+    needs: changes
+    if: needs.changes.outputs.mindweaver == 'true' || needs.changes.outputs.pkg == 'true' || needs.changes.outputs.root-config == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.5'
+          go-version: '1.23'
           cache: true
-      
+
       - name: Setup Go workspace
         run: go work init ./packages/mindweaver ./pkg
-      
-      - name: Run tests (packages/mindweaver)
-        run: go test -v -race -coverprofile=coverage-mindweaver.out ./...
+
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.out ./...
         working-directory: packages/mindweaver
-      
-      - name: Run tests (pkg)
-        run: go test -v -race -coverprofile=coverage-pkg.out ./...
-        working-directory: pkg
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         if: github.event_name == 'pull_request'
         with:
-          files: ./packages/mindweaver/coverage-mindweaver.out,./pkg/coverage-pkg.out
-          flags: unittests
+          files: ./packages/mindweaver/coverage.out
+          flags: mindweaver
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-  
+
+  # ---------------------------------------------------------------------------
+  # Test shared pkg
+  # Runs when: shared pkg changes OR root config changes
+  # ---------------------------------------------------------------------------
+  test-pkg:
+    name: Test (pkg)
+    needs: changes
+    if: needs.changes.outputs.pkg == 'true' || needs.changes.outputs.root-config == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Setup Go workspace
+        run: go work init ./packages/mindweaver ./pkg
+
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.out ./...
+        working-directory: pkg
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: github.event_name == 'pull_request'
+        with:
+          files: ./pkg/coverage.out
+          flags: pkg
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  # Build mindweaver binary
+  # Runs when: mindweaver code changes OR shared pkg changes OR root config changes
+  # ---------------------------------------------------------------------------
+  build-mindweaver:
+    name: Build (mindweaver)
+    needs: changes
+    if: needs.changes.outputs.mindweaver == 'true' || needs.changes.outputs.pkg == 'true' || needs.changes.outputs.root-config == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Setup Task
+        uses: go-task/setup-task@v1
+
+      - name: Setup Go workspace
+        run: go work init ./packages/mindweaver ./pkg
+
+      - name: Build binary
+        run: task mw:build
+
+      - name: Verify binary
+        run: ./bin/mindweaver --version || true
+
+  # ---------------------------------------------------------------------------
+  # Lint (commented out - uncomment when ready)
+  # ---------------------------------------------------------------------------
   # lint:
   #   name: Lint
+  #   needs: changes
+  #   if: needs.changes.outputs.mindweaver == 'true' || needs.changes.outputs.pkg == 'true'
   #   runs-on: ubuntu-latest
-  #   
   #   steps:
   #     - name: Checkout code
   #       uses: actions/checkout@v4
-  #     
+  #
   #     - name: Set up Go
   #       uses: actions/setup-go@v5
   #       with:
-  #         go-version: '1.25.5'
+  #         go-version: '1.23'
   #         cache: true
-  #     
+  #
   #     - name: Run golangci-lint
   #       uses: golangci/golangci-lint-action@v4
   #       with:
   #         version: latest
   #         args: --timeout=5m
-  
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.5'
-          cache: true
-      
-      - name: Setup Task
-        uses: go-task/setup-task@v1
-      
-      - name: Setup Go workspace
-        run: go work init ./packages/mindweaver ./pkg
-      
-      - name: Build binary
-        run: task mw:build
-      
-      - name: Verify binary
-        run: ./bin/mindweaver --version || true
