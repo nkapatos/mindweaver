@@ -4,7 +4,7 @@ managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: github.com/nkapatos/mindweaver/internal/mind/gen
+      value: github.com/nkapatos/mindweaver/pkg/gen/proto
     # Map googleapis to standard location
     - file_option: go_package
       module: buf.build/googleapis/googleapis
@@ -16,13 +16,13 @@ managed:
 plugins:
   # Generate Go protobuf code
   - remote: buf.build/protocolbuffers/go
-    out: ../internal/mind/gen
+    out: ../gen/proto
     opt:
       - paths=source_relative
   
   # Generate Connect-RPC Go code (supports both gRPC and HTTP/JSON)
   - remote: buf.build/connectrpc/go
-    out: ../internal/mind/gen
+    out: ../gen/proto
     opt:
       - paths=source_relative
 inputs:
