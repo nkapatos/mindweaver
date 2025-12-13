@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"connectrpc.com/connect"
-	mindv3 "github.com/nkapatos/mindweaver/internal/mind/gen/v3"
-	"github.com/nkapatos/mindweaver/internal/mind/gen/v3/mindv3connect"
+	mindv3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3/mindv3connect"
 	"github.com/nkapatos/mindweaver/pkg/pagination"
 	"google.golang.org/protobuf/types/known/emptypb"
 )

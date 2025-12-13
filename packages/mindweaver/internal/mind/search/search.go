@@ -14,7 +14,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/nkapatos/mindweaver/internal/mind/store"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
 	"github.com/nkapatos/mindweaver/pkg/middleware"
 	"github.com/nkapatos/mindweaver/pkg/sqlcext"
 )

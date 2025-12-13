@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	"github.com/nkapatos/mindweaver/internal/mind/store"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
 )
 
 // DefaultCollection defines a system collection that must exist for the app to function.

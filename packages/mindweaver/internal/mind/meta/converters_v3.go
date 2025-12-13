@@ -1,8 +1,8 @@
 package meta
 
 import (
-	mindv3 "github.com/nkapatos/mindweaver/internal/mind/gen/v3"
-	"github.com/nkapatos/mindweaver/internal/mind/store"
+	mindv3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

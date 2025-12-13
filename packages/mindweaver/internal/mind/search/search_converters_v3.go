@@ -1,7 +1,7 @@
 package search
 
 import (
-	mindv3 "github.com/nkapatos/mindweaver/internal/mind/gen/v3"
+	mindv3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

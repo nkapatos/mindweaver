@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/nkapatos/mindweaver/internal/mind/store"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
 	"github.com/nkapatos/mindweaver/pkg/dberrors"
 	"github.com/nkapatos/mindweaver/pkg/middleware"
 	"github.com/nkapatos/mindweaver/pkg/utils"
