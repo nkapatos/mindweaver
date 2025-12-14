@@ -607,8 +607,8 @@ const file_v3_note_types_proto_rawDesc = "" +
 	"\vGetNoteType\x12\x1b.mind.v3.GetNoteTypeRequest\x1a\x11.mind.v3.NoteType\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/v3/note_types/{id}\x12c\n" +
 	"\x0eUpdateNoteType\x12\x1e.mind.v3.UpdateNoteTypeRequest\x1a\x11.mind.v3.NoteType\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*2\x13/v3/note_types/{id}\x12e\n" +
 	"\x0eDeleteNoteType\x12\x1e.mind.v3.DeleteNoteTypeRequest\x1a\x16.google.protobuf.Empty\"\x1b\x82\xd3\xe4\x93\x02\x15*\x13/v3/note_types/{id}\x12f\n" +
-	"\rListNoteTypes\x12\x1d.mind.v3.ListNoteTypesRequest\x1a\x1e.mind.v3.ListNoteTypesResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v3/note_typesB\x97\x01\n" +
-	"\vcom.mind.v3B\x0eNoteTypesProtoP\x01Z;github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
+	"\rListNoteTypes\x12\x1d.mind.v3.ListNoteTypesRequest\x1a\x1e.mind.v3.ListNoteTypesResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v3/note_typesB\xa0\x01\n" +
+	"\vcom.mind.v3B\x0eNoteTypesProtoP\x01ZDgithub.com/nkapatos/mindweaver/packages/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
 
 var (
 	file_v3_note_types_proto_rawDescOnce sync.Once

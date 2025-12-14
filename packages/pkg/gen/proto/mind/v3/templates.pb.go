@@ -567,8 +567,8 @@ const file_v3_templates_proto_rawDesc = "" +
 	"\rListTemplates\x12\x1d.mind.v3.ListTemplatesRequest\x1a\x1e.mind.v3.ListTemplatesResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/api/mind/v3/templates\x12b\n" +
 	"\vGetTemplate\x12\x1b.mind.v3.GetTemplateRequest\x1a\x11.mind.v3.Template\"#\x82\xd3\xe4\x93\x02\x1d\x12\x1b/api/mind/v3/templates/{id}\x12k\n" +
 	"\x0eUpdateTemplate\x12\x1e.mind.v3.UpdateTemplateRequest\x1a\x11.mind.v3.Template\"&\x82\xd3\xe4\x93\x02 :\x01*\x1a\x1b/api/mind/v3/templates/{id}\x12m\n" +
-	"\x0eDeleteTemplate\x12\x1e.mind.v3.DeleteTemplateRequest\x1a\x16.google.protobuf.Empty\"#\x82\xd3\xe4\x93\x02\x1d*\x1b/api/mind/v3/templates/{id}B\x97\x01\n" +
-	"\vcom.mind.v3B\x0eTemplatesProtoP\x01Z;github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
+	"\x0eDeleteTemplate\x12\x1e.mind.v3.DeleteTemplateRequest\x1a\x16.google.protobuf.Empty\"#\x82\xd3\xe4\x93\x02\x1d*\x1b/api/mind/v3/templates/{id}B\xa0\x01\n" +
+	"\vcom.mind.v3B\x0eTemplatesProtoP\x01ZDgithub.com/nkapatos/mindweaver/packages/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
 
 var (
 	file_v3_templates_proto_rawDescOnce sync.Once

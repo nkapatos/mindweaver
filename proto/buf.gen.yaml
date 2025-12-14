@@ -27,7 +27,7 @@ plugins:
       - paths=source_relative
   
   # Generate TypeScript types (temporary for neoweaver type generation)
-  - remote: buf.build/protocolbuffers/es
+  - remote: buf.build/bufbuild/es
     out: ../clients/neoweaver/gen/ts
     opt:
       - target=ts

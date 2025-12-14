@@ -324,9 +324,9 @@ const file_v3_links_proto_rawDesc = "" +
 	"total_size\x18\x03 \x01(\x05H\x00R\ttotalSize\x88\x01\x01B\r\n" +
 	"\v_total_size2n\n" +
 	"\fLinksService\x12^\n" +
-	"\tListLinks\x12\x19.mind.v3.ListLinksRequest\x1a\x1a.mind.v3.ListLinksResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/api/mind/v3/linksB\x93\x01\n" +
+	"\tListLinks\x12\x19.mind.v3.ListLinksRequest\x1a\x1a.mind.v3.ListLinksResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/api/mind/v3/linksB\x9c\x01\n" +
 	"\vcom.mind.v3B\n" +
-	"LinksProtoP\x01Z;github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
+	"LinksProtoP\x01ZDgithub.com/nkapatos/mindweaver/packages/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
 
 var (
 	file_v3_links_proto_rawDescOnce sync.Once
