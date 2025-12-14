@@ -11,7 +11,7 @@ import (
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
-	v3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
+	v3 "github.com/nkapatos/mindweaver/packages/pkg/gen/proto/mind/v3"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	http "net/http"
 	strings "strings"

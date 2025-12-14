@@ -24,10 +24,12 @@ map_ts_to_lua() {
     local ts_type="$1"
     case "$ts_type" in
         string) echo "string" ;;
-        number|bigint) echo "integer" ;;
+        number) echo "number" ;;
+        bigint) echo "integer" ;;
         boolean) echo "boolean" ;;
         "Timestamp") echo "string" ;;
         "Date") echo "string" ;;
+        "{ [key: string]: string }") echo "table<string, string>" ;;
         *"[]") 
             # Array type - extract inner type and make it an array
             inner="${ts_type%\[\]}"
@@ -38,52 +40,67 @@ map_ts_to_lua() {
     esac
 }
 
-# Process each TypeScript file
-for ts_file in "$TS_GEN_DIR"/mind/v3/*.ts; do
+# Process each TypeScript _pb.ts file (these contain message definitions)
+for ts_file in "$TS_GEN_DIR"/v3/*_pb.ts; do
     [ -f "$ts_file" ] || continue
     
-    filename=$(basename "$ts_file" .ts)
+    filename=$(basename "$ts_file" _pb.ts)
     echo "-- From $filename.proto" >> "$OUTPUT_FILE"
     echo "" >> "$OUTPUT_FILE"
     
-    # Extract interface/type definitions
+    in_type=false
+    current_type=""
+    
     while IFS= read -r line; do
-        # Match: export interface ClassName {
-        if [[ "$line" =~ ^export[[:space:]]+(interface|type)[[:space:]]+([A-Za-z_][A-Za-z0-9_]*) ]]; then
-            class_name="${BASH_REMATCH[2]}"
-            echo "---@class mind.v3.$class_name" >> "$OUTPUT_FILE"
+        # Match: export type TypeName = Message<"mind.v3.TypeName"> & {
+        if [[ "$line" =~ ^export[[:space:]]+type[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*=[[:space:]]*Message\<\"mind\.v3\.([A-Za-z_][A-Za-z0-9_]*)\"\>[[:space:]]*\&[[:space:]]*\{ ]]; then
+            current_type="${BASH_REMATCH[1]}"
+            in_type=true
+            echo "---@class mind.v3.$current_type" >> "$OUTPUT_FILE"
             continue
         fi
         
-        # Match field definitions: fieldName?: type;
-        # Or: fieldName: type;
-        if [[ "$line" =~ ^[[:space:]]+([a-z_][a-zA-Z0-9_]*)\??:[[:space:]]*([^;]+); ]]; then
-            field_name="${BASH_REMATCH[1]}"
-            field_type="${BASH_REMATCH[2]}"
-            
-            # Check if optional (has ? before :)
-            is_optional=false
-            if [[ "$line" =~ ^[[:space:]]+[a-z_][a-zA-Z0-9_]*\? ]]; then
-                is_optional=true
-            fi
-            
-            # Clean up the type (remove comments, whitespace)
-            field_type=$(echo "$field_type" | sed 's/\/\/.*//' | xargs)
-            
-            # Map TypeScript type to Lua type
-            lua_type=$(map_ts_to_lua "$field_type")
-            
-            # Build annotation
-            if [[ "$is_optional" == true ]]; then
-                echo "---@field ${field_name}? ${lua_type}" >> "$OUTPUT_FILE"
-            else
-                echo "---@field ${field_name} ${lua_type}" >> "$OUTPUT_FILE"
-            fi
+        # Detect end of type (closing brace followed by semicolon)
+        if [[ "$in_type" == true && "$line" =~ ^[[:space:]]*\}\;[[:space:]]*$ ]]; then
+            in_type=false
+            echo "" >> "$OUTPUT_FILE"
+            continue
         fi
         
-        # Detect end of interface/type (closing brace)
-        if [[ "$line" =~ ^[[:space:]]*\}[[:space:]]*$ ]]; then
-            echo "" >> "$OUTPUT_FILE"
+        # Parse field definitions inside type
+        if [[ "$in_type" == true ]]; then
+            # Skip comment-only lines
+            if [[ "$line" =~ ^[[:space:]]*\*.*$ ]] || [[ "$line" =~ ^[[:space:]]*\/\*.*$ ]] || [[ "$line" =~ ^[[:space:]]*\/\/.*$ ]]; then
+                continue
+            fi
+            
+            # Match field definition patterns:
+            # fieldName: type;
+            # fieldName?: type;
+            # fieldName: { [key: string]: string };
+            if [[ "$line" =~ ^[[:space:]]+([a-z][a-zA-Z0-9_]*)\??:[[:space:]]*([^\;]+)\;[[:space:]]*$ ]]; then
+                field_name="${BASH_REMATCH[1]}"
+                field_type="${BASH_REMATCH[2]}"
+                
+                # Check if optional (has ? after field name)
+                is_optional=false
+                if [[ "$line" =~ ^[[:space:]]+[a-z][a-zA-Z0-9_]*\? ]]; then
+                    is_optional=true
+                fi
+                
+                # Clean up the type (remove extra whitespace)
+                field_type=$(echo "$field_type" | xargs)
+                
+                # Map TypeScript type to Lua type
+                lua_type=$(map_ts_to_lua "$field_type")
+                
+                # Build annotation
+                if [[ "$is_optional" == true ]]; then
+                    echo "---@field ${field_name}? ${lua_type}" >> "$OUTPUT_FILE"
+                else
+                    echo "---@field ${field_name} ${lua_type}" >> "$OUTPUT_FILE"
+                fi
+            fi
         fi
     done < "$ts_file"
 done

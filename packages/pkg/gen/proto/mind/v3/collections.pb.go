@@ -795,8 +795,8 @@ const file_v3_collections_proto_rawDesc = "" +
 	"\x10DeleteCollection\x12 .mind.v3.DeleteCollectionRequest\x1a\x16.google.protobuf.Empty\"\x1c\x82\xd3\xe4\x93\x02\x16*\x14/v3/collections/{id}\x12m\n" +
 	"\x0fListCollections\x12\x1f.mind.v3.ListCollectionsRequest\x1a .mind.v3.ListCollectionsResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/v3/collections\x12\x90\x01\n" +
 	"\x16ListCollectionChildren\x12&.mind.v3.ListCollectionChildrenRequest\x1a .mind.v3.ListCollectionsResponse\",\x82\xd3\xe4\x93\x02&\x12$/v3/collections/{parent_id}/children\x12\x82\x01\n" +
-	"\x11GetCollectionTree\x12!.mind.v3.GetCollectionTreeRequest\x1a\".mind.v3.GetCollectionTreeResponse\"&\x82\xd3\xe4\x93\x02 \x12\x1e/v3/collections/{root_id}/treeB\x99\x01\n" +
-	"\vcom.mind.v3B\x10CollectionsProtoP\x01Z;github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
+	"\x11GetCollectionTree\x12!.mind.v3.GetCollectionTreeRequest\x1a\".mind.v3.GetCollectionTreeResponse\"&\x82\xd3\xe4\x93\x02 \x12\x1e/v3/collections/{root_id}/treeB\xa2\x01\n" +
+	"\vcom.mind.v3B\x10CollectionsProtoP\x01ZDgithub.com/nkapatos/mindweaver/packages/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
 
 var (
 	file_v3_collections_proto_rawDescOnce sync.Once
