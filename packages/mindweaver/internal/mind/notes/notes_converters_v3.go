@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	mindv3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
+	mindv3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
 	"github.com/nkapatos/mindweaver/pkg/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -89,4 +89,20 @@ func ProtoReplaceNoteToStore(req *mindv3.ReplaceNoteRequest, current store.Note)
 		CollectionID: collectionID,
 		Version:      current.Version,
 	}
+}
+
+// ProtoNewNoteToParams extracts collection_id and template_id from NewNoteRequest.
+// Returns defaulted values: collection_id defaults to 1, template_id defaults to 1.
+func ProtoNewNoteToParams(req *mindv3.NewNoteRequest) (collectionID int64, templateID int64) {
+	collectionID = DefaultCollectionID
+	if req.CollectionId != nil {
+		collectionID = *req.CollectionId
+	}
+
+	templateID = DefaultCollectionID // Template ID 1 is system default empty template
+	if req.TemplateId != nil {
+		templateID = *req.TemplateId
+	}
+
+	return collectionID, templateID
 }

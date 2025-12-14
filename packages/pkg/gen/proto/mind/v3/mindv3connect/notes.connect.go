@@ -50,6 +50,8 @@ const (
 	NotesServiceDeleteNoteProcedure = "/mind.v3.NotesService/DeleteNote"
 	// NotesServiceListNotesProcedure is the fully-qualified name of the NotesService's ListNotes RPC.
 	NotesServiceListNotesProcedure = "/mind.v3.NotesService/ListNotes"
+	// NotesServiceNewNoteProcedure is the fully-qualified name of the NotesService's NewNote RPC.
+	NotesServiceNewNoteProcedure = "/mind.v3.NotesService/NewNote"
 	// NotesServiceGetNoteMetaProcedure is the fully-qualified name of the NotesService's GetNoteMeta
 	// RPC.
 	NotesServiceGetNoteMetaProcedure = "/mind.v3.NotesService/GetNoteMeta"
@@ -72,6 +74,9 @@ type NotesServiceClient interface {
 	DeleteNote(context.Context, *connect.Request[v3.DeleteNoteRequest]) (*connect.Response[emptypb.Empty], error)
 	// List notes with optional filters (AIP-132)
 	ListNotes(context.Context, *connect.Request[v3.ListNotesRequest]) (*connect.Response[v3.ListNotesResponse], error)
+	// Create a new note with auto-generated title (AIP-136 custom method)
+	// Returns a new note with title "Untitled N" and optional template content
+	NewNote(context.Context, *connect.Request[v3.NewNoteRequest]) (*connect.Response[v3.Note], error)
 	// Get note metadata (read-only sub-resource)
 	GetNoteMeta(context.Context, *connect.Request[v3.GetNoteMetaRequest]) (*connect.Response[v3.GetNoteMetaResponse], error)
 	// Get note relationships (read-only sub-resource)
@@ -120,6 +125,12 @@ func NewNotesServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(notesServiceMethods.ByName("ListNotes")),
 			connect.WithClientOptions(opts...),
 		),
+		newNote: connect.NewClient[v3.NewNoteRequest, v3.Note](
+			httpClient,
+			baseURL+NotesServiceNewNoteProcedure,
+			connect.WithSchema(notesServiceMethods.ByName("NewNote")),
+			connect.WithClientOptions(opts...),
+		),
 		getNoteMeta: connect.NewClient[v3.GetNoteMetaRequest, v3.GetNoteMetaResponse](
 			httpClient,
 			baseURL+NotesServiceGetNoteMetaProcedure,
@@ -142,6 +153,7 @@ type notesServiceClient struct {
 	replaceNote          *connect.Client[v3.ReplaceNoteRequest, v3.Note]
 	deleteNote           *connect.Client[v3.DeleteNoteRequest, emptypb.Empty]
 	listNotes            *connect.Client[v3.ListNotesRequest, v3.ListNotesResponse]
+	newNote              *connect.Client[v3.NewNoteRequest, v3.Note]
 	getNoteMeta          *connect.Client[v3.GetNoteMetaRequest, v3.GetNoteMetaResponse]
 	getNoteRelationships *connect.Client[v3.GetNoteRelationshipsRequest, v3.GetNoteRelationshipsResponse]
 }
@@ -171,6 +183,11 @@ func (c *notesServiceClient) ListNotes(ctx context.Context, req *connect.Request
 	return c.listNotes.CallUnary(ctx, req)
 }
 
+// NewNote calls mind.v3.NotesService.NewNote.
+func (c *notesServiceClient) NewNote(ctx context.Context, req *connect.Request[v3.NewNoteRequest]) (*connect.Response[v3.Note], error) {
+	return c.newNote.CallUnary(ctx, req)
+}
+
 // GetNoteMeta calls mind.v3.NotesService.GetNoteMeta.
 func (c *notesServiceClient) GetNoteMeta(ctx context.Context, req *connect.Request[v3.GetNoteMetaRequest]) (*connect.Response[v3.GetNoteMetaResponse], error) {
 	return c.getNoteMeta.CallUnary(ctx, req)
@@ -195,6 +212,9 @@ type NotesServiceHandler interface {
 	DeleteNote(context.Context, *connect.Request[v3.DeleteNoteRequest]) (*connect.Response[emptypb.Empty], error)
 	// List notes with optional filters (AIP-132)
 	ListNotes(context.Context, *connect.Request[v3.ListNotesRequest]) (*connect.Response[v3.ListNotesResponse], error)
+	// Create a new note with auto-generated title (AIP-136 custom method)
+	// Returns a new note with title "Untitled N" and optional template content
+	NewNote(context.Context, *connect.Request[v3.NewNoteRequest]) (*connect.Response[v3.Note], error)
 	// Get note metadata (read-only sub-resource)
 	GetNoteMeta(context.Context, *connect.Request[v3.GetNoteMetaRequest]) (*connect.Response[v3.GetNoteMetaResponse], error)
 	// Get note relationships (read-only sub-resource)
@@ -239,6 +259,12 @@ func NewNotesServiceHandler(svc NotesServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(notesServiceMethods.ByName("ListNotes")),
 		connect.WithHandlerOptions(opts...),
 	)
+	notesServiceNewNoteHandler := connect.NewUnaryHandler(
+		NotesServiceNewNoteProcedure,
+		svc.NewNote,
+		connect.WithSchema(notesServiceMethods.ByName("NewNote")),
+		connect.WithHandlerOptions(opts...),
+	)
 	notesServiceGetNoteMetaHandler := connect.NewUnaryHandler(
 		NotesServiceGetNoteMetaProcedure,
 		svc.GetNoteMeta,
@@ -263,6 +289,8 @@ func NewNotesServiceHandler(svc NotesServiceHandler, opts ...connect.HandlerOpti
 			notesServiceDeleteNoteHandler.ServeHTTP(w, r)
 		case NotesServiceListNotesProcedure:
 			notesServiceListNotesHandler.ServeHTTP(w, r)
+		case NotesServiceNewNoteProcedure:
+			notesServiceNewNoteHandler.ServeHTTP(w, r)
 		case NotesServiceGetNoteMetaProcedure:
 			notesServiceGetNoteMetaHandler.ServeHTTP(w, r)
 		case NotesServiceGetNoteRelationshipsProcedure:
@@ -294,6 +322,10 @@ func (UnimplementedNotesServiceHandler) DeleteNote(context.Context, *connect.Req
 
 func (UnimplementedNotesServiceHandler) ListNotes(context.Context, *connect.Request[v3.ListNotesRequest]) (*connect.Response[v3.ListNotesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("mind.v3.NotesService.ListNotes is not implemented"))
+}
+
+func (UnimplementedNotesServiceHandler) NewNote(context.Context, *connect.Request[v3.NewNoteRequest]) (*connect.Response[v3.Note], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("mind.v3.NotesService.NewNote is not implemented"))
 }
 
 func (UnimplementedNotesServiceHandler) GetNoteMeta(context.Context, *connect.Request[v3.GetNoteMetaRequest]) (*connect.Response[v3.GetNoteMetaResponse], error) {

@@ -7,13 +7,13 @@ import (
 	"strconv"
 
 	"connectrpc.com/connect"
-	mindv3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
-	"github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3/mindv3connect"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/links"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/meta"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/tags"
 	"github.com/nkapatos/mindweaver/pkg/dberrors"
+	mindv3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3/mindv3connect"
 	"github.com/nkapatos/mindweaver/pkg/pagination"
 	"github.com/nkapatos/mindweaver/pkg/utils"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -238,4 +238,29 @@ func (h *NotesHandlerV3) GetNoteRelationships(
 	}
 
 	return connect.NewResponse(resp), nil
+}
+
+func (h *NotesHandlerV3) NewNote(
+	ctx context.Context,
+	req *connect.Request[mindv3.NewNoteRequest],
+) (*connect.Response[mindv3.Note], error) {
+	collectionID, templateID := ProtoNewNoteToParams(req.Msg)
+	noteID, err := h.service.NewNoteCreation(ctx, collectionID, templateID)
+	if err != nil {
+		if errors.Is(err, ErrNoteAlreadyExists) {
+			return nil, newAlreadyExistsError("notes", "title", "auto-generated title")
+		}
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, newNotFoundError("template", strconv.FormatInt(templateID, 10))
+		}
+		if dberrors.IsForeignKeyConstraintError(err) {
+			return nil, newInvalidArgumentError("collection_id or template_id", "referenced resource does not exist")
+		}
+		return nil, newInternalError("failed to create new note", err)
+	}
+	note, err := h.service.GetNoteByID(ctx, noteID)
+	if err != nil {
+		return nil, newInternalError("failed to retrieve created note", err)
+	}
+	return connect.NewResponse(StoreNoteToProto(note)), nil
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/links"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/meta"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/scheduler"
@@ -27,6 +28,8 @@ type NotesService struct {
 	scheduler *scheduler.ChangeAccumulator // Optional: notifies Brain of note changes
 	parser    *markdown.Parser
 }
+
+var untitledCounter int64 = 0
 
 // NewNotesService creates a new NotesService.
 func NewNotesService(db *sql.DB, store store.Querier, logger *slog.Logger, serviceName string) *NotesService {
@@ -141,6 +144,43 @@ func (s *NotesService) CreateNote(ctx context.Context, params store.CreateNotePa
 	}
 
 	return id, nil
+}
+
+// NewNoteCreation creates a new note with auto-generated title and optional template content.
+func (s *NotesService) NewNoteCreation(ctx context.Context, collectionID int64, templateID int64) (int64, error) {
+	// Generate auto-incremented title
+	untitledCounter++
+	title := fmt.Sprintf("Untitled %d", untitledCounter)
+
+	// Get template body (template_id 1 is empty by default)
+	body := ""
+	if templateID != 1 {
+		templateNote, err := s.GetNoteByID(ctx, templateID)
+		if err != nil {
+			s.logger.Error("failed to get template note", "template_id", templateID, "err", err, "request_id", middleware.GetRequestID(ctx))
+			return 0, err
+		}
+		if templateNote.Body.Valid {
+			body = templateNote.Body.String
+		}
+	}
+
+	// Build params for CreateNote
+	params := store.CreateNoteParams{
+		Uuid:         uuid.New(),
+		Title:        title,
+		Body:         sql.NullString{String: body, Valid: body != ""},
+		CollectionID: collectionID,
+	}
+
+	// Delegate to existing CreateNote logic
+	noteID, err := s.CreateNote(ctx, params)
+	if err != nil {
+		s.logger.Error("failed to create new note", "title", title, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return 0, err
+	}
+
+	return noteID, nil
 }
 
 // UpdateNote updates an existing note and re-extracts all derived data.

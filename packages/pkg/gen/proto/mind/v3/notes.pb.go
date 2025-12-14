@@ -500,6 +500,62 @@ func (x *DeleteNoteRequest) GetId() int64 {
 	return 0
 }
 
+// Request message for NewNote (AIP-136 custom method)
+// Creates a new note with auto-generated title and optional template expansion
+type NewNoteRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Optional collection ID (defaults to 1 if omitted)
+	CollectionId *int64 `protobuf:"varint,1,opt,name=collection_id,json=collectionId,proto3,oneof" json:"collection_id,omitempty"`
+	// Optional template ID (defaults to 1 if omitted - system default empty template)
+	TemplateId    *int64 `protobuf:"varint,2,opt,name=template_id,json=templateId,proto3,oneof" json:"template_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NewNoteRequest) Reset() {
+	*x = NewNoteRequest{}
+	mi := &file_v3_notes_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NewNoteRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NewNoteRequest) ProtoMessage() {}
+
+func (x *NewNoteRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v3_notes_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NewNoteRequest.ProtoReflect.Descriptor instead.
+func (*NewNoteRequest) Descriptor() ([]byte, []int) {
+	return file_v3_notes_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *NewNoteRequest) GetCollectionId() int64 {
+	if x != nil && x.CollectionId != nil {
+		return *x.CollectionId
+	}
+	return 0
+}
+
+func (x *NewNoteRequest) GetTemplateId() int64 {
+	if x != nil && x.TemplateId != nil {
+		return *x.TemplateId
+	}
+	return 0
+}
+
 // Request message for ListNotes (AIP-132, AIP-158)
 type ListNotesRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -519,7 +575,7 @@ type ListNotesRequest struct {
 
 func (x *ListNotesRequest) Reset() {
 	*x = ListNotesRequest{}
-	mi := &file_v3_notes_proto_msgTypes[5]
+	mi := &file_v3_notes_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -531,7 +587,7 @@ func (x *ListNotesRequest) String() string {
 func (*ListNotesRequest) ProtoMessage() {}
 
 func (x *ListNotesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v3_notes_proto_msgTypes[5]
+	mi := &file_v3_notes_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -544,7 +600,7 @@ func (x *ListNotesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListNotesRequest.ProtoReflect.Descriptor instead.
 func (*ListNotesRequest) Descriptor() ([]byte, []int) {
-	return file_v3_notes_proto_rawDescGZIP(), []int{5}
+	return file_v3_notes_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListNotesRequest) GetPageSize() int32 {
@@ -597,7 +653,7 @@ type ListNotesResponse struct {
 
 func (x *ListNotesResponse) Reset() {
 	*x = ListNotesResponse{}
-	mi := &file_v3_notes_proto_msgTypes[6]
+	mi := &file_v3_notes_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -609,7 +665,7 @@ func (x *ListNotesResponse) String() string {
 func (*ListNotesResponse) ProtoMessage() {}
 
 func (x *ListNotesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v3_notes_proto_msgTypes[6]
+	mi := &file_v3_notes_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -622,7 +678,7 @@ func (x *ListNotesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListNotesResponse.ProtoReflect.Descriptor instead.
 func (*ListNotesResponse) Descriptor() ([]byte, []int) {
-	return file_v3_notes_proto_rawDescGZIP(), []int{6}
+	return file_v3_notes_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ListNotesResponse) GetNotes() []*Note {
@@ -657,7 +713,7 @@ type GetNoteMetaRequest struct {
 
 func (x *GetNoteMetaRequest) Reset() {
 	*x = GetNoteMetaRequest{}
-	mi := &file_v3_notes_proto_msgTypes[7]
+	mi := &file_v3_notes_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -669,7 +725,7 @@ func (x *GetNoteMetaRequest) String() string {
 func (*GetNoteMetaRequest) ProtoMessage() {}
 
 func (x *GetNoteMetaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v3_notes_proto_msgTypes[7]
+	mi := &file_v3_notes_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -682,7 +738,7 @@ func (x *GetNoteMetaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetNoteMetaRequest.ProtoReflect.Descriptor instead.
 func (*GetNoteMetaRequest) Descriptor() ([]byte, []int) {
-	return file_v3_notes_proto_rawDescGZIP(), []int{7}
+	return file_v3_notes_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetNoteMetaRequest) GetNoteId() int64 {
@@ -703,7 +759,7 @@ type GetNoteMetaResponse struct {
 
 func (x *GetNoteMetaResponse) Reset() {
 	*x = GetNoteMetaResponse{}
-	mi := &file_v3_notes_proto_msgTypes[8]
+	mi := &file_v3_notes_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -715,7 +771,7 @@ func (x *GetNoteMetaResponse) String() string {
 func (*GetNoteMetaResponse) ProtoMessage() {}
 
 func (x *GetNoteMetaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v3_notes_proto_msgTypes[8]
+	mi := &file_v3_notes_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -728,7 +784,7 @@ func (x *GetNoteMetaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetNoteMetaResponse.ProtoReflect.Descriptor instead.
 func (*GetNoteMetaResponse) Descriptor() ([]byte, []int) {
-	return file_v3_notes_proto_rawDescGZIP(), []int{8}
+	return file_v3_notes_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetNoteMetaResponse) GetMetadata() map[string]string {
@@ -749,7 +805,7 @@ type GetNoteRelationshipsRequest struct {
 
 func (x *GetNoteRelationshipsRequest) Reset() {
 	*x = GetNoteRelationshipsRequest{}
-	mi := &file_v3_notes_proto_msgTypes[9]
+	mi := &file_v3_notes_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -761,7 +817,7 @@ func (x *GetNoteRelationshipsRequest) String() string {
 func (*GetNoteRelationshipsRequest) ProtoMessage() {}
 
 func (x *GetNoteRelationshipsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v3_notes_proto_msgTypes[9]
+	mi := &file_v3_notes_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -774,7 +830,7 @@ func (x *GetNoteRelationshipsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetNoteRelationshipsRequest.ProtoReflect.Descriptor instead.
 func (*GetNoteRelationshipsRequest) Descriptor() ([]byte, []int) {
-	return file_v3_notes_proto_rawDescGZIP(), []int{9}
+	return file_v3_notes_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetNoteRelationshipsRequest) GetNoteId() int64 {
@@ -799,7 +855,7 @@ type GetNoteRelationshipsResponse struct {
 
 func (x *GetNoteRelationshipsResponse) Reset() {
 	*x = GetNoteRelationshipsResponse{}
-	mi := &file_v3_notes_proto_msgTypes[10]
+	mi := &file_v3_notes_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -811,7 +867,7 @@ func (x *GetNoteRelationshipsResponse) String() string {
 func (*GetNoteRelationshipsResponse) ProtoMessage() {}
 
 func (x *GetNoteRelationshipsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v3_notes_proto_msgTypes[10]
+	mi := &file_v3_notes_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -824,7 +880,7 @@ func (x *GetNoteRelationshipsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetNoteRelationshipsResponse.ProtoReflect.Descriptor instead.
 func (*GetNoteRelationshipsResponse) Descriptor() ([]byte, []int) {
-	return file_v3_notes_proto_rawDescGZIP(), []int{10}
+	return file_v3_notes_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetNoteRelationshipsResponse) GetOutgoingLinks() []int64 {
@@ -922,7 +978,13 @@ const file_v3_notes_proto_rawDesc = "" +
 	"\x0e_collection_idB\x0e\n" +
 	"\f_is_template\",\n" +
 	"\x11DeleteNoteRequest\x12\x17\n" +
-	"\x02id\x18\x01 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\x02id\"\x95\x02\n" +
+	"\x02id\x18\x01 \x01(\x03B\a\xbaH\x04\"\x02 \x00R\x02id\"\x94\x01\n" +
+	"\x0eNewNoteRequest\x121\n" +
+	"\rcollection_id\x18\x01 \x01(\x03B\a\xbaH\x04\"\x02 \x00H\x00R\fcollectionId\x88\x01\x01\x12-\n" +
+	"\vtemplate_id\x18\x02 \x01(\x03B\a\xbaH\x04\"\x02 \x00H\x01R\n" +
+	"templateId\x88\x01\x01B\x10\n" +
+	"\x0e_collection_idB\x0e\n" +
+	"\f_template_id\"\x95\x02\n" +
 	"\x10ListNotesRequest\x12&\n" +
 	"\tpage_size\x18\x01 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x00R\bpageSize\x12\x1d\n" +
 	"\n" +
@@ -953,7 +1015,7 @@ const file_v3_notes_proto_rawDesc = "" +
 	"\x1cGetNoteRelationshipsResponse\x12%\n" +
 	"\x0eoutgoing_links\x18\x01 \x03(\x03R\routgoingLinks\x12%\n" +
 	"\x0eincoming_links\x18\x02 \x03(\x03R\rincomingLinks\x12\x17\n" +
-	"\atag_ids\x18\x03 \x03(\x03R\x06tagIds2\xac\x05\n" +
+	"\atag_ids\x18\x03 \x03(\x03R\x06tagIds2\xf9\x05\n" +
 	"\fNotesService\x12M\n" +
 	"\n" +
 	"CreateNote\x12\x1a.mind.v3.CreateNoteRequest\x1a\r.mind.v3.Note\"\x14\x82\xd3\xe4\x93\x02\x0e:\x01*\"\t/v3/notes\x12I\n" +
@@ -961,7 +1023,8 @@ const file_v3_notes_proto_rawDesc = "" +
 	"\vReplaceNote\x12\x1b.mind.v3.ReplaceNoteRequest\x1a\r.mind.v3.Note\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\x1a\x0e/v3/notes/{id}\x12X\n" +
 	"\n" +
 	"DeleteNote\x12\x1a.mind.v3.DeleteNoteRequest\x1a\x16.google.protobuf.Empty\"\x16\x82\xd3\xe4\x93\x02\x10*\x0e/v3/notes/{id}\x12U\n" +
-	"\tListNotes\x12\x19.mind.v3.ListNotesRequest\x1a\x1a.mind.v3.ListNotesResponse\"\x11\x82\xd3\xe4\x93\x02\v\x12\t/v3/notes\x12j\n" +
+	"\tListNotes\x12\x19.mind.v3.ListNotesRequest\x1a\x1a.mind.v3.ListNotesResponse\"\x11\x82\xd3\xe4\x93\x02\v\x12\t/v3/notes\x12K\n" +
+	"\aNewNote\x12\x17.mind.v3.NewNoteRequest\x1a\r.mind.v3.Note\"\x18\x82\xd3\xe4\x93\x02\x12:\x01*\"\r/v3/notes:new\x12j\n" +
 	"\vGetNoteMeta\x12\x1b.mind.v3.GetNoteMetaRequest\x1a\x1c.mind.v3.GetNoteMetaResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v3/notes/{note_id}/meta\x12\x8e\x01\n" +
 	"\x14GetNoteRelationships\x12$.mind.v3.GetNoteRelationshipsRequest\x1a%.mind.v3.GetNoteRelationshipsResponse\")\x82\xd3\xe4\x93\x02#\x12!/v3/notes/{note_id}/relationshipsB\x93\x01\n" +
 	"\vcom.mind.v3B\n" +
@@ -979,50 +1042,53 @@ func file_v3_notes_proto_rawDescGZIP() []byte {
 	return file_v3_notes_proto_rawDescData
 }
 
-var file_v3_notes_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_v3_notes_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_v3_notes_proto_goTypes = []any{
 	(*Note)(nil),                         // 0: mind.v3.Note
 	(*CreateNoteRequest)(nil),            // 1: mind.v3.CreateNoteRequest
 	(*GetNoteRequest)(nil),               // 2: mind.v3.GetNoteRequest
 	(*ReplaceNoteRequest)(nil),           // 3: mind.v3.ReplaceNoteRequest
 	(*DeleteNoteRequest)(nil),            // 4: mind.v3.DeleteNoteRequest
-	(*ListNotesRequest)(nil),             // 5: mind.v3.ListNotesRequest
-	(*ListNotesResponse)(nil),            // 6: mind.v3.ListNotesResponse
-	(*GetNoteMetaRequest)(nil),           // 7: mind.v3.GetNoteMetaRequest
-	(*GetNoteMetaResponse)(nil),          // 8: mind.v3.GetNoteMetaResponse
-	(*GetNoteRelationshipsRequest)(nil),  // 9: mind.v3.GetNoteRelationshipsRequest
-	(*GetNoteRelationshipsResponse)(nil), // 10: mind.v3.GetNoteRelationshipsResponse
-	nil,                                  // 11: mind.v3.Note.MetadataEntry
-	nil,                                  // 12: mind.v3.CreateNoteRequest.MetadataEntry
-	nil,                                  // 13: mind.v3.ReplaceNoteRequest.MetadataEntry
-	nil,                                  // 14: mind.v3.GetNoteMetaResponse.MetadataEntry
-	(*timestamppb.Timestamp)(nil),        // 15: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),                // 16: google.protobuf.Empty
+	(*NewNoteRequest)(nil),               // 5: mind.v3.NewNoteRequest
+	(*ListNotesRequest)(nil),             // 6: mind.v3.ListNotesRequest
+	(*ListNotesResponse)(nil),            // 7: mind.v3.ListNotesResponse
+	(*GetNoteMetaRequest)(nil),           // 8: mind.v3.GetNoteMetaRequest
+	(*GetNoteMetaResponse)(nil),          // 9: mind.v3.GetNoteMetaResponse
+	(*GetNoteRelationshipsRequest)(nil),  // 10: mind.v3.GetNoteRelationshipsRequest
+	(*GetNoteRelationshipsResponse)(nil), // 11: mind.v3.GetNoteRelationshipsResponse
+	nil,                                  // 12: mind.v3.Note.MetadataEntry
+	nil,                                  // 13: mind.v3.CreateNoteRequest.MetadataEntry
+	nil,                                  // 14: mind.v3.ReplaceNoteRequest.MetadataEntry
+	nil,                                  // 15: mind.v3.GetNoteMetaResponse.MetadataEntry
+	(*timestamppb.Timestamp)(nil),        // 16: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                // 17: google.protobuf.Empty
 }
 var file_v3_notes_proto_depIdxs = []int32{
-	15, // 0: mind.v3.Note.create_time:type_name -> google.protobuf.Timestamp
-	15, // 1: mind.v3.Note.update_time:type_name -> google.protobuf.Timestamp
-	11, // 2: mind.v3.Note.metadata:type_name -> mind.v3.Note.MetadataEntry
-	12, // 3: mind.v3.CreateNoteRequest.metadata:type_name -> mind.v3.CreateNoteRequest.MetadataEntry
-	13, // 4: mind.v3.ReplaceNoteRequest.metadata:type_name -> mind.v3.ReplaceNoteRequest.MetadataEntry
+	16, // 0: mind.v3.Note.create_time:type_name -> google.protobuf.Timestamp
+	16, // 1: mind.v3.Note.update_time:type_name -> google.protobuf.Timestamp
+	12, // 2: mind.v3.Note.metadata:type_name -> mind.v3.Note.MetadataEntry
+	13, // 3: mind.v3.CreateNoteRequest.metadata:type_name -> mind.v3.CreateNoteRequest.MetadataEntry
+	14, // 4: mind.v3.ReplaceNoteRequest.metadata:type_name -> mind.v3.ReplaceNoteRequest.MetadataEntry
 	0,  // 5: mind.v3.ListNotesResponse.notes:type_name -> mind.v3.Note
-	14, // 6: mind.v3.GetNoteMetaResponse.metadata:type_name -> mind.v3.GetNoteMetaResponse.MetadataEntry
+	15, // 6: mind.v3.GetNoteMetaResponse.metadata:type_name -> mind.v3.GetNoteMetaResponse.MetadataEntry
 	1,  // 7: mind.v3.NotesService.CreateNote:input_type -> mind.v3.CreateNoteRequest
 	2,  // 8: mind.v3.NotesService.GetNote:input_type -> mind.v3.GetNoteRequest
 	3,  // 9: mind.v3.NotesService.ReplaceNote:input_type -> mind.v3.ReplaceNoteRequest
 	4,  // 10: mind.v3.NotesService.DeleteNote:input_type -> mind.v3.DeleteNoteRequest
-	5,  // 11: mind.v3.NotesService.ListNotes:input_type -> mind.v3.ListNotesRequest
-	7,  // 12: mind.v3.NotesService.GetNoteMeta:input_type -> mind.v3.GetNoteMetaRequest
-	9,  // 13: mind.v3.NotesService.GetNoteRelationships:input_type -> mind.v3.GetNoteRelationshipsRequest
-	0,  // 14: mind.v3.NotesService.CreateNote:output_type -> mind.v3.Note
-	0,  // 15: mind.v3.NotesService.GetNote:output_type -> mind.v3.Note
-	0,  // 16: mind.v3.NotesService.ReplaceNote:output_type -> mind.v3.Note
-	16, // 17: mind.v3.NotesService.DeleteNote:output_type -> google.protobuf.Empty
-	6,  // 18: mind.v3.NotesService.ListNotes:output_type -> mind.v3.ListNotesResponse
-	8,  // 19: mind.v3.NotesService.GetNoteMeta:output_type -> mind.v3.GetNoteMetaResponse
-	10, // 20: mind.v3.NotesService.GetNoteRelationships:output_type -> mind.v3.GetNoteRelationshipsResponse
-	14, // [14:21] is the sub-list for method output_type
-	7,  // [7:14] is the sub-list for method input_type
+	6,  // 11: mind.v3.NotesService.ListNotes:input_type -> mind.v3.ListNotesRequest
+	5,  // 12: mind.v3.NotesService.NewNote:input_type -> mind.v3.NewNoteRequest
+	8,  // 13: mind.v3.NotesService.GetNoteMeta:input_type -> mind.v3.GetNoteMetaRequest
+	10, // 14: mind.v3.NotesService.GetNoteRelationships:input_type -> mind.v3.GetNoteRelationshipsRequest
+	0,  // 15: mind.v3.NotesService.CreateNote:output_type -> mind.v3.Note
+	0,  // 16: mind.v3.NotesService.GetNote:output_type -> mind.v3.Note
+	0,  // 17: mind.v3.NotesService.ReplaceNote:output_type -> mind.v3.Note
+	17, // 18: mind.v3.NotesService.DeleteNote:output_type -> google.protobuf.Empty
+	7,  // 19: mind.v3.NotesService.ListNotes:output_type -> mind.v3.ListNotesResponse
+	0,  // 20: mind.v3.NotesService.NewNote:output_type -> mind.v3.Note
+	9,  // 21: mind.v3.NotesService.GetNoteMeta:output_type -> mind.v3.GetNoteMetaResponse
+	11, // 22: mind.v3.NotesService.GetNoteRelationships:output_type -> mind.v3.GetNoteRelationshipsResponse
+	15, // [15:23] is the sub-list for method output_type
+	7,  // [7:15] is the sub-list for method input_type
 	7,  // [7:7] is the sub-list for extension type_name
 	7,  // [7:7] is the sub-list for extension extendee
 	0,  // [0:7] is the sub-list for field type_name
@@ -1038,13 +1104,14 @@ func file_v3_notes_proto_init() {
 	file_v3_notes_proto_msgTypes[3].OneofWrappers = []any{}
 	file_v3_notes_proto_msgTypes[5].OneofWrappers = []any{}
 	file_v3_notes_proto_msgTypes[6].OneofWrappers = []any{}
+	file_v3_notes_proto_msgTypes[7].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v3_notes_proto_rawDesc), len(file_v3_notes_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
