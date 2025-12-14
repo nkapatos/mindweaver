@@ -4,7 +4,7 @@ managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: github.com/nkapatos/mindweaver/packages/pkg/gen/proto/mind
+      value: github.com/nkapatos/mindweaver/pkg/gen/proto/mind
     # Map googleapis to standard location
     - file_option: go_package
       module: buf.build/googleapis/googleapis
