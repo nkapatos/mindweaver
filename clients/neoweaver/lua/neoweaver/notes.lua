@@ -138,15 +138,26 @@ function M.save_note(bufnr, id)
 	local metadata = vim.b[bufnr].note_metadata or {}
 
 	-- Build v3 ReplaceNoteRequest
+	-- Connect RPC uses camelCase in JSON (not snake_case)
 	---@type mind.v3.ReplaceNoteRequest
 	local req = {
 		id = id,
 		title = title,
 		body = body,
 		collectionId = collection_id,
-		noteTypeId = note_type_id,
-		metadata = metadata,
 	}
+	
+	-- Add optional fields only if they have values
+	if note_type_id then
+		req.noteTypeId = note_type_id
+	end
+	
+	if metadata and next(metadata) ~= nil then
+		req.metadata = metadata
+	end
+
+	-- Debug: log the request
+	vim.notify("Saving note: " .. vim.inspect(req), vim.log.levels.DEBUG)
 
 	-- Call API with etag for optimistic locking
 	api.notes.update(req, etag, function(res)
