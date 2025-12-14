@@ -144,6 +144,16 @@ message DeleteNoteRequest {
   int64 id = 1 [(buf.validate.field).int64.gt = 0];
 }
 
+// Request message for NewNote (AIP-136 custom method)
+// Creates a new note with auto-generated title and optional template expansion
+message NewNoteRequest {
+  // Optional collection ID (defaults to 1 if omitted)
+  optional int64 collection_id = 1 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional template ID (defaults to 1 if omitted - system default empty template)
+  optional int64 template_id = 2 [(buf.validate.field).int64.gt = 0];
+}
+
 // Request message for ListNotes (AIP-132, AIP-158)
 message ListNotesRequest {
   // Maximum number of notes to return (default: 50, max: 100)
@@ -215,6 +225,15 @@ service NotesService {
   rpc ListNotes(ListNotesRequest) returns (ListNotesResponse) {
     option (google.api.http) = {
       get: "/v3/notes"
+    };
+  }
+
+  // Create a new note with auto-generated title (AIP-136 custom method)
+  // Returns a new note with title "Untitled N" and optional template content
+  rpc NewNote(NewNoteRequest) returns (Note) {
+    option (google.api.http) = {
+      post: "/v3/notes:new"
+      body: "*"
     };
   }
 
