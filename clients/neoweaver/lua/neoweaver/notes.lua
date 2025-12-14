@@ -1,10 +1,26 @@
 ---
---- notes.lua - Minimal note management for Neoweaver (v3)
---- Start simple: List notes only
+--- notes.lua - Note management for Neoweaver (v3)
+--- Handles note listing, opening, editing, and saving
+---
+--- Reference: clients/mw/notes.lua (v1 implementation)
 ---
 local api = require("neoweaver.api")
+local buffer_manager = require("neoweaver.buffer.manager")
 
 local M = {}
+
+-- Register note type handlers with buffer manager
+-- This is called once during setup
+local function register_handlers()
+	buffer_manager.register_type("note", {
+		on_save = function(bufnr, id)
+			M.save_note(bufnr, id)
+		end,
+		on_close = function(bufnr, id)
+			-- Cleanup if needed in future
+		end,
+	})
+end
 
 --- List all notes using vim.ui.select
 function M.list_notes()
@@ -44,23 +60,136 @@ function M.list_notes()
 				return
 			end
 			local selected_note = notes[idx]
-			vim.notify(
-				string.format("Selected: [%d] %s", selected_note.id, selected_note.title),
-				vim.log.levels.INFO
-			)
-			-- TODO: Open note for editing
+			-- Open note for editing
+			M.open_note(tonumber(selected_note.id))
 		end)
 	end)
 end
 
-function M.setup()
-	-- Create command
-	vim.api.nvim_create_user_command("NotesList", M.list_notes, { desc = "List all notes (v3)" })
+--- Open a note in a buffer for editing
+--- If buffer already exists, switch to it; otherwise fetch and create
+---@param note_id integer The note ID to open
+function M.open_note(note_id)
+	if not note_id then
+		vim.notify("Invalid note ID", vim.log.levels.ERROR)
+		return
+	end
 
-	-- Create keymap
-	vim.keymap.set("n", "<leader>nl", M.list_notes, { desc = "List notes (v3)" })
+	-- Check if buffer already exists
+	local existing = buffer_manager.get("note", note_id)
+	if existing and vim.api.nvim_buf_is_valid(existing) then
+		vim.api.nvim_set_current_buf(existing)
+		return
+	end
+
+	-- Fetch note from API
+	---@type mind.v3.GetNoteRequest
+	local req = { id = note_id }
 	
-	vim.notify("Neoweaver (v3) notes module loaded", vim.log.levels.INFO)
+	api.notes.get(req, function(res)
+		if res.error then
+			vim.notify("Error loading note: " .. res.error.message, vim.log.levels.ERROR)
+			return
+		end
+
+		-- v3 API: Response is mind.v3.Note directly
+		---@type mind.v3.Note
+		local note = res.data
+
+		-- Create buffer via buffer_manager
+		local bufnr = buffer_manager.create({
+			type = "note",
+			id = note_id,
+			name = note.title or "Untitled",
+			filetype = "markdown",
+			modifiable = true,
+		})
+
+		-- Load content into buffer
+		local lines = vim.split(note.body or "", "\n")
+		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+		vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
+
+		-- Store note data in buffer variables
+		-- Using note_* prefix for domain-specific storage
+		vim.b[bufnr].note_id = note_id
+		vim.b[bufnr].note_title = note.title
+		vim.b[bufnr].note_etag = note.etag
+		vim.b[bufnr].note_collection_id = note.collectionId
+		vim.b[bufnr].note_type_id = note.noteTypeId
+		vim.b[bufnr].note_metadata = note.metadata or {}
+	end)
+end
+
+--- Save note buffer content to server
+--- Called by buffer_manager when buffer is saved (:w)
+---@param bufnr integer Buffer number
+---@param id integer Note ID
+function M.save_note(bufnr, id)
+	-- Extract buffer content
+	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+	local body = table.concat(lines, "\n")
+
+	-- Get stored note data
+	local title = vim.b[bufnr].note_title or "Untitled"
+	local etag = vim.b[bufnr].note_etag
+	local collection_id = vim.b[bufnr].note_collection_id or 1
+	local note_type_id = vim.b[bufnr].note_type_id
+	local metadata = vim.b[bufnr].note_metadata or {}
+
+	-- Build v3 ReplaceNoteRequest
+	---@type mind.v3.ReplaceNoteRequest
+	local req = {
+		id = id,
+		title = title,
+		body = body,
+		collectionId = collection_id,
+		noteTypeId = note_type_id,
+		metadata = metadata,
+	}
+
+	-- Call API with etag for optimistic locking
+	api.notes.update(req, etag, function(res)
+		if res.error then
+			vim.notify("Save failed: " .. res.error.message, vim.log.levels.ERROR)
+			-- TODO: Handle conflict (412) - requires diff.lua integration
+			return
+		end
+
+		-- Update etag and mark buffer as unmodified
+		---@type mind.v3.Note
+		local updated_note = res.data
+		vim.b[bufnr].note_etag = updated_note.etag
+		vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
+		vim.notify("Note saved successfully", vim.log.levels.INFO)
+	end)
+end
+
+function M.setup()
+	-- Register note type handlers with buffer manager
+	register_handlers()
+
+	-- Create commands
+	vim.api.nvim_create_user_command("NotesList", M.list_notes, { desc = "List all notes (v3)" })
+	vim.api.nvim_create_user_command("NotesOpen", function(opts)
+		local id = tonumber(opts.args)
+		if id then
+			M.open_note(id)
+		else
+			vim.notify("Usage: :NotesOpen <note_id>", vim.log.levels.WARN)
+		end
+	end, { nargs = 1, desc = "Open note by ID (v3)" })
+
+	-- Create keymaps
+	vim.keymap.set("n", "<leader>nl", M.list_notes, { desc = "List notes (v3)" })
+	vim.keymap.set("n", "<leader>no", function()
+		vim.ui.input({ prompt = "Note ID: " }, function(input)
+			local id = tonumber(input)
+			if id then
+				M.open_note(id)
+			end
+		end)
+	end, { desc = "Open note by ID (v3)" })
 end
 
 return M
