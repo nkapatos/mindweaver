@@ -268,8 +268,8 @@ const file_v3_tags_proto_rawDesc = "" +
 	"total_size\x18\x03 \x01(\x05H\x00R\ttotalSize\x88\x01\x01B\r\n" +
 	"\v_total_size2i\n" +
 	"\vTagsService\x12Z\n" +
-	"\bListTags\x12\x18.mind.v3.ListTagsRequest\x1a\x19.mind.v3.ListTagsResponse\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/api/mind/v3/tagsB\x9b\x01\n" +
-	"\vcom.mind.v3B\tTagsProtoP\x01ZDgithub.com/nkapatos/mindweaver/packages/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
+	"\bListTags\x12\x18.mind.v3.ListTagsRequest\x1a\x19.mind.v3.ListTagsResponse\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/api/mind/v3/tagsB\x92\x01\n" +
+	"\vcom.mind.v3B\tTagsProtoP\x01Z;github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
 
 var (
 	file_v3_tags_proto_rawDescOnce sync.Once

@@ -317,8 +317,8 @@ const file_v3_search_proto_rawDesc = "" +
 	"\x05limit\x18\x05 \x01(\x05R\x05limit\x12\x16\n" +
 	"\x06offset\x18\x06 \x01(\x05R\x06offset2s\n" +
 	"\rSearchService\x12b\n" +
-	"\vSearchNotes\x12\x1b.mind.v3.SearchNotesRequest\x1a\x1c.mind.v3.SearchNotesResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v3/search/notesB\x9d\x01\n" +
-	"\vcom.mind.v3B\vSearchProtoP\x01ZDgithub.com/nkapatos/mindweaver/packages/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
+	"\vSearchNotes\x12\x1b.mind.v3.SearchNotesRequest\x1a\x1c.mind.v3.SearchNotesResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v3/search/notesB\x94\x01\n" +
+	"\vcom.mind.v3B\vSearchProtoP\x01Z;github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
 
 var (
 	file_v3_search_proto_rawDescOnce sync.Once
