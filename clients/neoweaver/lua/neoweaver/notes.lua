@@ -66,6 +66,56 @@ function M.list_notes()
 	end)
 end
 
+--- Create a new note (server-first approach)
+--- Creates empty note on server first, then opens buffer with ID
+function M.create_note()
+	-- Generate title with timestamp
+	local title = vim.fn.strftime("%Y-%m-%d %H:%M") .. " - Untitled"
+	
+	-- Create note on server first
+	---@type mind.v3.CreateNoteRequest
+	local req = {
+		title = title,
+		body = "",
+		collectionId = 1, -- Default collection
+	}
+	
+	api.notes.create(req, function(res)
+		if res.error then
+			vim.notify("Failed to create note: " .. res.error.message, vim.log.levels.ERROR)
+			return
+		end
+		
+		-- Note created successfully, now open buffer with ID
+		---@type mind.v3.Note
+		local note = res.data
+		local note_id = tonumber(note.id)
+		
+		-- Create managed buffer via buffer_manager
+		local bufnr = buffer_manager.create({
+			type = "note",
+			id = note_id,
+			name = note.title or "Untitled",
+			filetype = "markdown",
+			modifiable = true,
+		})
+		
+		-- Buffer starts empty (note.body = "")
+		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+		vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
+		
+		-- Store note metadata
+		vim.b[bufnr].note_id = note_id
+		vim.b[bufnr].note_title = note.title
+		vim.b[bufnr].note_etag = note.etag
+		vim.b[bufnr].note_collection_id = note.collectionId
+		vim.b[bufnr].note_type_id = note.noteTypeId
+		vim.b[bufnr].note_metadata = note.metadata or {}
+		
+		vim.notify("Note created (ID: " .. note_id .. "). Start editing!", vim.log.levels.INFO)
+	end)
+end
+
 --- Open a note in a buffer for editing
 --- If buffer already exists, switch to it; otherwise fetch and create
 ---@param note_id integer The note ID to open
@@ -123,6 +173,7 @@ end
 
 --- Save note buffer content to server
 --- Called by buffer_manager when buffer is saved (:w)
+--- Always updates existing note (server-first approach ensures ID exists)
 ---@param bufnr integer Buffer number
 ---@param id integer Note ID
 function M.save_note(bufnr, id)
@@ -137,8 +188,7 @@ function M.save_note(bufnr, id)
 	local note_type_id = vim.b[bufnr].note_type_id
 	local metadata = vim.b[bufnr].note_metadata or {}
 
-	-- Build v3 ReplaceNoteRequest
-	-- Connect RPC uses camelCase in JSON (not snake_case)
+	-- Build update request
 	---@type mind.v3.ReplaceNoteRequest
 	local req = {
 		id = id,
@@ -155,9 +205,6 @@ function M.save_note(bufnr, id)
 	if metadata and next(metadata) ~= nil then
 		req.metadata = metadata
 	end
-
-	-- Debug: log the request
-	vim.notify("Saving note: " .. vim.inspect(req), vim.log.levels.DEBUG)
 
 	-- Call API with etag for optimistic locking
 	api.notes.update(req, etag, function(res)
@@ -190,6 +237,7 @@ function M.setup()
 			vim.notify("Usage: :NotesOpen <note_id>", vim.log.levels.WARN)
 		end
 	end, { nargs = 1, desc = "Open note by ID (v3)" })
+	vim.api.nvim_create_user_command("NotesNew", M.create_note, { desc = "Create new note (v3)" })
 
 	-- Create keymaps
 	vim.keymap.set("n", "<leader>nl", M.list_notes, { desc = "List notes (v3)" })
@@ -201,6 +249,7 @@ function M.setup()
 			end
 		end)
 	end, { desc = "Open note by ID (v3)" })
+	vim.keymap.set("n", "<leader>nn", M.create_note, { desc = "Create new note (v3)" })
 end
 
 return M
