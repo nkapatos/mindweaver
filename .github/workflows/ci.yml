@@ -38,7 +38,7 @@ permissions:
 #
 # Path groups:
 #   - mindweaver: packages/mindweaver/** (excluding tests/)
-#   - pkg: pkg/** (shared code - triggers all Go package tests)
+#   - pkg: packages/pkg/** (shared code - triggers all Go package tests)
 #   - root-config: Taskfile.yml, .mise.toml (triggers all jobs)
 #
 # Adding a new Go package (e.g., packages/imex):
@@ -72,7 +72,7 @@ jobs:
               - 'packages/mindweaver/**'
               - '!packages/mindweaver/tests/**'
             pkg:
-              - 'pkg/**'
+              - 'packages/pkg/**'
             root-config:
               - 'Taskfile.yml'
               - '.mise.toml'
@@ -97,7 +97,7 @@ jobs:
           cache: true
 
       - name: Setup Go workspace
-        run: go work init ./packages/mindweaver ./pkg
+        run: go work init ./packages/mindweaver ./packages/pkg
 
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
@@ -133,17 +133,17 @@ jobs:
           cache: true
 
       - name: Setup Go workspace
-        run: go work init ./packages/mindweaver ./pkg
+        run: go work init ./packages/mindweaver ./packages/pkg
 
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
-        working-directory: pkg
+        working-directory: packages/pkg
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         if: github.event_name == 'pull_request'
         with:
-          files: ./pkg/coverage.out
+          files: ./packages/pkg/coverage.out
           flags: pkg
           fail_ci_if_error: false
         env:
@@ -172,7 +172,7 @@ jobs:
         uses: go-task/setup-task@v1
 
       - name: Setup Go workspace
-        run: go work init ./packages/mindweaver ./pkg
+        run: go work init ./packages/mindweaver ./packages/pkg
 
       - name: Build binary
         run: task mw:build
