@@ -1,14 +1,20 @@
--- neoweaver.nvim
--- Neovim client for MindWeaver
-
+---
+--- init.lua - Neoweaver entry point (v3)
+---
 local M = {}
 
-M.config = {
-  -- Default configuration
-}
-
 function M.setup(opts)
-  M.config = vim.tbl_deep_extend("force", M.config, opts or {})
+	opts = opts or {}
+	
+	-- Setup API layer
+	local api = require("neoweaver.api")
+	api.setup(opts.api or {})
+	
+	-- Setup notes module
+	local notes = require("neoweaver.notes")
+	notes.setup()
+	
+	vim.notify("Neoweaver v3 loaded!", vim.log.levels.INFO)
 end
 
 return M
