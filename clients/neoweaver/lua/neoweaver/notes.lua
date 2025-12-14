@@ -66,27 +66,34 @@ function M.list_notes()
 	end)
 end
 
---- Create a new note (server-first approach)
---- Creates empty note on server first, then opens buffer with ID
+-- Debounce state for create_note
+local last_create_time = 0
+local DEBOUNCE_MS = 500
+
+--- Create a new note (server-first approach with auto-generated title)
+--- Server generates "Untitled 0", "Untitled 1", etc. via NewNote endpoint
 function M.create_note()
-	-- Generate title with timestamp
-	local title = vim.fn.strftime("%Y-%m-%d %H:%M") .. " - Untitled"
+	-- Debounce rapid calls to prevent accidental spam
+	local now = vim.loop.now()
+	if now - last_create_time < DEBOUNCE_MS then
+		vim.notify("Please wait before creating another note", vim.log.levels.WARN)
+		return
+	end
+	last_create_time = now
 	
-	-- Create note on server first
-	---@type mind.v3.CreateNoteRequest
+	-- Call NewNote endpoint - server generates title automatically
+	---@type mind.v3.NewNoteRequest
 	local req = {
-		title = title,
-		body = "",
-		collectionId = 1, -- Default collection
+		collectionId = 1, -- Default collection (optional, server defaults to 1)
 	}
 	
-	api.notes.create(req, function(res)
+	api.notes.new(req, function(res)
 		if res.error then
 			vim.notify("Failed to create note: " .. res.error.message, vim.log.levels.ERROR)
 			return
 		end
 		
-		-- Note created successfully, now open buffer with ID
+		-- Note created with auto-generated title "Untitled 0", "Untitled 1", etc.
 		---@type mind.v3.Note
 		local note = res.data
 		local note_id = tonumber(note.id)
@@ -95,7 +102,7 @@ function M.create_note()
 		local bufnr = buffer_manager.create({
 			type = "note",
 			id = note_id,
-			name = note.title or "Untitled",
+			name = note.title, -- Server-generated "Untitled N"
 			filetype = "markdown",
 			modifiable = true,
 		})
@@ -112,7 +119,7 @@ function M.create_note()
 		vim.b[bufnr].note_type_id = note.noteTypeId
 		vim.b[bufnr].note_metadata = note.metadata or {}
 		
-		vim.notify("Note created (ID: " .. note_id .. "). Start editing!", vim.log.levels.INFO)
+		vim.notify("Note created: " .. note.title, vim.log.levels.INFO)
 	end)
 end
 

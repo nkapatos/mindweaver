@@ -117,6 +117,7 @@ end
 ---@field list fun(req: mind.v3.ListNotesRequest, cb: fun(res: ApiResponse)) List notes
 ---@field get fun(req: mind.v3.GetNoteRequest, cb: fun(res: ApiResponse)) Get a note
 ---@field create fun(req: mind.v3.CreateNoteRequest, cb: fun(res: ApiResponse)) Create a note
+---@field new fun(req: mind.v3.NewNoteRequest, cb: fun(res: ApiResponse)) Create a new note with auto-generated title
 ---@field update fun(req: mind.v3.ReplaceNoteRequest, etag: string?, cb: fun(res: ApiResponse)) Update a note
 ---@field delete fun(req: mind.v3.DeleteNoteRequest, cb: fun(res: ApiResponse)) Delete a note
 
@@ -149,6 +150,16 @@ M.notes = {
 	create = function(req, cb)
 		request("POST", "/mind.v3.NotesService/CreateNote", {
 			body = vim.json.encode(req),
+			headers = { ["Content-Type"] = "application/json" },
+		}, cb)
+	end,
+
+	-- POST /mind.v3.NotesService/NewNote
+	-- Request: mind.v3.NewNoteRequest
+	-- Response: mind.v3.Note
+	new = function(req, cb)
+		request("POST", "/mind.v3.NotesService/NewNote", {
+			body = vim.json.encode(req or {}),
 			headers = { ["Content-Type"] = "application/json" },
 		}, cb)
 	end,
