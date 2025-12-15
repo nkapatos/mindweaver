@@ -35,22 +35,78 @@ local curl = require("plenary.curl")
 ---@field error? ConnectError Error object (present on failure)
 
 M.config = {
-	server_url = {
-		dev = "http://localhost:9421",
-		prod = "http://192.168.64.1:9999",
-	},
-	use_prod = false,
+	servers = {},
+	current_server = nil,
 	debug_info = true, -- Can be toggled independently with :MwToggleDebug
 }
 
+local function normalize_servers(servers)
+	if type(servers) ~= "table" or vim.tbl_isempty(servers) then
+		error("neoweaver.api.setup: 'servers' table is required")
+	end
+
+	local normalized = {}
+	local default_name = nil
+
+	for name, value in pairs(servers) do
+		if type(name) ~= "string" or name == "" then
+			error("neoweaver.api.setup: server names must be non-empty strings")
+		end
+
+		local url
+		local is_default = false
+
+		if type(value) == "string" then
+			url = value
+		elseif type(value) == "table" then
+			url = value.url
+			is_default = value.default == true
+		else
+			error(string.format("neoweaver.api.setup: invalid configuration for server '%s'", name))
+		end
+
+		if type(url) ~= "string" or url == "" then
+			error(string.format("neoweaver.api.setup: server '%s' must provide a non-empty url", name))
+		end
+
+		normalized[name] = { url = url }
+
+		if is_default and not default_name then
+			default_name = name
+		end
+	end
+
+	return normalized, default_name
+end
+
 function M.setup(opts)
 	opts = opts or {}
-	M.config.server_url.dev = opts.server_url_dev or M.config.server_url.dev
-	M.config.server_url.prod = opts.server_url_prod or M.config.server_url.prod
-	M.config.use_prod = opts.use_prod or M.config.use_prod
-	M.config.debug_info = opts.debug_info or M.config.debug_info
+
+	if opts.debug_info ~= nil then
+		M.config.debug_info = opts.debug_info
+	end
+
+	if opts.servers then
+		local normalized, default_name = normalize_servers(opts.servers)
+		M.config.servers = normalized
+		M.config.current_server = default_name
+	else
+		M.config.servers = {}
+		M.config.current_server = nil
+	end
+
+	if vim.tbl_isempty(M.config.servers) then
+		error("neoweaver.api.setup: at least one server must be configured")
+	end
+
 	if M.config.debug_info then
-		vim.notify("Neoweaver API Setup (v3) Completed", vim.log.levels.INFO)
+		local msg = "Neoweaver API configured"
+		if M.config.current_server then
+			msg = msg .. " (default: " .. M.config.current_server .. ")"
+		else
+			msg = msg .. " (no default server)"
+		end
+		vim.notify(msg, vim.log.levels.INFO)
 	end
 end
 
@@ -61,8 +117,22 @@ end
 ---@param endpoint string Connect RPC endpoint (e.g., "/mind.v3.NotesService/GetNote")
 ---@param opts table Request options (body, headers)
 ---@param cb fun(res: ApiResponse) Callback function
+local function get_current_server_url()
+	local name = M.config.current_server
+	if not name or name == "" then
+		error("neoweaver.api: no server selected. Use :MwServerUse <name> or set a default server.")
+	end
+
+	local entry = M.config.servers[name]
+	if not entry then
+		error(string.format("neoweaver.api: server '%s' is not configured", name))
+	end
+
+	return entry.url
+end
+
 local function request(method, endpoint, opts, cb)
-	local base_url = M.config.use_prod and M.config.server_url.prod or M.config.server_url.dev
+	local base_url = get_current_server_url()
 	local url = base_url .. endpoint
 	opts = opts or {}
 
@@ -201,13 +271,50 @@ M.list_notes_by_collection = function(collection_id, query, cb)
 	M.notes.list(req, cb)
 end
 
--- Toggle command for dev/prod server selection
--- Note: Debug logging is independent - use :MwToggleDebug to control it
-vim.api.nvim_create_user_command("MwToggleProd", function()
-	M.config.use_prod = not M.config.use_prod
-	local url = M.config.use_prod and M.config.server_url.prod or M.config.server_url.dev
-	vim.notify("Server: " .. (M.config.use_prod and "PROD" or "DEV") .. " (" .. url .. ")", vim.log.levels.INFO)
-end, { desc = "Toggle between dev and prod server" })
+local function list_server_names(
+	ArgLead ---@diagnostic disable-line:unused-local
+)
+	local names = {}
+	for name, _ in pairs(M.config.servers) do
+		if type(name) == "string" then
+			table.insert(names, name)
+		end
+	end
+	table.sort(names)
+	return names
+end
+
+local function set_current_server(name)
+	if not name or name == "" then
+		error("MwServerUse: server name is required")
+	end
+
+	if not M.config.servers[name] then
+		error(string.format("MwServerUse: server '%s' is not configured", name))
+	end
+
+	M.config.current_server = name
+
+	if M.config.debug_info then
+		vim.notify("Neoweaver server set to '" .. name .. "'", vim.log.levels.INFO)
+	end
+end
+
+vim.api.nvim_create_user_command("MwServerUse", function(opts)
+	set_current_server(opts.args)
+end, {
+	nargs = 1,
+	complete = function(ArgLead)
+		local matches = {}
+		for _, name in ipairs(list_server_names(ArgLead)) do
+			if name:find("^" .. vim.pesc(ArgLead)) then
+				table.insert(matches, name)
+			end
+		end
+		return matches
+	end,
+	desc = "Select Neoweaver server by name",
+})
 
 -- Toggle command for debug logging (independent of server mode)
 -- Useful for debugging production issues or cleaning up dev logs
