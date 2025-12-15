@@ -70,12 +70,47 @@ end
 local last_create_time = 0
 local DEBOUNCE_MS = 500
 
+local allow_multiple_empty_notes = false
+
+---@param opts? { allow_multiple_empty_notes?: boolean }
+function M.setup(opts)
+	opts = opts or {}
+	allow_multiple_empty_notes = opts.allow_multiple_empty_notes == true
+
+	-- Register note type handlers with buffer manager
+	register_handlers()
+
+	-- Create commands
+	vim.api.nvim_create_user_command("NotesList", M.list_notes, { desc = "List all notes (v3)" })
+	vim.api.nvim_create_user_command("NotesOpen", function(o)
+		local id = tonumber(o.args)
+		if id then
+			M.open_note(id)
+		else
+			vim.notify("Usage: :NotesOpen <note_id>", vim.log.levels.WARN)
+		end
+	end, { nargs = 1, desc = "Open note by ID (v3)" })
+	vim.api.nvim_create_user_command("NotesNew", M.create_note, { desc = "Create new note (v3)" })
+
+	-- Create keymaps
+	vim.keymap.set("n", "<leader>nl", M.list_notes, { desc = "List notes (v3)" })
+	vim.keymap.set("n", "<leader>no", function()
+		vim.ui.input({ prompt = "Note ID: " }, function(input)
+			local id = tonumber(input)
+			if id then
+				M.open_note(id)
+			end
+		end)
+	end, { desc = "Open note by ID (v3)" })
+	vim.keymap.set("n", "<leader>nn", M.create_note, { desc = "Create new note (v3)" })
+end
+
 --- Create a new note (server-first approach with auto-generated title)
 --- Server generates "Untitled 0", "Untitled 1", etc. via NewNote endpoint
 function M.create_note()
-	-- Debounce rapid calls to prevent accidental spam
+	-- Debounce rapid calls unless feature explicitly allows multiple empty notes
 	local now = vim.loop.now()
-	if now - last_create_time < DEBOUNCE_MS then
+	if not allow_multiple_empty_notes and (now - last_create_time < DEBOUNCE_MS) then
 		vim.notify("Please wait before creating another note", vim.log.levels.WARN)
 		return
 	end
@@ -109,7 +144,7 @@ function M.create_note()
 		
 		-- Buffer starts empty (note.body = "")
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-		vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
+		vim.api.nvim_set_option_value("modified", allow_multiple_empty_notes, { buf = bufnr })
 		
 		-- Store note metadata
 		vim.b[bufnr].note_id = note_id
@@ -230,14 +265,17 @@ function M.save_note(bufnr, id)
 	end)
 end
 
-function M.setup()
+function M.setup(opts)
+	opts = opts or {}
+	allow_multiple_empty_notes = opts.allow_multiple_empty_notes == true
+
 	-- Register note type handlers with buffer manager
 	register_handlers()
 
 	-- Create commands
 	vim.api.nvim_create_user_command("NotesList", M.list_notes, { desc = "List all notes (v3)" })
-	vim.api.nvim_create_user_command("NotesOpen", function(opts)
-		local id = tonumber(opts.args)
+	vim.api.nvim_create_user_command("NotesOpen", function(o)
+		local id = tonumber(o.args)
 		if id then
 			M.open_note(id)
 		else
