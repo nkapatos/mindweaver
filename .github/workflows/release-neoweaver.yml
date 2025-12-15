@@ -1,0 +1,38 @@
+name: Release Neoweaver
+
+on:
+  push:
+    tags:
+      - 'neoweaver/v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish Neoweaver assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare package
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME#neoweaver/}"
+          VERSION="${TAG_NAME#v}"
+          mkdir -p dist
+          tar -czf "dist/neoweaver-${TAG_NAME}.tar.gz" -C clients neoweaver
+          (cd clients && zip -r "../dist/neoweaver-${TAG_NAME}.zip" neoweaver >/dev/null)
+          echo "asset_tag=${TAG_NAME}" >> "$GITHUB_ENV"
+          echo "asset_version=${VERSION}" >> "$GITHUB_ENV"
+
+      - name: Upload release assets
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: ${{ github.ref_name }}
+          artifacts: dist/neoweaver-${{ env.asset_tag }}.tar.gz,dist/neoweaver-${{ env.asset_tag }}.zip
+          artifactContentType: application/gzip
