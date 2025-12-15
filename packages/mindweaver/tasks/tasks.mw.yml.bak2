@@ -1,0 +1,85 @@
+version: '3'
+
+# Configuration comes from .env.example (defaults) and .env.local (overrides)
+# See .env.example for all available environment variables
+# 
+# Vars use `sh:` to evaluate at runtime, allowing them to access dotenv variables.
+# This creates a single source of truth: .env.example for defaults, .env.local for overrides.
+
+vars:
+  # Build configuration (structural, rarely changed)
+  BIN_NAME: mindweaver
+  BIN_DIR: ./bin
+  CMD_DIR: ./packages/mindweaver/cmd/mindweaver
+  DB_DIR: ./db
+  DB_MIND_NAME: mind
+  DB_BRAIN_NAME: brain
+  # DevTool configuration - pulled from dotenv (.env.example + .env.local)
+  MIND_STORE_DIR:
+    sh: echo "${MIND_STORE_DIR:-packages/mindweaver/store/mind}"
+  BRAIN_STORE_DIR:
+    sh: echo "${BRAIN_STORE_DIR:-packages/mindweaver/store/brain}"
+  MIND_INTERNAL_STORE_DIR:
+    sh: echo "${MIND_INTERNAL_STORE_DIR:-packages/mindweaver/internal/mind/store}"
+  BRAIN_INTERNAL_STORE_DIR:
+    sh: echo "${BRAIN_INTERNAL_STORE_DIR:-packages/mindweaver/internal/brain/store}"
+  MIND_MIGRATION_DIR:
+    sh: echo "${MIND_MIGRATION_DIR:-./packages/mindweaver/migrations/mind}"
+  BRAIN_MIGRATION_DIR:
+    sh: echo "${BRAIN_MIGRATION_DIR:-./packages/mindweaver/migrations/brain}"
+  GOOSE_DRIVER:
+    sh: echo "${GOOSE_DRIVER:-sqlite3}"
+  AIR_CONFIG:
+    sh: echo "${AIR_CONFIG:-./packages/mindweaver/.air.toml}"
+
+tasks:
+  build:
+    dir: packages/mindweaver
+    desc: Build mindweaver binary
+    cmds: 
+      - mkdir -p {{.BIN_DIR}}
+      - go build -o {{.BIN_DIR}}/{{.BIN_NAME}} {{.CMD_DIR}}
+
+  serve:
+    desc: Serve Mindweaver server
+    deps: [build]
+    vars:
+      # Default if you want to have a default variable and also to be able to overwrite it from
+      # another task
+      MODE: '{{default "" .MODE}}' 
+    cmds:
+      - mkdir -p {{.DB_DIR}}
+      - "{{.BIN_DIR}}/{{.BIN_NAME}} {{.MODE}}"
+
+  dev:
+    desc: Run Mindweaver server on dev mode using Air for app reloading
+    preconditions:
+      - sh: command -v air
+        msg: "air is not installed. Install with: go install github.com/air-verse/air@latest"
+    cmds:
+      - air -c {{.AIR_CONFIG}}
+
+  db:reset:
+    desc: Reset all databases - roll back migrations, migrate up, and regenerate store code
+    cmds:
+      - task: db:migrations:reset
+      - task: db:migrations:up
+      - task: db:store:reset
+
+  db:store:reset:
+    desc: Delete generated store code and regenerate from SQL for both mind and brain
+    cmds:
+      - task: :brain:db:store:reset
+      - task: :mind:db:store:reset
+
+  db:migrations:up:
+    desc: Migrate both mind and brain databases to the most recent version available
+    cmds:
+      - task: :brain:db:migrations:up
+      - task: :mind:db:migrations:up
+
+  db:migrations:reset:
+    desc: Roll back all migrations for both mind and brain databases
+    cmds:
+      - task: :brain:db:migrations:reset
+      - task: :mind:db:migrations:reset
