@@ -10,7 +10,7 @@ vars:
   # Build configuration (structural, rarely changed)
   BIN_NAME: mindweaver
   BIN_DIR: ./bin
-  CMD_DIR: ./packages/mindweaver/cmd/mindweaver
+  CMD_DIR: ./cmd/mindweaver
   DB_DIR: ./db
   DB_MIND_NAME: mind
   DB_BRAIN_NAME: brain
@@ -34,12 +34,14 @@ vars:
 
 tasks:
   build:
+    dir: packages/mindweaver
     desc: Build mindweaver binary
     cmds: 
       - mkdir -p {{.BIN_DIR}}
       - go build -o {{.BIN_DIR}}/{{.BIN_NAME}} {{.CMD_DIR}}
 
   serve:
+    dir: packages/mindweaver
     desc: Serve Mindweaver server
     deps: [build]
     vars:
@@ -51,6 +53,7 @@ tasks:
       - "{{.BIN_DIR}}/{{.BIN_NAME}} {{.MODE}}"
 
   dev:
+    dir: packages/mindweaver
     desc: Run Mindweaver server on dev mode using Air for app reloading
     preconditions:
       - sh: command -v air
