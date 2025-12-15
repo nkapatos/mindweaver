@@ -1,0 +1,49 @@
+name: Neovim Docs
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'clients/neoweaver/**'
+      - 'README.md'
+      - 'docs/**'
+      - '.github/workflows/neovim-docs.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'clients/neoweaver/**'
+      - 'README.md'
+      - 'docs/**'
+      - '.github/workflows/neovim-docs.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  panvimdoc:
+    name: Generate Vim help from Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate Vim help with panvimdoc
+        uses: kdheepak/panvimdoc@v4.0.1
+        with:
+          vimdoc: neoweaver
+          pandoc: clients/neoweaver/README.md
+          outpath: clients/neoweaver/doc
+          version: 'NVIM v0.9.0'
+          toc: true
+          description: 'MindWeaver Neovim client'
+          dedupsubheadings: true
+          treesitter: true
+
+      - name: Show generated doc diff
+        run: |
+          if git status --short | grep "clients/neoweaver/doc/neoweaver.txt"; then
+            git --no-pager diff clients/neoweaver/doc/neoweaver.txt
+            exit 1
+          fi
