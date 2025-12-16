@@ -4,12 +4,12 @@ The mindweaver server provides the Mind and Brain services.
 
 ## Prerequisites
 
-- Go 1.25+
-- [Task](https://taskfile.dev/installation/)
-- [Buf](https://buf.build/docs/installation/)
-- [sqlc](https://docs.sqlc.dev/en/latest/overview/install.html)
-- [goose](https://github.com/pressly/goose)
-- [air](https://github.com/air-verse/air) (optional, for hot reload)
+- **Go 1.25.5** - See root `.mise.toml` or install manually
+- **[sqlc](https://docs.sqlc.dev/en/latest/overview/install.html)** - SQL code generator
+- **[goose](https://github.com/pressly/goose)** - Database migration tool
+- **[air](https://github.com/air-verse/air)** (optional) - Hot reload for development
+
+Task definitions include precondition checks with installation instructions.
 
 ## Quick Start
 

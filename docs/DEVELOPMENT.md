@@ -4,10 +4,12 @@ Guide for developers who want to build, run, or contribute to Mindweaver.
 
 ## Prerequisites
 
-- **Go 1.24+** (for project-local tool installation)
-- **Task** - [Installation guide](https://taskfile.dev/installation/)
-- **Buf** - [Installation guide](https://buf.build/docs/installation/)
+- **[mise](https://mise.jdx.dev/)** - Manages toolchain versions (see `.mise.toml` for configured versions)
+- **[Task](https://taskfile.dev/installation/)** - Task runner for build automation
+- **[Buf](https://buf.build/docs/installation/)** - Protocol buffer tooling
 - **Ollama** (optional, for AI features) - [ollama.com](https://ollama.com)
+
+Component-specific tools (sqlc, goose, air) are documented in each component's README.
 
 ## Quick Start
 
