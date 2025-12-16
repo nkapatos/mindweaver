@@ -29,6 +29,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Prepare doc output directory
+        run: |
+          mkdir -p clients/neoweaver/doc
+          touch clients/neoweaver/doc/neoweaver.txt
+
       - name: Generate Vim help with panvimdoc
         uses: kdheepak/panvimdoc@v4.0.1
         with:
