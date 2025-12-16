@@ -97,8 +97,8 @@ jobs:
         uses: go-task/setup-task@v1
 
       - name: Setup Go workspace
-        run: task workspace:setup
-        working-directory: packages/mindweaver
+        run: task setup
+        working-directory: packages
 
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
