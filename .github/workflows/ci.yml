@@ -38,12 +38,11 @@ permissions:
 #
 # Path groups:
 #   - mindweaver: packages/mindweaver/** (excluding tests/)
-#   - pkg: packages/pkg/** (shared code - triggers all Go package tests)
 #   - root-config: packages/Taskfile.yaml, .mise.toml (triggers all jobs)
 #
 # Adding a new Go package (e.g., packages/imex):
 #   1. Add filter in 'changes' job: imex: 'packages/imex/**'
-#   2. Add test-imex job with: if: needs.changes.outputs.imex == 'true' || needs.changes.outputs.pkg == 'true'
+#   2. Add test-imex job with: if: needs.changes.outputs.imex == 'true'
 #   3. Add build-imex job if needed
 #   4. Update packages/Taskfile.yaml workspace:setup task to include new module
 #   5. Create component Taskfile with build task that depends on :workspace:setup
@@ -58,7 +57,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       mindweaver: ${{ steps.filter.outputs.mindweaver }}
-      pkg: ${{ steps.filter.outputs.pkg }}
       root-config: ${{ steps.filter.outputs.root-config }}
     steps:
       - name: Checkout code
@@ -72,20 +70,18 @@ jobs:
             mindweaver:
               - 'packages/mindweaver/**'
               - '!packages/mindweaver/tests/**'
-            pkg:
-              - 'packages/pkg/**'
             root-config:
               - 'packages/Taskfile.yaml'
               - '.mise.toml'
 
   # ---------------------------------------------------------------------------
   # Test mindweaver package
-  # Runs when: mindweaver code changes OR shared pkg changes OR root config changes
+  # Runs when: mindweaver code changes OR root config changes
   # ---------------------------------------------------------------------------
   test-mindweaver:
     name: Test (mindweaver)
     needs: changes
-    if: needs.changes.outputs.mindweaver == 'true' || needs.changes.outputs.pkg == 'true' || needs.changes.outputs.root-config == 'true'
+    if: needs.changes.outputs.mindweaver == 'true' || needs.changes.outputs.root-config == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -119,53 +115,13 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   # ---------------------------------------------------------------------------
-  # Test shared pkg
-  # Runs when: shared pkg changes OR root config changes
-  # ---------------------------------------------------------------------------
-  test-pkg:
-    name: Test (pkg)
-    needs: changes
-    if: needs.changes.outputs.pkg == 'true' || needs.changes.outputs.root-config == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.5'
-          cache: true
-
-      - name: Setup Task
-        uses: go-task/setup-task@v1
-
-      - name: Setup Go workspace
-        run: task workspace:setup
-        working-directory: packages/pkg
-
-      - name: Run tests
-        run: go test -v -race -coverprofile=coverage.out ./...
-        working-directory: packages/pkg
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        if: github.event_name == 'pull_request'
-        with:
-          files: ./packages/pkg/coverage.out
-          flags: pkg
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-  # ---------------------------------------------------------------------------
   # Build mindweaver binary
-  # Runs when: mindweaver code changes OR shared pkg changes OR root config changes
+  # Runs when: mindweaver code changes OR root config changes
   # ---------------------------------------------------------------------------
   build-mindweaver:
     name: Build (mindweaver)
     needs: changes
-    if: needs.changes.outputs.mindweaver == 'true' || needs.changes.outputs.pkg == 'true' || needs.changes.outputs.root-config == 'true'
+    if: needs.changes.outputs.mindweaver == 'true' || needs.changes.outputs.root-config == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -197,7 +153,7 @@ jobs:
   # lint:
   #   name: Lint
   #   needs: changes
-  #   if: needs.changes.outputs.mindweaver == 'true' || needs.changes.outputs.pkg == 'true'
+  #   if: needs.changes.outputs.mindweaver == 'true'
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Checkout code
