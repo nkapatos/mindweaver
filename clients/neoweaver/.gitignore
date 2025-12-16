@@ -1,1 +1,9 @@
 /gen/
+
+# Plugin packaging artifacts
+dist/
+*.zip
+*.tar.gz
+
+# Keep generated docs tracked (panvimdoc output)
+# doc/neoweaver.txt is tracked intentionally
