@@ -22,8 +22,10 @@ permissions:
   contents: write
 
 jobs:
+  # FIXME: Re-enable panvimdoc once README+MiniDoc documentation generation is finalized.
   panvimdoc:
     name: Generate Vim help from Markdown
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
