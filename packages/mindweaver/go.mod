@@ -2,8 +2,6 @@ module github.com/nkapatos/mindweaver/packages/mindweaver
 
 go 1.25.5
 
-replace github.com/nkapatos/mindweaver/pkg => ../pkg
-
 require (
 	buf.build/go/protovalidate v1.0.1
 	connectrpc.com/connect v1.19.1
