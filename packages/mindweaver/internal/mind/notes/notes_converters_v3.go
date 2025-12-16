@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
-	mindv3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
-	"github.com/nkapatos/mindweaver/pkg/utils"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
+	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

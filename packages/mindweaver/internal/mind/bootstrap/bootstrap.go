@@ -9,12 +9,12 @@ import (
 	"log/slog"
 
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/collections"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/links"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/meta"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/notes"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/notetypes"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/search"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/tags"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/templates"
 	mindmigrations "github.com/nkapatos/mindweaver/packages/mindweaver/migrations/mind"

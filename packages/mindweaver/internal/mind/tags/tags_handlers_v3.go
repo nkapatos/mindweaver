@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	mindv3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
-	"github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3/mindv3connect"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
-	"github.com/nkapatos/mindweaver/pkg/pagination"
+	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3/mindv3connect"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
 )
 
 // TODO: V1 to V3 Migration - Missing Endpoints

@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/migrations/mind"
-	"github.com/nkapatos/mindweaver/pkg/testdb"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/testdb"
 )
 
 // SetupTest creates a test database with Mind migrations and returns

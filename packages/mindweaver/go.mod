@@ -3,21 +3,26 @@ module github.com/nkapatos/mindweaver/packages/mindweaver
 go 1.25.5
 
 require (
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20251209175733-2a1774d88802.1
 	buf.build/go/protovalidate v1.0.1
 	connectrpc.com/connect v1.19.1
 	github.com/dgraph-io/badger/v4 v4.8.0
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.13.4
-	github.com/nkapatos/mindweaver/pkg v0.0.0
+	github.com/pressly/goose/v3 v3.26.0
 	github.com/stretchr/testify v1.11.1
+	github.com/yuin/goldmark v1.7.13
+	github.com/yuin/goldmark-meta v1.1.0
+	go.abhg.dev/goldmark/hashtag v0.4.0
+	go.abhg.dev/goldmark/wikilink v0.6.0
 	golang.org/x/net v0.43.0
+	google.golang.org/genproto/googleapis/api v0.0.0-20251213004720-97cd9d5aeac2
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251124214823-79d6a2a48846
 	google.golang.org/protobuf v1.36.11
 	modernc.org/sqlite v1.40.1
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20251209175733-2a1774d88802.1 // indirect
 	cel.dev/expr v0.24.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -36,17 +41,12 @@ require (
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/pressly/goose/v3 v3.26.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/stoewer/go-strcase v1.3.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/yuin/goldmark v1.7.13 // indirect
-	github.com/yuin/goldmark-meta v1.1.0 // indirect
-	go.abhg.dev/goldmark/hashtag v0.4.0 // indirect
-	go.abhg.dev/goldmark/wikilink v0.6.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect
 	go.opentelemetry.io/otel/metric v1.37.0 // indirect
@@ -58,7 +58,6 @@ require (
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20251213004720-97cd9d5aeac2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.66.10 // indirect
