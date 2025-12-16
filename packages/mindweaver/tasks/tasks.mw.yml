@@ -14,6 +14,7 @@ vars:
   DB_DIR: ./db
   DB_MIND_NAME: mind
   DB_BRAIN_NAME: brain
+  PROTO_DIR: ../../proto
   # DevTool configuration - pulled from dotenv (.env.example + .env.local)
   MIND_STORE_DIR:
     sh: echo "${MIND_STORE_DIR:-./store/mind}"
@@ -33,8 +34,22 @@ vars:
     sh: echo "${AIR_CONFIG:-./.air.toml}"
 
 tasks:
+  proto:generate:
+    desc: Generate Go protobuf code for all services (mind and brain)
+    aliases: [proto:gen]
+    cmds:
+      - task: :mind:proto:generate
+      - task: :brain:proto:generate
+
+  proto:clean:
+    desc: Remove all generated protobuf files for all services
+    cmds:
+      - task: :mind:proto:clean
+      - task: :brain:proto:clean
+
   build:
     desc: Build mindweaver binary
+    deps: [proto:generate]
     cmds: 
       - mkdir -p {{.BIN_DIR}}
       - go build -o {{.BIN_DIR}}/{{.BIN_NAME}} {{.CMD_DIR}}

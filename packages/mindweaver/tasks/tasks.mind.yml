@@ -4,6 +4,26 @@ version: '3'
 # We use task-level env to ensure proper isolation and prevent variable leaking between mind/brain tasks.
 
 tasks:
+  proto:generate:
+    desc: Generate Go protobuf code for mind service
+    aliases: [proto:gen]
+    dir: '{{.PROTO_DIR}}'
+    preconditions:
+      - sh: command -v buf
+        msg: "buf is not installed. Install with: go install github.com/bufbuild/buf/cmd/buf@latest"
+    cmds:
+      - buf generate
+    sources:
+      - mind/v3/*.proto
+    generates:
+      - ../packages/mindweaver/gen/proto/mind/v3/*.pb.go
+      - ../packages/mindweaver/gen/proto/mind/v3/mindv3connect/*.connect.go
+
+  proto:clean:
+    desc: Remove generated protobuf files for mind service
+    cmds:
+      - rm -rf ./gen/proto/mind
+
   serve:
     desc: Run Mindweaver server with mode=mind
     cmds:
