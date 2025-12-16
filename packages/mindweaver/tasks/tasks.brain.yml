@@ -4,9 +4,12 @@ version: '3'
 # We use task-level env to ensure proper isolation and prevent variable leaking between mind/brain tasks.
 
 tasks:
+  proto:clean:
+    desc: Remove generated protobuf files for brain service
+    cmds:
+      - rm -rf gen/proto
   proto:generate:
     desc: Generate Go protobuf code for brain service (proto definitions not yet created)
-    aliases: [proto:gen]
     dir: '{{.PROTO_DIR}}'
     preconditions:
       - sh: command -v buf
@@ -15,16 +18,6 @@ tasks:
         msg: "brain proto directory does not exist yet. Create proto/brain/ when brain service APIs are defined."
     cmds:
       - buf generate
-    sources:
-      - brain/v3/*.proto
-    generates:
-      - ../packages/mindweaver/gen/proto/brain/v3/*.pb.go
-      - ../packages/mindweaver/gen/proto/brain/v3/brainv3connect/*.connect.go
-
-  proto:clean:
-    desc: Remove generated protobuf files for brain service
-    cmds:
-      - rm -rf ./gen/proto/brain
 
   serve:
     desc: Run Mindweaver server with mode=brain

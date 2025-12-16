@@ -4,31 +4,22 @@ version: '3'
 # We use task-level env to ensure proper isolation and prevent variable leaking between mind/brain tasks.
 
 tasks:
+  proto:clean:
+    desc: Remove generated protobuf files for mind service
+    cmds:
+      - rm -rf gen/proto
   proto:generate:
     desc: Generate Go protobuf code for mind service
-    aliases: [proto:gen]
     dir: '{{.PROTO_DIR}}'
     preconditions:
       - sh: command -v buf
         msg: "buf is not installed. Install with: go install github.com/bufbuild/buf/cmd/buf@latest"
     cmds:
       - buf generate
-    sources:
-      - mind/v3/*.proto
-    generates:
-      - ../packages/mindweaver/gen/proto/mind/v3/*.pb.go
-      - ../packages/mindweaver/gen/proto/mind/v3/mindv3connect/*.connect.go
-
-  proto:clean:
-    desc: Remove generated protobuf files for mind service
-    cmds:
-      - rm -rf ./gen/proto/mind
 
   serve:
     desc: Run Mindweaver server with mode=mind
     cmds:
-      # When calling tasks from another file is important to prefix with : the task name, otherwise it will resolve in the current key of this taskfile
-      # with : calls mw:serve, without calls mind:mw:serve
       - task: ":mw:serve"
         vars: {MODE: "--mode=mind"}
 
@@ -37,6 +28,11 @@ tasks:
     cmds:
       - task: ":mw:dev"
         vars: {MODE: "--mode=mind"}
+
+  db:init:
+    desc: Create database directory for local development
+    cmds:
+      - mkdir -p {{.DB_DIR}}
 
   db:store:generate:
     desc: Generate source code from SQL
@@ -75,6 +71,7 @@ tasks:
   db:migrations:up:
     desc: Migrate the DB to the most recent version available
     aliases: [db:mig:up]
+    deps: [db:init]
     env:
       GOOSE_DRIVER: "{{.GOOSE_DRIVER}}"
       GOOSE_DBSTRING: "{{.MIND_DB_PATH}}"
