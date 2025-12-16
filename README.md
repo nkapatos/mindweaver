@@ -64,7 +64,7 @@ Mindweaver is in active development. Here's what exists today and what's coming:
 **Full documentation: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**
 
 **Prerequisites:**
-- Go 1.25+
+- [mise](https://mise.jdx.dev/) - Manages toolchain versions (see `.mise.toml`)
 - [Task runner](https://taskfile.dev/installation/)
 - [Buf](https://buf.build/docs/installation/) - Protocol buffer tooling
 - Ollama (optional) - [ollama.com](https://ollama.com)
