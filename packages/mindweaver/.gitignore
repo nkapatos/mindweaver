@@ -1,0 +1,28 @@
+# Go binaries
+bin/
+mindweaver
+*.exe
+*.exe~
+
+# Go build outputs
+dist/
+build/
+
+# Go test coverage
+coverage.out
+coverage.html
+coverage.txt
+*.coverprofile
+
+# Go test binaries
+*.test
+
+# Database files (development/testing)
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Air (live reload) temporary files
+tmp/
+.air.toml.bak
