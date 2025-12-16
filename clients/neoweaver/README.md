@@ -1,24 +1,27 @@
 # Neoweaver
 
-Neoweaver is the MindWeaver Neovim client. It communicates with the MindWeaver backend over the v3 Connect RPC API and exposes note-management commands inside Neovim.
+Neovim client for MindWeaver. Provides note management commands inside Neovim, communicating with the MindWeaver server over the Connect RPC API.
 
-## Installation
+## Prerequisites
 
-The plugin can be installed with any package manager. The example below uses **lazy.nvim** and configures the client to talk to a locally running MindWeaver server.
+- **Neovim 0.11+** - Required for plugin functionality
+- **[plenary.nvim](https://github.com/nvim-lua/plenary.nvim)** - Required dependency for HTTP requests
+
+## Quick Start
+
+Install with your preferred package manager. Example using **lazy.nvim**:
 
 ```lua
 return {
   {
-    dir = vim.fn.expand("~/Workbench/projects/nvmw/mindweaver/clients/neoweaver"),
-    dev = true,
+    dir = "path/to/neoweaver",
     cmd = { "NotesList", "NotesOpen", "NotesNew", "MwServerUse", "MwToggleDebug" },
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
       allow_multiple_empty_notes = false,
       api = {
         servers = {
-          work = { url = "http://localhost:9421", default = true },
-          cloud = "https://api.example.com",
+          local = { url = "http://localhost:9421", default = true },
         },
         debug_info = true,
       },
@@ -27,26 +30,50 @@ return {
 }
 ```
 
-## Configuration
+## Development
 
-Neoweaver accepts the following options via `require("neoweaver").setup()`.
+### Code Generation
+
+Generated Lua type annotations are not committed. Run generation when protocol buffer definitions change:
+
+```bash
+# Show available tasks
+task --list
+
+# Generate Lua types from protobuf (full pipeline)
+task neoweaver:types:generate
+
+# Clean generated files
+task neoweaver:types:clean
+```
+
+Generation pipeline:
+1. Generate TypeScript from protobuf
+2. Convert TypeScript to Lua type annotations
+3. Clean up temporary files
+
+### Testing
+
+See [TESTING.md](TESTING.md) for test suite documentation.
+
+## Configuration
 
 ### `allow_multiple_empty_notes`
 
 - **Type:** boolean (default: `false`)
-- When `true`, newly created note buffers are marked as modified immediately so that you can create and discard multiple untitled notes in succession without Neovim blocking on `:w`. When `false`, buffers start unmodified to prevent accidental empty notes.
+- When `true`, new note buffers are marked as modified immediately, allowing multiple untitled notes without Neovim blocking on `:w`.
 
 ### `api.servers`
 
 - **Type:** table (required)
-- A map of server names to configuration tables or URL strings. Each entry must provide a `url`. Set `default = true` on one entry to select it automatically; otherwise run `:MwServerUse <name>` to choose a backend after setup.
+- Map of server names to configuration. Each entry must provide a `url`. Set `default = true` on one entry to select it automatically.
 
 Example:
 
 ```lua
 api = {
   servers = {
-    work = { url = "http://localhost:9421", default = true },
+    local = { url = "http://localhost:9421", default = true },
     cloud = "https://api.example.com",
   },
 }
@@ -55,29 +82,44 @@ api = {
 ### `api.debug_info`
 
 - **Type:** boolean (default: `true`)
-- Toggles informational logging from the API module. You can switch this at runtime with `:MwToggleDebug`.
+- Toggles API logging. Can be toggled at runtime with `:MwToggleDebug`.
 
 ## Commands
 
-| Command         | Description                                     |
-|-----------------|-------------------------------------------------|
-| `:NotesList`    | Fetch the first page of notes and open a picker |
-| `:NotesOpen`    | Open a note by ID                               |
-| `:NotesNew`     | Create a new note on the server and open buffer |
-| `:MwServerUse`  | Switch to a configured backend server           |
-| `:MwToggleDebug`| Toggle API debug notifications                  |
+| Command          | Description                                     |
+| ---------------- | ----------------------------------------------- |
+| `:NotesList`     | Fetch the first page of notes and open a picker |
+| `:NotesOpen`     | Open a note by ID                               |
+| `:NotesNew`      | Create a new note on the server and open buffer |
+| `:MwServerUse`   | Switch to a configured backend server           |
+| `:MwToggleDebug` | Toggle API debug notifications                  |
 
 ## Keymaps
 
-During setup Neoweaver registers the following default mappings. Remap or clear them if needed.
+Default mappings (can be remapped):
 
-| Mapping        | Action            |
-|----------------|-------------------|
-| `<leader>nl`   | `NotesList`       |
-| `<leader>no`   | Prompt for note ID|
-| `<leader>nn`   | `NotesNew`        |
+| Mapping      | Action             |
+| ------------ | ------------------ |
+| `<leader>nl` | `NotesList`        |
+| `<leader>no` | Prompt for note ID |
+| `<leader>nn` | `NotesNew`         |
 
-## Notes
+## Architecture
 
-- The plugin expects a running MindWeaver server that exposes the v3 RPC API.
-- Conflict handling and metadata extraction are still being migrated from the legacy `mw` client.
+```
+lua/neoweaver/
+├── api.lua           - HTTP client for Connect RPC API
+├── notes.lua         - Note operations and commands
+├── buffer/
+│   └── manager.lua   - Buffer lifecycle management
+└── types.lua         - Generated Lua type annotations
+```
+
+The plugin expects a running MindWeaver server exposing the v3 RPC API.
+
+## See Also
+
+- [Root README](../../README.md) - Project overview
+- [docs/WORKFLOW.md](../../docs/WORKFLOW.md) - Contribution guidelines
+- [docs/guidelines.md](docs/guidelines.md) - Development guidelines
+- [rules/conventions.md](rules/conventions.md) - Code conventions
