@@ -32,6 +32,9 @@ jobs:
       - name: Setup Task
         uses: go-task/setup-task@v1
       
+      - name: Setup Buf
+        uses: bufbuild/buf-setup-action@v1
+      
       - name: Setup Go workspace
         run: task workspace:setup
         working-directory: packages/mindweaver
