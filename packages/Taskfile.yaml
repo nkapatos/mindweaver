@@ -1,0 +1,10 @@
+version: '3'
+
+tasks:
+  setup:
+    desc: Setup Go workspace (required once after cloning)
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - go work init ./mindweaver ./pkg
+    status:
+      - test -f go.work

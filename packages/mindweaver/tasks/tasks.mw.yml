@@ -49,7 +49,9 @@ tasks:
 
   build:
     desc: Build mindweaver binary
-    deps: [proto:generate]
+    deps: 
+      - :workspace:setup
+      - proto:generate
     cmds: 
       - mkdir -p {{.BIN_DIR}}
       - go build -o {{.BIN_DIR}}/{{.BIN_NAME}} {{.CMD_DIR}}

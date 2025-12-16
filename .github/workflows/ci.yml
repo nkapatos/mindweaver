@@ -45,7 +45,8 @@ permissions:
 #   1. Add filter in 'changes' job: imex: 'packages/imex/**'
 #   2. Add test-imex job with: if: needs.changes.outputs.imex == 'true' || needs.changes.outputs.pkg == 'true'
 #   3. Add build-imex job if needed
-#   4. Update go work init to include new package
+#   4. Update packages/Taskfile.yaml workspace:setup task to include new module
+#   5. Create component Taskfile with build task that depends on :workspace:setup
 # =============================================================================
 
 jobs:
@@ -96,8 +97,12 @@ jobs:
           go-version: '1.25.5'
           cache: true
 
+      - name: Setup Task
+        uses: go-task/setup-task@v1
+
       - name: Setup Go workspace
-        run: go work init ./packages/mindweaver ./packages/pkg
+        run: task workspace:setup
+        working-directory: packages/mindweaver
 
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
@@ -132,8 +137,12 @@ jobs:
           go-version: '1.25.5'
           cache: true
 
+      - name: Setup Task
+        uses: go-task/setup-task@v1
+
       - name: Setup Go workspace
-        run: go work init ./packages/mindweaver ./packages/pkg
+        run: task workspace:setup
+        working-directory: packages/pkg
 
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
@@ -171,14 +180,13 @@ jobs:
       - name: Setup Task
         uses: go-task/setup-task@v1
 
-      - name: Setup Go workspace
-        run: go work init ./packages/mindweaver ./packages/pkg
-
       - name: Build binary
         run: task mw:build
+        working-directory: packages/mindweaver
 
       - name: Verify binary
         run: ./bin/mindweaver --version || true
+        working-directory: packages/mindweaver
 
   # ---------------------------------------------------------------------------
   # Lint (commented out - uncomment when ready)

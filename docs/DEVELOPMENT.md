@@ -15,18 +15,21 @@ Component-specific tools (sqlc, goose, air) are documented in each component's R
 
 ### Using Task (Recommended)
 
-The mindweaver server and clients each have their own Taskfiles. Navigate to the component directory and use `task --list` to see available tasks.
+Each component has its own Taskfile. Navigate to the component directory and run `task --list` to see available tasks for that component.
 
 ```bash
-# Clone and navigate to server
+# Clone repository
 git clone https://github.com/nkapatos/mindweaver.git
-cd mindweaver/packages/mindweaver
+cd mindweaver
+
+# Navigate to component directory
+cd <component-directory>
 
 # Show available tasks
 task --list
-
-# Application runs on http://localhost:9421
 ```
+
+Components with Taskfiles: `packages/mindweaver/`, `clients/neoweaver/`
 
 ### Manual Build & Run
 
@@ -98,7 +101,7 @@ See `.env.example` for all available options.
 
 ### Task Runner
 
-Each component has its own Taskfile with build, test, and development tasks. Use `task --list` from the component directory to see available tasks.
+All task commands must be run from the component directory.
 
 ### Running Tests
 
