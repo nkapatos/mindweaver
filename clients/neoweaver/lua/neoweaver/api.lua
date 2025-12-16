@@ -1,26 +1,3 @@
----
---- API module for Neoweaver plugin (v3)
---- Provides centralized HTTP request handling with Connect RPC transport
---- All types are generated from proto/mind/v3/*.proto
----
---- Connect RPC Transport:
---- - All RPC methods use POST regardless of operation type (Connect RPC protocol)
---- - Method parameter kept for developer clarity (GET/POST/PUT/DELETE semantic meaning)
---- - Actual HTTP method is always POST under the hood
----
---- Architecture Decision:
---- - NO client-side validation of request parameters (id, body, etc.)
---- - Backend is the single source of truth for all validation logic
---- - Client only handles network/transport errors (JSON decode, HTTP status)
---- - This ensures consistency across all clients and simplifies maintenance
----
---- Recent changes (2025-12-14):
---- - Migrated from REST API v1 to Connect RPC v3 transport
---- - All HTTP methods now use POST (Connect RPC requirement)
---- - Updated resource paths from /api/* to /mind.v3.*Service/*
---- - Request payloads moved from query params to POST body
---- - Updated all type annotations to use generated v3 types
----
 local M = {}
 local curl = require("plenary.curl")
 
