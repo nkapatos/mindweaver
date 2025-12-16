@@ -29,6 +29,13 @@ jobs:
           go-version: '1.25.5'
           cache: true
       
+      - name: Setup Task
+        uses: go-task/setup-task@v1
+      
+      - name: Setup Go workspace
+        run: task workspace:setup
+        working-directory: packages/mindweaver
+      
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:

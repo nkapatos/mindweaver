@@ -39,7 +39,7 @@ permissions:
 # Path groups:
 #   - mindweaver: packages/mindweaver/** (excluding tests/)
 #   - pkg: packages/pkg/** (shared code - triggers all Go package tests)
-#   - root-config: Taskfile.yml, .mise.toml (triggers all jobs)
+#   - root-config: packages/Taskfile.yaml, .mise.toml (triggers all jobs)
 #
 # Adding a new Go package (e.g., packages/imex):
 #   1. Add filter in 'changes' job: imex: 'packages/imex/**'
@@ -75,7 +75,7 @@ jobs:
             pkg:
               - 'packages/pkg/**'
             root-config:
-              - 'Taskfile.yml'
+              - 'packages/Taskfile.yaml'
               - '.mise.toml'
 
   # ---------------------------------------------------------------------------

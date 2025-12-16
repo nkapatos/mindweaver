@@ -31,16 +31,18 @@ jobs:
             revert
           scopes: |
             mindweaver
+            neoweaver
             mind
             brain
             imex
             lsp
-            nvim
             web
             desktop
             api
+            pkg
             deps
             ci
+            proto
           requireScope: false
           subjectPattern: ^.+$
           subjectPatternError: |
