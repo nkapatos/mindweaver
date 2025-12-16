@@ -6,6 +6,7 @@ Guide for developers who want to build, run, or contribute to Mindweaver.
 
 - **Go 1.24+** (for project-local tool installation)
 - **Task** - [Installation guide](https://taskfile.dev/installation/)
+- **Buf** - [Installation guide](https://buf.build/docs/installation/)
 - **Ollama** (optional, for AI features) - [ollama.com](https://ollama.com)
 
 ## Quick Start
@@ -110,7 +111,7 @@ go test ../pkg/config
 
 ### Code Generation
 
-After modifying `.sql` files in `store/*/sql/`, regenerate Go code using sqlc (available via Task or directly with `go tool sqlc generate`).
+Code is generated from various sources (protocol buffers, SQL schemas). Use `task --list` in the component directory to see available generation tasks.
 
 ## Running in Different Modes
 

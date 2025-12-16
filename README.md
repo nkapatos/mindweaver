@@ -66,6 +66,7 @@ Mindweaver is in active development. Here's what exists today and what's coming:
 **Prerequisites:**
 - Go 1.25+
 - [Task runner](https://taskfile.dev/installation/)
+- [Buf](https://buf.build/docs/installation/) - Protocol buffer tooling
 - Ollama (optional) - [ollama.com](https://ollama.com)
 
 **Quick start:**
