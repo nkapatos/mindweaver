@@ -29,5 +29,8 @@ project_local_files/
 go.work
 go.work.sum
 
-bin/
-tmp/
+# Generated and build artifacts (matches at any depth)
+**/bin/
+**/dist/
+**/tmp/
+**/gen/

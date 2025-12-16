@@ -30,5 +30,5 @@ tmp/
 # Task cache
 .task/
 
-# Generated protobuf code (not committed - regenerate via buf generate)
+# Generated code (protos, sqlc outputs)
 gen/
