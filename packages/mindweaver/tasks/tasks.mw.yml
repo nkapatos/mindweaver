@@ -7,7 +7,6 @@ version: '3'
 # This creates a single source of truth: .env.example for defaults, .env.local for overrides.
 
 vars:
-  # Build configuration (structural, rarely changed)
   BIN_NAME: mindweaver
   BIN_DIR: ./bin
   CMD_DIR: ./cmd/mindweaver
@@ -21,15 +20,19 @@ vars:
   BRAIN_STORE_DIR:
     sh: echo "${BRAIN_STORE_DIR:-./store/brain}"
   MIND_INTERNAL_STORE_DIR:
-    sh: echo "${MIND_INTERNAL_STORE_DIR:-./internal/mind/store}"
+    sh: echo "${MIND_INTERNAL_STORE_DIR:-./internal/mind/gen/store}"
   BRAIN_INTERNAL_STORE_DIR:
-    sh: echo "${BRAIN_INTERNAL_STORE_DIR:-./internal/brain/store}"
+    sh: echo "${BRAIN_INTERNAL_STORE_DIR:-./internal/brain/gen/store}"
   MIND_MIGRATION_DIR:
     sh: echo "${MIND_MIGRATION_DIR:-./migrations/mind}"
   BRAIN_MIGRATION_DIR:
     sh: echo "${BRAIN_MIGRATION_DIR:-./migrations/brain}"
   GOOSE_DRIVER:
     sh: echo "${GOOSE_DRIVER:-sqlite3}"
+  MIND_DB_PATH:
+    sh: echo "${MIND_DB_PATH:-./db/mind.db}"
+  BRAIN_DB_PATH:
+    sh: echo "${BRAIN_DB_PATH:-./db/brain.db}"
   AIR_CONFIG:
     sh: echo "${AIR_CONFIG:-./.air.toml}"
 
@@ -39,13 +42,13 @@ tasks:
     aliases: [proto:gen]
     cmds:
       - task: :mind:proto:generate
-      - task: :brain:proto:generate
+      # - task: :brain:proto:generate
 
   proto:clean:
     desc: Remove all generated protobuf files for all services
     cmds:
       - task: :mind:proto:clean
-      - task: :brain:proto:clean
+      # - task: :brain:proto:clean
 
   build:
     desc: Build mindweaver binary
@@ -58,13 +61,15 @@ tasks:
 
   serve:
     desc: Serve Mindweaver server
-    deps: [build]
+    deps:
+      - build
+      - :mind:db:init
+      # - :brain:db:init
     vars:
       # Default if you want to have a default variable and also to be able to overwrite it from
       # another task
       MODE: '{{default "" .MODE}}' 
     cmds:
-      - mkdir -p {{.DB_DIR}}
       - "{{.BIN_DIR}}/{{.BIN_NAME}} {{.MODE}}"
 
   dev:
@@ -85,17 +90,17 @@ tasks:
   db:store:reset:
     desc: Delete generated store code and regenerate from SQL for both mind and brain
     cmds:
-      - task: :brain:db:store:reset
+      # - task: :brain:db:store:reset
       - task: :mind:db:store:reset
 
   db:migrations:up:
     desc: Migrate both mind and brain databases to the most recent version available
     cmds:
-      - task: :brain:db:migrations:up
+      # - task: :brain:db:migrations:up
       - task: :mind:db:migrations:up
 
   db:migrations:reset:
     desc: Roll back all migrations for both mind and brain databases
     cmds:
-      - task: :brain:db:migrations:reset
+      # - task: :brain:db:migrations:reset
       - task: :mind:db:migrations:reset
