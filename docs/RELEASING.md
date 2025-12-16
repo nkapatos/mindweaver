@@ -4,25 +4,48 @@ Technical documentation for the release process, tooling, and troubleshooting.
 
 ## Overview
 
-Mindweaver uses automated releases via GitHub Actions and goreleaser. Every merge to `main` that affects the codebase triggers a version bump, build, and release.
+The monorepo uses [release-please](https://github.com/googleapis/release-please) for automated, independent releases of each component. Each component (mindweaver server, neoweaver client) has its own version and release cycle.
 
 ## Release Tools
 
+### release-please
+
+**Purpose:** Manages independent versioning and creates release PRs
+
+**Configuration:**
+- `release-please-config.json` - Component definitions
+- `.release-please-manifest.json` - Current versions
+
+**Features:**
+- Independent component versioning
+- Automatic CHANGELOG generation
+- Conventional commit parsing
+- Separate release PRs per component
+- Version calculation (semantic versioning)
+
+**How it works:**
+1. Scans commits merged to `main`
+2. Groups commits by scope (`mindweaver`, `neoweaver`) - NOTE: Use exact component names, NOT shortcuts like `nvim`
+3. Creates release PR(s) with CHANGELOG updates
+4. When release PR merged → creates git tag
+5. Tag triggers component-specific release workflow
+
 ### goreleaser
 
-**Purpose:** Builds cross-platform binaries and creates GitHub releases
+**Purpose:** Builds cross-platform binaries for mindweaver server
 
-**Configuration:** `.goreleaser.yml`
+**Configuration:** `packages/mindweaver/.goreleaser.yml`
 
 **Features:**
 - Cross-compilation for multiple OS/arch combinations
 - Automatic archive creation with checksums
-- GitHub Release creation with notes
+- GitHub Release artifact upload
 - Version embedding via ldflags
-- Changelog generation from commits
 
 **Test locally:**
 ```bash
+cd packages/mindweaver
+
 # Dry run (no release)
 goreleaser release --snapshot --clean
 
@@ -38,55 +61,47 @@ goreleaser build --snapshot --clean
 **Workflows:**
 - `.github/workflows/ci.yml` - PR checks
 - `.github/workflows/pr-title-check.yml` - PR title validation
-- `.github/workflows/release.yml` - Automated releases
+- `.github/workflows/release-please.yml` - Creates release PRs
+- `.github/workflows/release-mindweaver.yml` - Builds mindweaver binaries
+- `.github/workflows/release-neoweaver.yml` - Packages neoweaver client
 
-**Release workflow logic:**
-1. Detects changes to relevant paths
-2. Reads current version from `cmd/mindweaver/VERSION`
-3. Analyzes commit message type
-4. Calculates version bump
-5. Updates VERSION file
-6. Creates git tag
-7. Runs goreleaser
-8. Updates CHANGELOG
-9. Commits changes back
+**Release workflow:**
+1. `release-please.yml` runs on every push to `main`
+2. Creates/updates release PRs for affected components
+3. When release PR merged → tag created (`mindweaver/v*` or `neoweaver/v*`)
+4. Tag triggers component-specific release workflow
+5. Artifacts built and attached to GitHub Release
 
 ## Versioning
 
-### Version File
+### Version Management
 
-**Location:** `cmd/mindweaver/VERSION`
-
-**Format:** Plain text, single line
-```
-0.9.0
-```
-
-**Used by:**
-- GitHub Actions (reading current version)
-- goreleaser (via git tags)
-- Documentation references
+Versions tracked in:
+- Component `CHANGELOG.md` files
+- `.release-please-manifest.json` (managed automatically by release-please)
 
 ### Git Tags
 
-**Format:** `mindweaver/vX.Y.Z`
+**Format:** `<component>/vX.Y.Z` (e.g., `mindweaver/v0.9.0`, `neoweaver/v0.5.0`)
 
-**Examples:**
-```
-mindweaver/v0.9.0
-mindweaver/v0.10.0
-mindweaver/v1.0.0
-```
-
-**Create manually:**
-```bash
-git tag -a mindweaver/v1.0.0 -m "Release v1.0.0"
-git push origin mindweaver/v1.0.0
-```
+Tags are created automatically when release PRs are merged.
 
 **List tags:**
 ```bash
+# All mindweaver tags
 git tag -l "mindweaver/*"
+
+# All neoweaver tags
+git tag -l "neoweaver/*"
+
+# All tags
+git tag -l
+```
+
+**Create manually (if needed):**
+```bash
+git tag -a mindweaver/v1.0.0 -m "Release mindweaver v1.0.0"
+git push origin mindweaver/v1.0.0
 ```
 
 **Delete tag (if needed):**
@@ -97,32 +112,22 @@ git push origin :refs/tags/mindweaver/v1.0.0
 
 ### Version Bump Logic
 
-**Implemented in:** `.github/workflows/release.yml`
+**Implemented by:** release-please (automatic)
 
-```bash
-# Breaking change (in 0.x.x)
-feat(mind)!: breaking change
-# OR
-feat(mind): new feature
+Component determined by commit scope. Only `feat:` and `fix:` trigger release PRs.
 
-BREAKING CHANGE: details
-# Result: 0.9.0 → 0.10.0 (minor bump)
+**Required Scopes:**
+- Use `mindweaver` (NOT `server`, `backend`, or `mind`/`brain` for releases)
+- Use `neoweaver` (NOT `nvim`, `neovim`, or `client` for releases)
+- Sub-component scopes like `mind`, `brain`, `api` are included in `mindweaver` releases
+- Incorrect scopes will NOT trigger release PRs
 
-# Feature
-feat(mind): add search
-# Result: 0.9.0 → 0.10.0 (minor bump)
+**Pre-1.0 semantics (0.x.x):**
+- `feat:` → MINOR bump (0.9.0 → 0.10.0)
+- `fix:` → PATCH bump (0.9.0 → 0.9.1)
+- `feat!:` → MINOR bump (0.9.0 → 0.10.0)
 
-# Fix
-fix(mind): resolve bug
-# Result: 0.9.0 → 0.9.1 (patch bump)
-
-# No bump
-chore: update docs
-docs: fix typo
-# Result: No release triggered
-```
-
-**After 1.0.0:**
+**Post-1.0 semantics:**
 - `feat!:` → MAJOR bump (1.0.0 → 2.0.0)
 - `feat:` → MINOR bump (1.0.0 → 1.1.0)
 - `fix:` → PATCH bump (1.0.0 → 1.0.1)
@@ -137,83 +142,93 @@ docs: fix typo
 gh pr merge 123 --squash
 ```
 
-**2. GitHub Action triggers:**
-```
-✓ Detect changes to cmd/mindweaver/ or internal/
-✓ Read current version: 0.9.0
-✓ Analyze commit: "feat(mind): add search"
-✓ Calculate bump: minor (0.9.0 → 0.10.0)
-✓ Update VERSION file → 0.10.0
-✓ Create tag → mindweaver/v0.10.0
-✓ Run goreleaser → build binaries
-✓ Create GitHub Release
-✓ Update CHANGELOG.md
-✓ Push changes to main
-```
+**2. release-please workflow runs:**
 
-**3. Release published:**
-- GitHub Releases page shows new release
-- Binaries available for download
-- CHANGELOG updated on main branch
+Scans commits, groups by scope, calculates version bumps, and creates/updates release PRs with CHANGELOG updates.
+
+**3. Review and merge release PR(s):**
+
+Release PRs can be merged independently. Merging creates a git tag which triggers the component-specific release workflow.
+
+**4. Component-specific workflows run:**
+
+Each component has its own workflow (see `.github/workflows/release-*.yml`):
+- mindweaver: GoReleaser builds multi-platform binaries
+- neoweaver: Packages client as archives
+
+**5. Releases published:**
+
+Each component gets a separate GitHub Release with its artifacts.
 
 ### Manual Release
 
 **Scenario 1: Force specific version**
 
 ```bash
-# Create empty commit with version override
-git commit --allow-empty -m "chore(mindweaver): release v1.0.0
+# For mindweaver
+git commit --allow-empty -m "chore(mindweaver): release 1.0.0
+
+RELEASE-AS: 1.0.0"
+
+# For neoweaver
+git commit --allow-empty -m "chore(neoweaver): release 1.0.0
 
 RELEASE-AS: 1.0.0"
 
 git push origin main
+
+# release-please creates PR with specified version
+# Merge the release PR to trigger release
 ```
 
-**Scenario 2: Release from local machine**
+**Scenario 2: Manual tag and release**
 
 ```bash
 # Ensure you're on main and up to date
 git checkout main
 git pull
 
-# Update VERSION file
-echo "1.0.0" > cmd/mindweaver/VERSION
+# Manually update CHANGELOG and manifest
+vim packages/mindweaver/CHANGELOG.md
+vim .release-please-manifest.json
 
-# Commit and tag
-git add cmd/mindweaver/VERSION
-git commit -m "chore(mindweaver): bump version to 1.0.0"
-git tag -a mindweaver/v1.0.0 -m "Release v1.0.0"
-git push origin main mindweaver/v1.0.0
+# Commit changes
+git add .
+git commit -m "chore(mindweaver): prepare v1.0.0"
+git push origin main
 
-# Run goreleaser locally
-export GITHUB_TOKEN="your_token_here"
-goreleaser release --clean
+# Create and push tag
+git tag -a mindweaver/v1.0.0 -m "Release mindweaver v1.0.0"
+git push origin mindweaver/v1.0.0
+
+# This triggers release-mindweaver.yml workflow
 ```
 
 **Scenario 3: Hotfix release**
 
 ```bash
 # Branch from tag
-git checkout -b hotfix-0.9.1 mindweaver/v0.9.0
+git checkout -b hotfix-mindweaver-0.9.1 mindweaver/v0.9.0
 
 # Fix bug
-git commit -m "fix(mind): critical bug fix"
+git commit -m "fix(mindweaver): critical bug fix"
 
-# Update version
-echo "0.9.1" > cmd/mindweaver/VERSION
-git add cmd/mindweaver/VERSION
-git commit -m "chore(mindweaver): bump version to 0.9.1"
+# Update CHANGELOG and manifest
+vim packages/mindweaver/CHANGELOG.md  # Add 0.9.1 section
+vim .release-please-manifest.json     # Update to 0.9.1
 
-# Tag and push
-git tag -a mindweaver/v0.9.1 -m "Hotfix v0.9.1"
+git add .
+git commit -m "chore(mindweaver): bump to 0.9.1"
+
+# Create tag
+git tag -a mindweaver/v0.9.1 -m "Hotfix mindweaver v0.9.1"
 git push origin mindweaver/v0.9.1
 
-# Release
-goreleaser release --clean
+# Tag triggers release workflow automatically
 
 # Merge back to main
 git checkout main
-git merge hotfix-0.9.1
+git merge hotfix-mindweaver-0.9.1
 git push origin main
 ```
 
@@ -279,7 +294,11 @@ go build -ldflags="-X main.version=0.9.0 -X main.commit=$(git rev-parse HEAD)" .
 
 **Based on:** [Keep a Changelog](https://keepachangelog.com/)
 
-**Structure:**
+**Each component has its own CHANGELOG:**
+- `packages/mindweaver/CHANGELOG.md`
+- `clients/neoweaver/CHANGELOG.md`
+
+**Structure (mindweaver):**
 ```markdown
 ## [Unreleased]
 
@@ -296,35 +315,53 @@ go build -ldflags="-X main.version=0.9.0 -X main.commit=$(git rev-parse HEAD)" .
 #### Features
 - Added thing (#PR)
 
-### Combined
-#### Chores
-- Updated deps (#PR)
+### API
+#### Breaking Changes
+- Changed endpoint (#PR)
+```
+
+**Structure (neoweaver):**
+```markdown
+## [Unreleased]
+
+## [X.Y.Z] - YYYY-MM-DD
+
+### Features
+- Added UI feature (#PR)
+
+### Bug Fixes
+- Fixed display issue (#PR)
 ```
 
 ### Automatic Updates
 
-The release workflow automatically:
-1. Extracts commits since last tag
-2. Creates new version section
-3. Lists commits as bullet points
-4. Commits back to main
+release-please automatically:
+1. Scans commits since last release for that component
+2. Groups by conventional commit type
+3. Creates new version section in CHANGELOG
+4. Includes in release PR
+5. CHANGELOG updated when release PR merged
 
 ### Manual CHANGELOG Edits
 
 **To improve auto-generated changelog:**
 
 ```bash
-# After release, edit CHANGELOG.md
-vim CHANGELOG.md
+# Edit CHANGELOG in release PR before merging
+gh pr checkout <release-pr-number>
+vim packages/mindweaver/CHANGELOG.md
 
-# Group commits better, add details
-# Commit changes
-git add CHANGELOG.md
+# Improve grouping, add context
+git add packages/mindweaver/CHANGELOG.md
+git commit -m "docs: improve CHANGELOG formatting"
+git push
+
+# Or after release
+vim packages/mindweaver/CHANGELOG.md
+git add packages/mindweaver/CHANGELOG.md
 git commit -m "docs(mindweaver): improve CHANGELOG for v0.10.0"
 git push origin main
 ```
-
-**This won't affect the release** (already published) but improves documentation.
 
 ## GitHub Releases
 
@@ -366,17 +403,32 @@ After release is created, edit on GitHub:
 
 ## Troubleshooting
 
-### Release Didn't Trigger
+### Release PR Not Created
 
 **Check:**
 1. Was PR merged to `main`?
-2. Did changes affect relevant paths?
-3. Does commit message start with `feat:` or `fix:`?
-4. Check Action logs in GitHub
+2. Does commit message follow conventional commits?
+3. Does commit use correct scope (`mindweaver`, `neoweaver`)?
+4. Is commit type `feat:` or `fix:`? (others don't trigger releases)
+5. Check `.github/workflows/release-please.yml` logs
+
+**Common issues:**
+```bash
+# Wrong - no scope or wrong scope
+git commit -m "feat: add feature"  # No release PR (missing scope)
+git commit -m "feat(nvim): add feature"  # No release PR (wrong scope - use 'neoweaver')
+
+# Wrong - commit type doesn't trigger release
+git commit -m "chore(mindweaver): update code"  # No release PR
+
+# Correct
+git commit -m "feat(mindweaver): add feature"  # Creates mindweaver release PR
+git commit -m "feat(neoweaver): add feature"  # Creates neoweaver release PR
+```
 
 **Fix:**
 ```bash
-# Create empty commit to retrigger
+# Create empty commit with correct format
 git commit --allow-empty -m "feat(mindweaver): trigger release"
 git push origin main
 ```
@@ -451,41 +503,17 @@ GOOS=darwin GOARCH=arm64 go build ./cmd/mindweaver
 
 ## Advanced Topics
 
-### Multiple Binaries
+### Adding New Components
 
-**Future: When adding `imex`, `lsp`, etc.**
+To add a new independently-versioned component:
 
-`.goreleaser.yml`:
-```yaml
-builds:
-  - id: mindweaver
-    main: ./cmd/mindweaver
-    binary: mindweaver
-  
-  - id: imex
-    main: ./cmd/imex
-    binary: mw-imex
-  
-  - id: lsp
-    main: ./cmd/lsp
-    binary: mw-lsp
-```
+1. Add entry to `release-please-config.json` with appropriate `release-type` (go, node, simple)
+2. Add entry to `.release-please-manifest.json` starting at version `0.0.0`
+3. Create `CHANGELOG.md` in component directory
+4. Create component-specific release workflow following the pattern in `.github/workflows/release-mindweaver.yml` or `.github/workflows/release-neoweaver.yml`
+5. Use component name as scope in commits (e.g., `feat(imex): add feature`)
 
-Each binary built and included in release.
-
-### Separate Release Workflows
-
-**When components need independent versioning:**
-
-Create `.github/workflows/release-imex.yml`:
-```yaml
-on:
-  push:
-    paths:
-      - 'cmd/imex/**'
-```
-
-Uses different VERSION file and tag prefix: `imex/vX.Y.Z`
+See existing workflows and configs for reference patterns.
 
 ### Docker Images
 

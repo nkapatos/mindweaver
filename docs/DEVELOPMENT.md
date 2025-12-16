@@ -12,16 +12,15 @@ Guide for developers who want to build, run, or contribute to Mindweaver.
 
 ### Using Task (Recommended)
 
+The mindweaver server and clients each have their own Taskfiles. Navigate to the component directory and use `task --list` to see available tasks.
+
 ```bash
-# Clone the repository
+# Clone and navigate to server
 git clone https://github.com/nkapatos/mindweaver.git
-cd mindweaver
+cd mindweaver/packages/mindweaver
 
-# Install development tools (air for hot reload, sqlc for code generation)
-task dev:init
-
-# Start development server with hot reload
-task dev
+# Show available tasks
+task --list
 
 # Application runs on http://localhost:9421
 ```
@@ -29,6 +28,9 @@ task dev
 ### Manual Build & Run
 
 ```bash
+# From packages/mindweaver directory
+cd packages/mindweaver
+
 # Build the binary
 go build -o mindweaver ./cmd/mindweaver
 
@@ -91,36 +93,24 @@ See `.env.example` for all available options.
 
 ## Development Workflow
 
-### Hot Reload Development
+### Task Runner
 
-```bash
-# Start with hot reload (watches for file changes)
-task dev
-
-# Or manually with air
-go tool air
-```
+Each component has its own Taskfile with build, test, and development tasks. Use `task --list` from the component directory to see available tasks.
 
 ### Running Tests
 
 ```bash
-# Run all tests
-task test
+# From packages/mindweaver
+go test ./...
 
 # Run specific package tests
 go test ./internal/mind/notes
-go test ./pkg/config
+go test ../pkg/config
 ```
 
 ### Code Generation
 
-```bash
-# Generate SQL query code (after modifying .sql files)
-task generate
-
-# Or manually
-go tool sqlc generate
-```
+After modifying `.sql` files in `store/*/sql/`, regenerate Go code using sqlc (available via Task or directly with `go tool sqlc generate`).
 
 ## Running in Different Modes
 
@@ -171,24 +161,7 @@ docker run -p 9421:9421 \
 
 ## Project Structure
 
-```
-mindweaver/
-├── cmd/mindweaver/    # Main entry point
-├── internal/          # Private packages
-│   ├── mind/         # Notes/PKM service
-│   ├── brain/        # AI assistant service
-│   └── imex/         # Import/export functionality
-├── pkg/              # Public packages
-│   ├── config/       # Configuration management
-│   ├── logging/      # Structured logging
-│   ├── types/        # API response wrappers
-│   └── ...
-├── sql/              # Database schemas
-│   ├── mind/         # Notes database
-│   └── brain/        # AI database
-├── docs/             # Documentation
-└── tasks/            # Task runner configs
-```
+The monorepo contains a Go workspace in `packages/` (server and shared libraries), client implementations in `clients/`, and protocol definitions in `proto/`. Each component has its own build configuration and task definitions.
 
 ## API Design Guidelines
 
@@ -379,16 +352,7 @@ LLM_ENDPOINT=http://ollama.example.com:11434 ./mindweaver
 
 ### Before Submitting PR
 
-```bash
-# Run tests
-task test
-
-# Run linting
-task lint
-
-# Format code
-task fmt
-```
+Run tests and linting from the component directory. Use `task --list` to see available tasks for testing, linting, and formatting.
 
 ### Code Style
 
@@ -405,6 +369,5 @@ task fmt
 
 ## See Also
 
-- [Configuration System](../pkg/config/README.md) - Detailed configuration docs
+- [Configuration System](../packages/pkg/config/README.md) - Detailed configuration docs
 - [Main README](../README.md) - Project overview
-- `.env.example` - All available configuration options

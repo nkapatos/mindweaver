@@ -72,14 +72,13 @@ Mindweaver is in active development. Here's what exists today and what's coming:
 
 ```bash
 git clone https://github.com/nkapatos/mindweaver.git
-cd mindweaver
-task dev:init
-task mw:dev  # Start with hot reload
+cd mindweaver/packages/mindweaver
+task --list  # Show available tasks
 ```
 
 **Documentation:**
-- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) - Developer guide
-- [pkg/config/README.md](pkg/config/README.md) - Configuration reference
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) - Developer guide and setup
+- [packages/pkg/config/README.md](packages/pkg/config/README.md) - Configuration reference
 
 ## Author
 
