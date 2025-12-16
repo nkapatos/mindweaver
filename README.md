@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/nkapatos/mindweaver/actions/workflows/ci.yml/badge.svg)](https://github.com/nkapatos/mindweaver/actions/workflows/ci.yml)
 [![Release](https://github.com/nkapatos/mindweaver/actions/workflows/release-mindweaver.yml/badge.svg)](https://github.com/nkapatos/mindweaver/actions/workflows/release-mindweaver.yml)
-[![Go Version](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](https://go.dev/)
 [![Latest Release](https://img.shields.io/github/v/release/nkapatos/mindweaver?include_prereleases)](https://github.com/nkapatos/mindweaver/releases)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
@@ -61,25 +60,20 @@ Mindweaver is in active development. Here's what exists today and what's coming:
 
 ## Getting Started
 
-**Full documentation: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**
-
 **Prerequisites:**
-- [mise](https://mise.jdx.dev/) - Manages toolchain versions (see `.mise.toml`)
-- [Task runner](https://taskfile.dev/installation/)
-- [Buf](https://buf.build/docs/installation/) - Protocol buffer tooling
-- Ollama (optional) - [ollama.com](https://ollama.com)
 
-**Quick start:**
+- **[mise](https://mise.jdx.dev/)** - A polyglot tool version manager that replaces tools like asdf, nvm, pyenv, and rbenv. Manages the toolchain versions specified in `.mise.toml`. → [Installation & docs](https://mise.jdx.dev/getting-started.html)
 
-```bash
-git clone https://github.com/nkapatos/mindweaver.git
-cd mindweaver/packages/mindweaver
-task --list  # Show available tasks
-```
+- **[Task](https://taskfile.dev/)** - A fast, cross-platform task runner and build tool. A modern alternative to Make with support for dependencies, variables, and platform-specific commands. → [Installation & docs](https://taskfile.dev/installation/)
+
+- **[Buf](https://buf.build/)** - Your one-stop shop for local Protobuf development. Handles compilation, linting, breaking change detection, and code generation for protocol buffers. → [Installation & docs](https://buf.build/docs/installation)
+
+- **OpenAI-compatible API** (optional) - Required for Brain service AI features. Any OpenAI API-compatible server (local or remote) works. → Examples: [Ollama](https://ollama.com/), [LM Studio](https://lmstudio.ai/), [vLLM](https://docs.vllm.ai/), or OpenAI directly
 
 **Documentation:**
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) - Developer guide and setup
-- [packages/pkg/config/README.md](packages/pkg/config/README.md) - Configuration reference
+- [docs/WORKFLOW.md](docs/WORKFLOW.md) - Contribution workflow and PR guidelines
+- Component-specific docs in each package directory
 
 ## Author
 
