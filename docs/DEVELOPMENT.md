@@ -7,7 +7,7 @@ Guide for developers who want to build, run, or contribute to Mindweaver.
 - **[mise](https://mise.jdx.dev/)** - Manages toolchain versions (see `.mise.toml` for configured versions)
 - **[Task](https://taskfile.dev/installation/)** - Task runner for build automation
 - **[Buf](https://buf.build/docs/installation/)** - Protocol buffer tooling
-- **Ollama** (optional, for AI features) - [ollama.com](https://ollama.com)
+- **OpenAI-compatible API** (optional) - Required for Brain service AI features. Any OpenAI API-compatible server works.
 
 Component-specific tools (sqlc, goose, air) are documented in each component's README.
 
