@@ -103,7 +103,9 @@ type(scope): description
 **Examples:**
 ```
 feat(mindweaver): add advanced search operators
+feat(neoweaver): add buffer management improvements
 fix(mind): resolve collection hierarchy bug
+fix(neoweaver): correct note save behavior
 docs: update installation instructions
 feat(brain)!: breaking change to embedding API
 ```
@@ -119,19 +121,35 @@ feat(brain)!: breaking change to embedding API
 - `ci`: CI/CD changes (no version bump)
 
 **Scopes:**
-- `mindweaver`: Main server binary or combined changes
-- `mind`: Mind service specifically
-- `brain`: Brain service specifically
-- `imex`: Import/export tool (future)
-- `lsp`: LSP server (future)
-- `nvim`: Neovim client (future)
-- `web`: Web client (future)
-- `desktop`: Desktop client (future)
-- `api`: API-level changes
+
+**Release-triggering scopes (required for component releases):**
+- `mindweaver`: Main server binary (packages/mindweaver) - triggers mindweaver release PR
+- `neoweaver`: Neovim client (clients/neoweaver) - triggers neoweaver release PR
+
+**Sub-component scopes (included in parent component's release):**
+- `mind`: Mind service within mindweaver server
+- `brain`: Brain service within mindweaver server
+- `api`: API-level changes affecting clients
+
+**General scopes:**
+- `pkg`: Shared packages/libraries
 - `deps`: Dependency updates
 - `ci`: CI/CD specific
+- `proto`: Protocol buffer changes
+- `docs`: Documentation changes
 
-**Scope is optional** but recommended for clarity.
+**Future component scopes:**
+- `imex`: Import/export tool (future)
+- `lsp`: LSP server (future)
+- `web`: Web client (future, clients/web)
+- `desktop`: Desktop client (future, clients/desktop)
+
+**Important Notes:**
+- **Use `neoweaver` (NOT `nvim`)** for Neovim client changes - this ensures proper release triggering and changelog updates
+- **Use `mindweaver` (NOT `server` or `backend`)** for server changes
+- Changes with `mind`, `brain`, or `api` scopes are included in the `mindweaver` component release
+- Using incorrect scopes (e.g., `nvim` instead of `neoweaver`) will prevent release-please from creating release PRs
+- Scope is optional but **strongly recommended** for clarity and proper release targeting
 
 ## Versioning Strategy
 
@@ -155,95 +173,156 @@ MAJOR.MINOR.PATCH (e.g., 0.9.0, 1.2.3)
 - `feat!` → MINOR bump (breaking changes allowed in 0.x)
 - Move to `1.0.0` when ready for stable release
 
-### Single Version for All Components
+### Independent Component Versioning
 
-**Architecture:**
+The monorepo uses **independent versioning** for each releasable component. Each component evolves at its own pace with separate version numbers.
+
+**Current Components:**
+
+| Component | Path | Version Managed By | Git Tag Format |
+|-----------|------|-------------------|----------------|
+| **mindweaver** | `packages/mindweaver/` | release-please | `mindweaver/vX.Y.Z` |
+| **neoweaver** | `clients/neoweaver/` | release-please | `neoweaver/vX.Y.Z` |
+
+**Server (mindweaver):**
 ```
-mindweaver binary v0.9.0
+mindweaver binary v0.12.5
 ├─ Mind service (included)
 └─ Brain service (included)
 ```
 
-**One version number** for the entire mindweaver binary that includes both services.
+The mindweaver server is a single binary containing both Mind and Brain services:
+- **Single version** for the binary
+- **CHANGELOG sections** differentiate service-specific changes:
+  - `### Mind Service` - Changes to Mind service
+  - `### Brain Service` - Changes to Brain service  
+  - `### API` - API-level changes affecting clients
 
-**CHANGELOG sections:**
-- `### Mind Service` - Changes to Mind service
-- `### Brain Service` - Changes to Brain service
-- `### Combined` - Changes affecting both or the binary itself
+**Clients (neoweaver, future: web, desktop):**
+- Each client has its **own independent version**
+- Can release without server changes
+- Document compatibility: "requires mindweaver >= X.Y.Z"
 
-**Future Components:**
-- `imex`, `lsp`, `nvim`, `web`, `desktop` will have independent versions
-- Each with own release workflow
-- Each documents "requires mindweaver >= X.Y.Z"
+**Shared Libraries (`packages/pkg`):**
+- Currently not independently versioned
+- Used internally by mindweaver
+- Future: May become releasable Go modules
 
-### Version Source of Truth
+**Version Source of Truth:**
+- `packages/mindweaver/CHANGELOG.md` - mindweaver version
+- `clients/neoweaver/CHANGELOG.md` - neoweaver version
+- Managed automatically by release-please
+- Git tags use component prefix: `mindweaver/v1.2.3`, `neoweaver/v0.5.0`
 
+**Compatibility Matrix:**
+
+Components track compatibility requirements in their README:
+
+```markdown
+# neoweaver v0.5.0
+Requires: mindweaver >= v0.10.0
 ```
-cmd/mindweaver/VERSION
-```
 
-- Plain text file with version number
-- Read by automation
-- Updated automatically on release
-- Git tags: `mindweaver/vX.Y.Z`
+This allows:
+- Server updates without forcing client updates
+- Client UI/UX improvements independent of server
+- Clear compatibility communication to users
 
 ## Release Process
 
-### Automatic Release (Default)
+The project uses [release-please](https://github.com/googleapis/release-please) for automated, independent releases of each component.
 
-**Trigger:** Merge to `main` branch
+### How It Works
 
-**Process:**
-1. GitHub Action detects merge to main
-2. Analyzes commit message for type (`feat`, `fix`, etc.)
-3. Calculates version bump
-4. Updates `cmd/mindweaver/VERSION`
-5. Creates git tag `mindweaver/vX.Y.Z`
-6. Builds binaries with goreleaser:
-   - `mindweaver_X.Y.Z_darwin_arm64.tar.gz`
-   - `mindweaver_X.Y.Z_darwin_amd64.tar.gz`
-   - `mindweaver_X.Y.Z_linux_amd64.tar.gz`
-   - `mindweaver_X.Y.Z_linux_arm64.tar.gz`
-7. Creates GitHub Release (pre-release for 0.x.x)
-8. Updates CHANGELOG.md
-9. Commits changes back to main
+**1. Development Flow:**
+```bash
+# Make changes to mindweaver server
+git commit -m "feat(mindweaver): add search operators"
 
-**Only triggers on changes to:**
-- `cmd/mindweaver/**`
-- `internal/mind/**`
-- `internal/brain/**`
-- `pkg/**`
-- `migrations/**`
-- `go.mod` / `go.sum`
+# Make changes to neoweaver client  
+git commit -m "fix(neoweaver): resolve buffer display bug"
 
-**Skip Release:**
-- Commits with `[skip ci]` in message
-- Commits that don't match `feat:`, `fix:`, or `BREAKING CHANGE`
+# Changes affecting both
+git commit -m "feat(mindweaver): add new API endpoint"
+git commit -m "feat(neoweaver): integrate new API endpoint"
 
-### Manual Release (When Needed)
+# Merge PR to main
+```
 
-To manually create a release or transition versions:
+**2. Automatic Release PR Creation:**
+
+When commits are merged to `main`, release-please:
+- Scans commit messages for conventional commit format
+- Groups commits by scope (`mindweaver`, `neoweaver`, etc.)
+- Creates separate release PRs for each affected component
+- Each release PR updates CHANGELOG.md and can be merged independently
+
+**3. Merging Release PRs:**
+
+Release PRs can be merged independently:
+- Merge server release PR → creates `mindweaver/v*` tag → triggers build
+- Merge client release PR → creates `neoweaver/v*` tag → triggers packaging
+- Merge both in any order → creates both releases independently
+
+**4. Release Artifacts:**
+
+After merging a release PR, the component-specific workflow builds and publishes artifacts:
+- mindweaver: GoReleaser builds multi-platform binaries
+- neoweaver: Packaged as tar.gz and zip archives
+- Each creates a separate GitHub Release
+
+### Cross-Component Changes
+
+When a PR affects multiple components (using different scopes in commits), release-please creates separate release PRs for each component. These can be merged independently based on readiness.
+
+### Manual Release Override
+
+To force a specific version (e.g., moving to 1.0.0):
 
 ```bash
-# Create empty commit with version override
-git commit --allow-empty -m "chore(mindweaver): release v1.0.0
+# For mindweaver
+git commit --allow-empty -m "chore(mindweaver): release 1.0.0
+
+RELEASE-AS: 1.0.0"
+
+# For neoweaver  
+git commit --allow-empty -m "chore(neoweaver): release 1.0.0
 
 RELEASE-AS: 1.0.0"
 
 git push origin main
 ```
 
-This triggers the workflow with explicit version.
+Release-please will create a release PR with the specified version.
 
-### Release Artifacts
+### Skip Release
 
-Each release includes:
-- Compiled binaries for multiple platforms
-- `README.md`
-- `docs/DEVELOPMENT.md`
-- `.env.example`
-- SHA256 checksums
-- Auto-generated release notes from commits
+To skip release PR creation for certain commits:
+
+```bash
+# Commits that don't trigger releases:
+git commit -m "docs: update README [skip ci]"
+git commit -m "chore: code cleanup"
+git commit -m "refactor(mindweaver): internal restructure"
+
+# Only feat:, fix:, and BREAKING CHANGE trigger version bumps
+```
+
+### Configuration Files
+
+**Release-please configuration:**
+- `release-please-config.json` - Component definitions and settings
+- `.release-please-manifest.json` - Current version tracking
+
+**Example `.release-please-manifest.json`:**
+```json
+{
+  "packages/mindweaver": "0.11.0",
+  "clients/neoweaver": "0.6.0"
+}
+```
+
+Updated automatically by release-please when release PRs are merged.
 
 ## PR Guidelines
 
@@ -376,48 +455,90 @@ Required settings:
 
 ## Future Considerations
 
-### When Adding New Components
+### Adding New Components
 
-**Example: Adding `imex` CLI tool**
+**Example: Adding `clients/web` or `packages/imex`**
 
-1. Create `cmd/imex/VERSION` file
-2. Create `.github/workflows/release-imex.yml`
-3. Configure path triggers for `cmd/imex/**`
-4. Independent versioning: `imex/vX.Y.Z`
-5. Document in `cmd/imex/README.md`: "Requires mindweaver >= X.Y.Z"
+1. Add entry to `release-please-config.json` with appropriate `release-type` and `component` name
+2. Add entry to `.release-please-manifest.json` starting at `0.0.0`
+3. Create component CHANGELOG.md
+4. Create release workflow following the pattern of existing component workflows (see `.github/workflows/release-mindweaver.yml` and `.github/workflows/release-neoweaver.yml`)
+5. Document compatibility requirements in component README
 
 ### When Moving to 1.0.0
 
-- Manual release trigger
-- Announcement plan
-- Documentation review
-- Consider: Auto-release only patches? Manual for minor/major?
+**For each component independently:**
+
+- **Decide readiness:** Server vs. clients may reach 1.0.0 at different times
+- **Manual release trigger** with `RELEASE-AS: 1.0.0`
+- **Update documentation:** Installation, compatibility matrix
+- **Announcement plan:** Blog post, release notes
+- **Consider:** Post-1.0 release strategy (auto-release patches only?)
+
+**Example: mindweaver reaches 1.0.0 first**
+```bash
+# Server is stable
+git commit --allow-empty -m "chore(mindweaver): release 1.0.0
+
+RELEASE-AS: 1.0.0"
+
+# Clients remain at 0.x.x until they're ready
+# neoweaver v0.8.0 - requires mindweaver >= v1.0.0
+```
+
+### Shared Go Modules
+
+**If `packages/pkg` needs independent versioning:**
+
+1. Make it a separate Go module
+2. Add to release-please config
+3. Use Go module versioning conventions
+4. Import as: `github.com/nkapatos/mindweaver/pkg@v1.2.3`
+
+Currently, `packages/pkg` is part of the workspace and doesn't need independent releases.
 
 ## Quick Reference
 
 **Development:**
 ```bash
 git checkout -b feature
-# work, commit freely
+
+# Server changes
+git commit -m "feat(mindweaver): add feature"
+
+# Client changes  
+git commit -m "fix(neoweaver): fix bug"
+
 git push origin feature
 # Create PR with conventional title
 ```
 
-**Version Bumps:**
-- `feat:` → 0.9.0 → 0.10.0
-- `fix:` → 0.9.0 → 0.9.1
-- `feat!:` → 0.9.0 → 0.10.0 (pre-1.0)
-- `feat!:` → 1.0.0 → 2.0.0 (post-1.0)
+**Version Bumps (per component):**
+- `feat(mindweaver):` → mindweaver 0.9.0 → 0.10.0
+- `fix(mindweaver):` → mindweaver 0.9.0 → 0.9.1
+- `feat(neoweaver):` → neoweaver 0.5.0 → 0.6.0
+- `fix(neoweaver):` → neoweaver 0.5.0 → 0.5.1
+- `feat!:` → MINOR bump (pre-1.0), MAJOR bump (post-1.0)
 
-**Tags:**
-- `mindweaver/v0.9.0`
-- `mindweaver/v0.10.0`
-- `mindweaver/v1.0.0`
+**Tags (component-prefixed):**
+- `mindweaver/v0.9.0`, `mindweaver/v0.10.0`, `mindweaver/v1.0.0`
+- `neoweaver/v0.5.0`, `neoweaver/v0.6.0`, `neoweaver/v1.0.0`
+
+**Release Process:**
+1. Merge PR to main
+2. release-please creates release PR(s)
+3. Merge release PR(s) independently
+4. GitHub releases created automatically
 
 **Merge Strategy:**
 - Messy commits → Squash
-- Clean commits → Rebase
+- Clean commits → Rebase  
 - When in doubt → Squash
+
+**Cross-component changes:**
+- Use correct scope for each commit
+- Multiple release PRs created automatically
+- Merge release PRs independently based on readiness
 
 ---
 
