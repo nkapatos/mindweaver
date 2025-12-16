@@ -1,41 +1,3 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-/bin/
-dist/
-build/
-*.test
-*.out
-
-# Go test coverage
-coverage.out
-coverage.html
-coverage.txt
-*.coverprofile
-
-# Go workspace file (if we use it later)
-go.work
-go.work.sum
-
-# Dependency directories
-vendor/
-
-# IDE and editor files
-.idea/
-.vscode/
-*.swp
-*.swo
-*.swn
-*~
-.DS_Store
-.project
-.settings/
-*.sublime-project
-*.sublime-workspace
-
 # OS-specific files
 .DS_Store
 .DS_Store?
@@ -45,110 +7,27 @@ vendor/
 ehthumbs.db
 Thumbs.db
 
-# Database files (development)
-*.db
-*.db-shm
-*.db-wal
-/db/
-/data/
-
-# Log files
-*.log
-logs/
-
-# Temporary files
-tmp/
-temp/
-.tmp/
-*.tmp
-
-# Air (live reload) temporary files
-tmp/
-.air.toml.bak
-
-# Test artifacts
-test-*.log
-test-errors.log
-test-mind-errors.log
-test-brain-errors.log
-
-# Frontend node modules and build artifacts
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-.npm
-.eslintcache
-.pnp
-.pnp.js
-
-# Frontend build outputs
-dist/
-build/
-.next/
-out/
-.nuxt/
-.cache/
-.parcel-cache/
-.vuepress/dist/
-.docusaurus/
-
-# Frontend environment files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.*.local
-
-# Docker
-.dockerignore.bak
-docker-compose.override.yml
-volumes/
-*.db-journal
-
-# Wails (future)
-wails.json.bak
-frontend/dist/
-frontend/build/
-frontend/node_modules/
-
-# Task runner
-.task/
-
-# PGO profiles (optimization)
-pgo/
-*.pgo
-
-# Debug and profiling
-*.prof
-*.trace
-debug
-__debug_bin
-
-# CI/CD artifacts
-.github/.DS_Store
-
-# Documentation build artifacts
-docs/_build/
-docs/.vuepress/dist/
-
-# Backup files
-*.bak
-*.backup
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
 *~
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
 
-# Local development overrides
-config.local.yml
-config.local.yaml
-.env.local
-
-# Misc
-*.orig
+# Mise local config
 .mise.local.toml
 
-# Local development and reference directories (root-level only)
-/worklog/
-/exploration/
-/templates/
+# Local development and reference directories (matches at any depth)
+project_local_files/
+
+# Go workspace files (developer-specific)
+go.work
+go.work.sum
+
+bin/
+tmp/
