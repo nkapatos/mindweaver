@@ -96,9 +96,21 @@ jobs:
       - name: Setup Task
         uses: go-task/setup-task@v1
 
+      - name: Setup Buf
+        uses: bufbuild/buf-setup-action@v1
+
+      - name: Setup sqlc
+        uses: sqlc-dev/setup-sqlc@v4
+        with:
+          sqlc-version: '1.27.0'
+
       - name: Setup Go workspace
         run: task setup
         working-directory: packages
+
+      - name: Generate code
+        run: task mw:proto:generate && task mind:db:store:generate
+        working-directory: packages/mindweaver
 
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
