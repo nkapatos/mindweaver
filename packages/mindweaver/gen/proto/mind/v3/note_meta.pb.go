@@ -225,8 +225,8 @@ const file_v3_note_meta_proto_rawDesc = "" +
 	"\x05items\x18\x01 \x03(\v2\x11.mind.v3.NoteMetaR\x05items\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x05R\x05total2t\n" +
 	"\x0fNoteMetaService\x12a\n" +
-	"\bListMeta\x12\x18.mind.v3.ListMetaRequest\x1a\x19.mind.v3.ListMetaResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v3/notes/{note_id}/metaB\x96\x01\n" +
-	"\vcom.mind.v3B\rNoteMetaProtoP\x01Z;github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
+	"\bListMeta\x12\x18.mind.v3.ListMetaRequest\x1a\x19.mind.v3.ListMetaResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v3/notes/{note_id}/metaB\xa6\x01\n" +
+	"\vcom.mind.v3B\rNoteMetaProtoP\x01ZKgithub.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
 
 var (
 	file_v3_note_meta_proto_rawDescOnce sync.Once

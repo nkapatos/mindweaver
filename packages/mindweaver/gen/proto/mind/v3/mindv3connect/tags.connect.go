@@ -12,7 +12,7 @@ import (
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
-	v3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
+	v3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
 	http "net/http"
 	strings "strings"
 )

@@ -1026,9 +1026,9 @@ const file_v3_notes_proto_rawDesc = "" +
 	"\tListNotes\x12\x19.mind.v3.ListNotesRequest\x1a\x1a.mind.v3.ListNotesResponse\"\x11\x82\xd3\xe4\x93\x02\v\x12\t/v3/notes\x12K\n" +
 	"\aNewNote\x12\x17.mind.v3.NewNoteRequest\x1a\r.mind.v3.Note\"\x18\x82\xd3\xe4\x93\x02\x12:\x01*\"\r/v3/notes:new\x12j\n" +
 	"\vGetNoteMeta\x12\x1b.mind.v3.GetNoteMetaRequest\x1a\x1c.mind.v3.GetNoteMetaResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v3/notes/{note_id}/meta\x12\x8e\x01\n" +
-	"\x14GetNoteRelationships\x12$.mind.v3.GetNoteRelationshipsRequest\x1a%.mind.v3.GetNoteRelationshipsResponse\")\x82\xd3\xe4\x93\x02#\x12!/v3/notes/{note_id}/relationshipsB\x93\x01\n" +
+	"\x14GetNoteRelationships\x12$.mind.v3.GetNoteRelationshipsRequest\x1a%.mind.v3.GetNoteRelationshipsResponse\")\x82\xd3\xe4\x93\x02#\x12!/v3/notes/{note_id}/relationshipsB\xa3\x01\n" +
 	"\vcom.mind.v3B\n" +
-	"NotesProtoP\x01Z;github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
+	"NotesProtoP\x01ZKgithub.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3;mindv3\xa2\x02\x03MXX\xaa\x02\aMind.V3\xca\x02\aMind\\V3\xe2\x02\x13Mind\\V3\\GPBMetadata\xea\x02\bMind::V3b\x06proto3"
 
 var (
 	file_v3_notes_proto_rawDescOnce sync.Once

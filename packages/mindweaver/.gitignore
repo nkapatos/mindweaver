@@ -26,3 +26,7 @@ coverage.txt
 # Air (live reload) temporary files
 tmp/
 .air.toml.bak
+
+# Generated protobuf code (TRACKED - committed to repo)
+# gen/ is NOT ignored - proto-generated Go files are committed
+# This allows development without buf generate, CI verifies freshness
