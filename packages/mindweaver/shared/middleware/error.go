@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/nkapatos/mindweaver/pkg/types"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/types"
 )
 
 // ErrorHandlerMiddleware standardizes error responses for the API.
