@@ -10,12 +10,12 @@ import (
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/links"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/meta"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/scheduler"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/tags"
-	"github.com/nkapatos/mindweaver/pkg/dberrors"
-	"github.com/nkapatos/mindweaver/pkg/markdown"
-	"github.com/nkapatos/mindweaver/pkg/middleware"
-	"github.com/nkapatos/mindweaver/pkg/utils"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/dberrors"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/markdown"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/middleware"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
 )
 
 // NotesService provides business logic for notes CRUD operations.

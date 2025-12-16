@@ -3,9 +3,9 @@ package templates
 import (
 	"fmt"
 
-	mindv3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
-	"github.com/nkapatos/mindweaver/pkg/utils"
+	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

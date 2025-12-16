@@ -6,7 +6,7 @@ import (
 	"embed"
 	"log/slog"
 
-	"github.com/nkapatos/mindweaver/pkg/migrator"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/migrator"
 )
 
 //go:embed *.sql

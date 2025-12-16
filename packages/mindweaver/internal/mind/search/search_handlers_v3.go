@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	mindv3 "github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3"
-	"github.com/nkapatos/mindweaver/pkg/gen/proto/mind/v3/mindv3connect"
+	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3/mindv3connect"
 )
 
 type SearchHandlerV3 struct {

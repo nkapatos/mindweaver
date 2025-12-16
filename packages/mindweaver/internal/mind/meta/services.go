@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"log/slog"
 
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/store"
-	"github.com/nkapatos/mindweaver/pkg/middleware"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/middleware"
 )
 
 // NoteMetaService provides business logic for note metadata operations.
