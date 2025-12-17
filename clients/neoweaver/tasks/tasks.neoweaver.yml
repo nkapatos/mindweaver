@@ -49,3 +49,37 @@ tasks:
     cmds:
       - rm -f {{.TYPES_OUTPUT}}
       - rm -rf {{.TS_GEN_DIR}}
+
+  docs:api:
+    desc: Generate API documentation from LuaLS annotations using mini.doc
+    dir: '{{.NEOWEAVER_DIR}}'
+    cmds:
+      - nvim -u scripts/make_api_documentation/minimal_init.lua -l scripts/make_api_documentation/main.lua
+    sources:
+      - lua/neoweaver/init.lua
+      - lua/neoweaver/types.lua
+    generates:
+      - doc/neoweaver_api.txt
+      - doc/neoweaver_types.txt
+
+  docs:tags:
+    desc: Generate vim help tags
+    dir: '{{.NEOWEAVER_DIR}}'
+    deps: [docs:api]
+    cmds:
+      - nvim -c 'helptags doc' -c 'quit'
+    sources:
+      - doc/*.txt
+    generates:
+      - doc/tags
+
+  docs:generate:
+    desc: Generate all documentation (API docs + vim tags)
+    aliases: [docs:gen, docs]
+    deps: [docs:api, docs:tags]
+
+  docs:clean:
+    desc: Remove generated documentation files
+    dir: '{{.NEOWEAVER_DIR}}'
+    cmds:
+      - rm -f doc/neoweaver_api.txt doc/neoweaver_types.txt doc/tags
