@@ -1,6 +1,15 @@
--- AUTO-GENERATED from proto/mind/v3/*.proto via TypeScript
--- Do not edit manually. Run: task neoweaver:types:generate
-
+--- Type definitions for MindWeaver API
+---
+--- AUTO-GENERATED from Protocol Buffer definitions (proto/mind/v3/*.proto).
+--- Do not edit manually.
+---
+--- To regenerate these types:
+---   task neoweaver:types:generate
+---
+--- This file provides LuaLS type annotations for the MindWeaver v3 API,
+--- enabling autocomplete and type checking in Neovim plugin development.
+---
+---@module neoweaver.types
 local M = {}
 
 -- From collections.proto
