@@ -248,20 +248,9 @@ M.list_notes_by_collection = function(collection_id, query, cb)
 	M.notes.list(req, cb)
 end
 
-local function list_server_names(
-	ArgLead ---@diagnostic disable-line:unused-local
-)
-	local names = {}
-	for name, _ in pairs(M.config.servers) do
-		if type(name) == "string" then
-			table.insert(names, name)
-		end
-	end
-	table.sort(names)
-	return names
-end
 
-local function set_current_server(name)
+
+function M.set_current_server(name)
 	if not name or name == "" then
 		error("MwServerUse: server name is required")
 	end
@@ -277,27 +266,20 @@ local function set_current_server(name)
 	end
 end
 
-vim.api.nvim_create_user_command("MwServerUse", function(opts)
-	set_current_server(opts.args)
-end, {
-	nargs = 1,
-	complete = function(ArgLead)
-		local matches = {}
-		for _, name in ipairs(list_server_names(ArgLead)) do
-			if name:find("^" .. vim.pesc(ArgLead)) then
-				table.insert(matches, name)
-			end
+function M.list_server_names()
+	local names = {}
+	for name, _ in pairs(M.config.servers) do
+		if type(name) == "string" then
+			table.insert(names, name)
 		end
-		return matches
-	end,
-	desc = "Select Neoweaver server by name",
-})
+	end
+	table.sort(names)
+	return names
+end
 
--- Toggle command for debug logging (independent of server mode)
--- Useful for debugging production issues or cleaning up dev logs
-vim.api.nvim_create_user_command("MwToggleDebug", function()
+function M.toggle_debug()
 	M.config.debug_info = not M.config.debug_info
 	vim.notify("Debug logging: " .. (M.config.debug_info and "ON" or "OFF"), vim.log.levels.INFO)
-end, { desc = "Toggle debug logging" })
+end
 
 return M
