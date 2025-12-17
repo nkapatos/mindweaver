@@ -1,0 +1,434 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                             *M*
+                                      `M`
+Type definitions for MindWeaver API
+
+AUTO-GENERATED from Protocol Buffer definitions (proto/mind/v3/*.proto).
+Do not edit manually.
+
+To regenerate these types:
+  task neoweaver:types:generate
+
+This file provides LuaLS type annotations for the MindWeaver v3 API,
+enabling autocomplete and type checking in Neovim plugin development.
+
+neoweaver.types
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.Collection}
+Fields ~
+{name} `(string)`
+{id} `(integer)`
+{displayName} `(string)`
+{parentId} `(optional)` `(integer)`
+{path} `(string)`
+{description} `(optional)` `(string)`
+{position} `(optional)` `(integer)`
+{isSystem} `(boolean)`
+{createTime} `(optional)` `(string)`
+{updateTime} `(optional)` `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.CreateCollectionRequest}
+Fields ~
+{displayName} `(string)`
+{parentId} `(optional)` `(integer)`
+{description} `(optional)` `(string)`
+{position} `(optional)` `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.GetCollectionRequest}
+Fields ~
+{id} `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.UpdateCollectionRequest}
+Fields ~
+{id} `(integer)`
+{displayName} `(string)`
+{parentId} `(optional)` `(integer)`
+{description} `(optional)` `(string)`
+{position} `(optional)` `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.DeleteCollectionRequest}
+Fields ~
+{id} `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListCollectionsRequest}
+Fields ~
+{pageSize} `(number)`
+{pageToken} `(string)`
+{parentId} `(optional)` `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListCollectionsResponse}
+Fields ~
+{collections} `(Collection[])`
+{nextPageToken} `(string)`
+{totalSize} `(optional)` `(number)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListCollectionChildrenRequest}
+Fields ~
+{parentId} `(integer)`
+{pageSize} `(number)`
+{pageToken} `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.GetCollectionTreeRequest}
+Fields ~
+{rootId} `(integer)`
+{maxDepth} `(number)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.GetCollectionTreeResponse}
+Fields ~
+{root} `(optional)` `(Collection)`
+{descendants} `(Collection[])`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.Link}
+Fields ~
+{name} `(string)`
+{id} `(integer)`
+{srcId} `(integer)`
+{destId} `(optional)` `(integer)`
+{destTitle} `(optional)` `(string)`
+{displayText} `(optional)` `(string)`
+{isEmbed} `(optional)` `(boolean)`
+{context} `(optional)` `(string)`
+{resolved} `(optional)` `(integer)`
+{createTime} `(optional)` `(string)`
+{updateTime} `(optional)` `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListLinksRequest}
+Fields ~
+{pageSize} `(number)`
+{pageToken} `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListLinksResponse}
+Fields ~
+{links} `(Link[])`
+{nextPageToken} `(string)`
+{totalSize} `(optional)` `(number)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.NoteMeta}
+Fields ~
+{key} `(string)`
+{value} `(string)`
+{createTime} `(optional)` `(string)`
+{updateTime} `(optional)` `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListMetaRequest}
+Fields ~
+{noteId} `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListMetaResponse}
+Fields ~
+{items} `(NoteMeta[])`
+{total} `(number)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.NoteType}
+Fields ~
+{name} `(string)`
+{id} `(integer)`
+{type} `(string)`
+{displayName} `(string)`
+{description} `(optional)` `(string)`
+{icon} `(optional)` `(string)`
+{color} `(optional)` `(string)`
+{isSystem} `(boolean)`
+{createTime} `(optional)` `(string)`
+{updateTime} `(optional)` `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.CreateNoteTypeRequest}
+Fields ~
+{type} `(string)`
+{displayName} `(string)`
+{description} `(optional)` `(string)`
+{icon} `(optional)` `(string)`
+{color} `(optional)` `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.GetNoteTypeRequest}
+Fields ~
+{id} `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.UpdateNoteTypeRequest}
+Fields ~
+{id} `(integer)`
+{type} `(string)`
+{displayName} `(string)`
+{description} `(optional)` `(string)`
+{icon} `(optional)` `(string)`
+{color} `(optional)` `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.DeleteNoteTypeRequest}
+Fields ~
+{id} `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListNoteTypesRequest}
+Fields ~
+{pageSize} `(number)`
+{pageToken} `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListNoteTypesResponse}
+Fields ~
+{noteTypes} `(NoteType[])`
+{nextPageToken} `(string)`
+{totalSize} `(optional)` `(number)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.Note}
+Fields ~
+{name} `(string)`
+{id} `(integer)`
+{uuid} `(string)`
+{title} `(string)`
+{body} `(optional)` `(string)`
+{description} `(optional)` `(string)`
+{noteTypeId} `(optional)` `(integer)`
+{collectionId} `(integer)`
+{isTemplate} `(optional)` `(boolean)`
+{etag} `(string)`
+{createTime} `(optional)` `(string)`
+{updateTime} `(optional)` `(string)`
+{metadata} `(table<string, string>)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.CreateNoteRequest}
+Fields ~
+{title} `(string)`
+{body} `(optional)` `(string)`
+{description} `(optional)` `(string)`
+{noteTypeId} `(optional)` `(integer)`
+{collectionId} `(optional)` `(integer)`
+{isTemplate} `(optional)` `(boolean)`
+{metadata} `(table<string, string>)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.GetNoteRequest}
+Fields ~
+{id} `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ReplaceNoteRequest}
+Fields ~
+{id} `(integer)`
+{title} `(string)`
+{body} `(optional)` `(string)`
+{description} `(optional)` `(string)`
+{noteTypeId} `(optional)` `(integer)`
+{collectionId} `(optional)` `(integer)`
+{isTemplate} `(optional)` `(boolean)`
+{metadata} `(table<string, string>)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.DeleteNoteRequest}
+Fields ~
+{id} `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListNotesRequest}
+Fields ~
+{pageSize} `(number)`
+{pageToken} `(string)`
+{collectionId} `(optional)` `(integer)`
+{noteTypeId} `(optional)` `(integer)`
+{isTemplate} `(optional)` `(boolean)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListNotesResponse}
+Fields ~
+{notes} `(Note[])`
+{nextPageToken} `(string)`
+{totalSize} `(optional)` `(number)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.GetNoteMetaRequest}
+Fields ~
+{noteId} `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.GetNoteMetaResponse}
+Fields ~
+{metadata} `(table<string, string>)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.GetNoteRelationshipsRequest}
+Fields ~
+{noteId} `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.GetNoteRelationshipsResponse}
+Fields ~
+{outgoingLinks} `(integer[])`
+{incomingLinks} `(integer[])`
+{tagIds} `(integer[])`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.SearchNotesRequest}
+Fields ~
+{query} `(string)`
+{limit} `(optional)` `(number)`
+{offset} `(optional)` `(number)`
+{includeBody} `(optional)` `(boolean)`
+{minScore} `(optional)` `(number)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.SearchResult}
+Fields ~
+{id} `(integer)`
+{title} `(string)`
+{snippet} `(string)`
+{score} `(number)`
+{createTime} `(optional)` `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.SearchNotesResponse}
+Fields ~
+{results} `(SearchResult[])`
+{total} `(number)`
+{query} `(string)`
+{durationMs} `(integer)`
+{limit} `(number)`
+{offset} `(number)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.Tag}
+Fields ~
+{name} `(string)`
+{id} `(integer)`
+{displayName} `(string)`
+{createTime} `(optional)` `(string)`
+{updateTime} `(optional)` `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListTagsRequest}
+Fields ~
+{pageSize} `(number)`
+{pageToken} `(string)`
+{noteId} `(optional)` `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListTagsResponse}
+Fields ~
+{tags} `(Tag[])`
+{nextPageToken} `(string)`
+{totalSize} `(optional)` `(number)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.Template}
+Fields ~
+{name} `(string)`
+{id} `(integer)`
+{displayName} `(string)`
+{description} `(optional)` `(string)`
+{starterNoteId} `(integer)`
+{noteTypeId} `(optional)` `(integer)`
+{createTime} `(optional)` `(string)`
+{updateTime} `(optional)` `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.CreateTemplateRequest}
+Fields ~
+{displayName} `(string)`
+{description} `(optional)` `(string)`
+{starterNoteId} `(integer)`
+{noteTypeId} `(optional)` `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListTemplatesRequest}
+Fields ~
+{pageSize} `(number)`
+{pageToken} `(string)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.ListTemplatesResponse}
+Fields ~
+{templates} `(Template[])`
+{nextPageToken} `(string)`
+{totalSize} `(optional)` `(number)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.GetTemplateRequest}
+Fields ~
+{id} `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.UpdateTemplateRequest}
+Fields ~
+{id} `(integer)`
+{displayName} `(string)`
+{description} `(optional)` `(string)`
+{starterNoteId} `(integer)`
+{noteTypeId} `(optional)` `(integer)`
+
+------------------------------------------------------------------------------
+Class ~
+{mind.v3.DeleteTemplateRequest}
+Fields ~
+{id} `(integer)`
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

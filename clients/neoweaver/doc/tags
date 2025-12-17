@@ -1,0 +1,5 @@
+M	neoweaver_api.txt	/*M*
+M	neoweaver_types.txt	/*M*
+M.get_config()	neoweaver_api.txt	/*M.get_config()*
+M.setup()	neoweaver_api.txt	/*M.setup()*
+M.setup_keymaps()	neoweaver_api.txt	/*M.setup_keymaps()*
