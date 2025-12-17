@@ -8,6 +8,27 @@ local api = require("neoweaver._internal.api")
 local buffer_manager = require("neoweaver._internal.buffer.manager")
 local diff = require("neoweaver._internal.diff")
 
+-- NOTE: This is temp here
+local ConnectCode = {
+  OK = "ok",
+  CANCELLED = "cancelled",
+  UNKNOWN = "unknown",
+  INVALID_ARGUMENT = "invalid_argument",
+  DEADLINE_EXCEEDED = "deadline_exceeded",
+  NOT_FOUND = "not_found",
+  ALREADY_EXISTS = "already_exists",
+  PERMISSION_DENIED = "permission_denied",
+  RESOURCE_EXHAUSTED = "resource_exhausted",
+  FAILED_PRECONDITION = "failed_precondition", -- Your ETag case
+  ABORTED = "aborted",
+  OUT_OF_RANGE = "out_of_range",
+  UNIMPLEMENTED = "unimplemented",
+  INTERNAL = "internal",
+  UNAVAILABLE = "unavailable",
+  DATA_LOSS = "data_loss",
+  UNAUTHENTICATED = "unauthenticated",
+}
+
 local M = {}
 
 -- Debounce state for create_note
@@ -237,6 +258,9 @@ end
 ---@param bufnr integer Buffer number
 ---@param note_id integer Note ID
 local function handle_conflict(bufnr, note_id)
+  -- NOTE: Due to how connect rpc is handling this and the connect error for precondition fail returns a 400
+  -- a custom error has been addded for now to check against 409 with additional meta info
+  -- This will chnge in the near future to match the 409 that the precondition etc should not be in the header but in the body
   vim.notify("ETag conflict detected - fetching latest version from server...", vim.log.levels.WARN)
 
   -- Fetch latest version from server
@@ -392,8 +416,7 @@ function M.save_note(bufnr, id)
   -- Call API with etag for optimistic locking
   api.notes.update(req, etag, function(res)
     if res.error then
-      -- Check for etag conflict (412 Precondition Failed)
-      if res.error.code == 412 or res.error.status == 412 then
+      if res.error.code == ConnectCode.FAILED_PRECONDITION then
         -- Handle conflict with diff view
         handle_conflict(bufnr, id)
         return
