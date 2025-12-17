@@ -6,6 +6,7 @@
 ---
 local api = require("neoweaver._internal.api")
 local buffer_manager = require("neoweaver._internal.buffer.manager")
+local diff = require("neoweaver._internal.diff")
 
 local M = {}
 
@@ -230,6 +231,68 @@ function M.amend_quicknote()
   -- Reference: clients/mw/notes.lua:handler__amend_quicknote
 end
 
+--- Handle etag conflict resolution
+--- Called when save fails with 412 Precondition Failed
+--- Fetches latest server version and enables diff view
+---@param bufnr integer Buffer number
+---@param note_id integer Note ID
+local function handle_conflict(bufnr, note_id)
+  vim.notify("ETag conflict detected - fetching latest version from server...", vim.log.levels.WARN)
+
+  -- Fetch latest version from server
+  ---@type mind.v3.GetNoteRequest
+  local req = { id = note_id }
+
+  api.notes.get(req, function(res)
+    if res.error then
+      vim.notify("Failed to fetch latest note: " .. res.error.message, vim.log.levels.ERROR)
+      return
+    end
+
+    ---@type mind.v3.Note
+    local latest_note = res.data
+    local server_lines = vim.split(latest_note.body or "", "\n")
+
+    -- Enable diff view for conflict resolution
+    vim.notify("Conflict resolver: Use ]c/[c to navigate, gh to apply hunk, :w to retry save", vim.log.levels.INFO)
+
+    -- Ensure buffer is modifiable
+    if not vim.api.nvim_get_option_value("modifiable", { buf = bufnr }) then
+      vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+    end
+
+    -- Enable diff overlay
+    diff.enable(bufnr)
+    diff.map_keys(bufnr)
+
+    -- Set server version as reference (with slight delay for stability)
+    vim.defer_fn(function()
+      local ok, err = pcall(diff.set_ref_text, bufnr, server_lines)
+      if not ok then
+        vim.notify("Failed to enable diff overlay: " .. tostring(err), vim.log.levels.ERROR)
+        return
+      end
+    end, 50)
+
+    -- Create one-shot autocmd to cleanup diff and retry save
+    local group = vim.api.nvim_create_augroup("neoweaver_conflict_" .. bufnr, { clear = true })
+    vim.api.nvim_create_autocmd("BufWriteCmd", {
+      group = group,
+      buffer = bufnr,
+      callback = function()
+        -- Disable diff overlay
+        diff.disable(bufnr)
+        vim.api.nvim_del_augroup_by_id(group)
+
+        -- Update etag to latest and retry save
+        vim.b[bufnr].note_etag = latest_note.etag
+        M.save_note(bufnr, note_id)
+      end,
+      once = true,
+    })
+  end)
+end
+
 --- Delete a note by ID
 ---@param note_id integer The note ID to delete
 function M.delete_note(note_id)
@@ -306,8 +369,15 @@ function M.save_note(bufnr, id)
   -- Call API with etag for optimistic locking
   api.notes.update(req, etag, function(res)
     if res.error then
+      -- Check for etag conflict (412 Precondition Failed)
+      if res.error.code == 412 or res.error.status == 412 then
+        -- Handle conflict with diff view
+        handle_conflict(bufnr, id)
+        return
+      end
+
+      -- Other errors
       vim.notify("Save failed: " .. res.error.message, vim.log.levels.ERROR)
-      -- TODO: Handle conflict (412) - requires diff.lua integration
       return
     end
 
