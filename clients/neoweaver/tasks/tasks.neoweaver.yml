@@ -1,22 +1,21 @@
 version: '3'
 
 vars:
-  NEOWEAVER_DIR: ./clients/neoweaver
-  PROTO_DIR: ./proto/mind/v3
-  TS_GEN_DIR: '{{.NEOWEAVER_DIR}}/gen/ts'
-  TYPES_OUTPUT: '{{.NEOWEAVER_DIR}}/lua/neoweaver/types.lua'
-  SCRIPTS_DIR: '{{.NEOWEAVER_DIR}}/scripts'
+  PROTO_DIR: ../../proto/mind/v3
+  TS_GEN_DIR: gen/ts
+  TYPES_OUTPUT: lua/neoweaver/types.lua
+  SCRIPTS_DIR: scripts
 
 tasks:
   types:proto:
     desc: Generate TypeScript types from proto files
-    dir: ./proto
+    dir: '{{.PROTO_DIR}}'
     cmds:
       - buf generate
     sources:
-      - mind/v3/*.proto
+      - '*.proto'
     generates:
-      - ../clients/neoweaver/gen/ts/v3/*_pb.ts
+      - ../../../clients/neoweaver/gen/ts/v3/*_pb.ts
 
   types:ts-to-lua:
     desc: Convert TypeScript types to Lua annotations
@@ -52,7 +51,6 @@ tasks:
 
   docs:api:
     desc: Generate API documentation from LuaLS annotations using mini.doc
-    dir: '{{.NEOWEAVER_DIR}}'
     cmds:
       - nvim -u scripts/make_api_documentation/minimal_init.lua -l scripts/make_api_documentation/main.lua
     sources:
@@ -64,7 +62,6 @@ tasks:
 
   docs:tags:
     desc: Generate vim help tags
-    dir: '{{.NEOWEAVER_DIR}}'
     deps: [docs:api]
     cmds:
       - nvim -c 'helptags doc' -c 'quit'
@@ -80,6 +77,5 @@ tasks:
 
   docs:clean:
     desc: Remove generated documentation files
-    dir: '{{.NEOWEAVER_DIR}}'
     cmds:
       - rm -f doc/neoweaver_api.txt doc/neoweaver_types.txt doc/tags
