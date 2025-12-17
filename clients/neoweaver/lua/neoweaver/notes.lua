@@ -9,6 +9,12 @@ local buffer_manager = require("neoweaver.buffer.manager")
 
 local M = {}
 
+-- Debounce state for create_note
+local last_create_time = 0
+local DEBOUNCE_MS = 500
+
+local allow_multiple_empty_notes = false
+
 -- Register note type handlers with buffer manager
 -- This is called once during setup
 local function register_handlers()
@@ -64,45 +70,6 @@ function M.list_notes()
 			M.open_note(tonumber(selected_note.id))
 		end)
 	end)
-end
-
--- Debounce state for create_note
-local last_create_time = 0
-local DEBOUNCE_MS = 500
-
-local allow_multiple_empty_notes = false
-
----@param opts? { allow_multiple_empty_notes?: boolean }
-function M.setup(opts)
-	opts = opts or {}
-	allow_multiple_empty_notes = opts.allow_multiple_empty_notes == true
-
-	-- Register note type handlers with buffer manager
-	register_handlers()
-
-	-- Create commands
-	vim.api.nvim_create_user_command("NotesList", M.list_notes, { desc = "List all notes (v3)" })
-	vim.api.nvim_create_user_command("NotesOpen", function(o)
-		local id = tonumber(o.args)
-		if id then
-			M.open_note(id)
-		else
-			vim.notify("Usage: :NotesOpen <note_id>", vim.log.levels.WARN)
-		end
-	end, { nargs = 1, desc = "Open note by ID (v3)" })
-	vim.api.nvim_create_user_command("NotesNew", M.create_note, { desc = "Create new note (v3)" })
-
-	-- Create keymaps
-	vim.keymap.set("n", "<leader>nl", M.list_notes, { desc = "List notes (v3)" })
-	vim.keymap.set("n", "<leader>no", function()
-		vim.ui.input({ prompt = "Note ID: " }, function(input)
-			local id = tonumber(input)
-			if id then
-				M.open_note(id)
-			end
-		end)
-	end, { desc = "Open note by ID (v3)" })
-	vim.keymap.set("n", "<leader>nn", M.create_note, { desc = "Create new note (v3)" })
 end
 
 --- Create a new note (server-first approach with auto-generated title)
@@ -213,6 +180,94 @@ function M.open_note(note_id)
 	end)
 end
 
+--- Edit note metadata (frontmatter)
+-- TODO: Implement metadata editing functionality
+-- This will allow editing YAML frontmatter (tags, custom fields, etc.)
+---@param note_id? integer Optional note ID (if nil, uses current buffer)
+function M.edit_metadata(note_id)
+	vim.notify("Metadata editing not yet implemented in v3", vim.log.levels.WARN)
+	-- TODO: Implementation steps:
+	-- 1. Get note_id from current buffer if not provided
+	-- 2. Fetch note from API
+	-- 3. Parse frontmatter from note.body
+	-- 4. Open floating window with editable YAML
+	-- 5. On save, update note with new frontmatter
+end
+
+--- Create a new quicknote in a floating window
+-- TODO: Implement quicknotes functionality
+-- Quicknotes are ephemeral floating windows for rapid note capture
+function M.create_quicknote()
+	vim.notify("Quicknotes not yet implemented in v3", vim.log.levels.WARN)
+	-- TODO: Implementation steps:
+	-- 1. Create floating window with configured dimensions
+	-- 2. Create buffer with auto-generated title (timestamp-based)
+	-- 3. On save, call NewNote API with quicknote note_type
+	-- 4. Store reference for amend functionality
+	-- Reference: clients/mw/notes.lua:handler__new_quicknote
+end
+
+--- List all quicknotes
+-- TODO: Implement quicknotes listing
+function M.list_quicknotes()
+	vim.notify("Quicknotes not yet implemented in v3", vim.log.levels.WARN)
+	-- TODO: Implementation steps:
+	-- 1. Call ListNotes API with note_type filter for quicknote
+	-- 2. Display in picker
+	-- 3. On select, open in floating window
+	-- Reference: clients/mw/notes.lua:handler__list_quicknotes
+end
+
+--- Amend the last created quicknote
+-- TODO: Implement quicknote amend functionality
+function M.amend_quicknote()
+	vim.notify("Quicknote amend not yet implemented in v3", vim.log.levels.WARN)
+	-- TODO: Implementation steps:
+	-- 1. Retrieve last quicknote ID from state
+	-- 2. Fetch note from API
+	-- 3. Open in floating window with existing content
+	-- 4. Allow editing and save
+	-- Reference: clients/mw/notes.lua:handler__amend_quicknote
+end
+
+--- Delete a note by ID
+---@param note_id integer The note ID to delete
+function M.delete_note(note_id)
+	if not note_id then
+		vim.notify("Invalid note ID", vim.log.levels.ERROR)
+		return
+	end
+
+	-- Ask for confirmation
+	vim.ui.input({
+		prompt = string.format("Delete note %d? (y/N): ", note_id),
+	}, function(input)
+		if not input or (input:lower() ~= "y" and input:lower() ~= "yes") then
+			vim.notify("Delete cancelled", vim.log.levels.INFO)
+			return
+		end
+
+		-- Call delete API
+		---@type mind.v3.DeleteNoteRequest
+		local req = { id = note_id }
+
+		api.notes.delete(req, function(res)
+			if res.error then
+				vim.notify("Failed to delete note: " .. res.error.message, vim.log.levels.ERROR)
+				return
+			end
+
+			-- Close buffer if it's open
+			local bufnr = buffer_manager.get("note", note_id)
+			if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+				vim.api.nvim_buf_delete(bufnr, { force = true })
+			end
+
+			vim.notify("Note deleted successfully", vim.log.levels.INFO)
+		end)
+	end)
+end
+
 --- Save note buffer content to server
 --- Called by buffer_manager when buffer is saved (:w)
 --- Always updates existing note (server-first approach ensures ID exists)
@@ -271,30 +326,6 @@ function M.setup(opts)
 
 	-- Register note type handlers with buffer manager
 	register_handlers()
-
-	-- Create commands
-	vim.api.nvim_create_user_command("NotesList", M.list_notes, { desc = "List all notes (v3)" })
-	vim.api.nvim_create_user_command("NotesOpen", function(o)
-		local id = tonumber(o.args)
-		if id then
-			M.open_note(id)
-		else
-			vim.notify("Usage: :NotesOpen <note_id>", vim.log.levels.WARN)
-		end
-	end, { nargs = 1, desc = "Open note by ID (v3)" })
-	vim.api.nvim_create_user_command("NotesNew", M.create_note, { desc = "Create new note (v3)" })
-
-	-- Create keymaps
-	vim.keymap.set("n", "<leader>nl", M.list_notes, { desc = "List notes (v3)" })
-	vim.keymap.set("n", "<leader>no", function()
-		vim.ui.input({ prompt = "Note ID: " }, function(input)
-			local id = tonumber(input)
-			if id then
-				M.open_note(id)
-			end
-		end)
-	end, { desc = "Open note by ID (v3)" })
-	vim.keymap.set("n", "<leader>nn", M.create_note, { desc = "Create new note (v3)" })
 end
 
 return M
