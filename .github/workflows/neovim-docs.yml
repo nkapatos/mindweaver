@@ -22,40 +22,47 @@ permissions:
   contents: write
 
 jobs:
-  # FIXME: Re-enable panvimdoc once README+MiniDoc documentation generation is finalized.
-  panvimdoc:
-    name: Generate Vim help from Markdown
-    if: ${{ false }}
+  vim_documentation:
+    name: Generate Vim Documentation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare doc output directory
-        run: |
-          mkdir -p clients/neoweaver/doc
-          touch clients/neoweaver/doc/neoweaver.txt
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: stable
 
-      - name: Generate Vim help with panvimdoc
-        uses: kdheepak/panvimdoc@v4.0.1
+      - name: Generate API Documentation (mini.doc)
+        working-directory: clients/neoweaver
+        run: |
+          nvim --version
+          nvim -u scripts/make_api_documentation/minimal_init.lua \
+               -l scripts/make_api_documentation/main.lua
+
+      - name: Generate User Documentation (panvimdoc)
+        uses: kdheepak/panvimdoc@main
         with:
           vimdoc: neoweaver
           pandoc: clients/neoweaver/README.md
           outpath: clients/neoweaver/doc
-          version: 'NVIM v0.9.0'
+          version: 'Neovim >= 0.11.0'
           toc: true
           description: 'MindWeaver Neovim client'
           dedupsubheadings: true
           treesitter: true
 
-      - name: Commit and push generated docs
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add clients/neoweaver/doc/neoweaver.txt
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "docs: update generated Neovim help documentation"
-            git push
-          fi
+      - name: Generate Vim Tags
+        working-directory: clients/neoweaver
+        run: nvim -c 'helptags doc' -c 'quit'
+
+      - name: Commit Generated Documentation
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs(neoweaver): auto-generate API and user documentation"
+          file_pattern: 'clients/neoweaver/doc/*.txt'
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "github-actions[bot]@users.noreply.github.com"
+          commit_author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
