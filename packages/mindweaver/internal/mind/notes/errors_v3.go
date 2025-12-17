@@ -117,3 +117,26 @@ func newInvalidArgumentError(field, description string) error {
 
 	return err
 }
+
+// NOTE: I'll have to change it eventually as techically having the etag header precodindition
+// has to return 412 and not 409. When change don't forget the nvim client update
+func newETagMismatchError(ifMatchHeader, currentETag string) error {
+	err := connect.NewError(
+		connect.CodeFailedPrecondition,
+		fmt.Errorf("note has been modified: ETag mismatch"),
+	)
+
+	// Add ErrorInfo for machine-readable metadata (AIP-193)
+	errorInfo, _ := connect.NewErrorDetail(&errdetails.ErrorInfo{
+		Reason: "ETAG_MISMATCH",
+		Domain: errorDomain,
+		Metadata: map[string]string{
+			"provided_etag": ifMatchHeader,
+			"current_etag":  currentETag,
+			"header":        "If-Match",
+		},
+	})
+	err.AddDetail(errorInfo)
+
+	return err
+}

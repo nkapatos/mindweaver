@@ -7,13 +7,13 @@ import (
 	"strconv"
 
 	"connectrpc.com/connect"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/links"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/meta"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/tags"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/dberrors"
 	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3/mindv3connect"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/links"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/meta"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/tags"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/dberrors"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -95,7 +95,7 @@ func (h *NotesHandlerV3) ReplaceNote(
 	if req.Header().Get("If-Match") != "" {
 		currentETag := utils.ComputeHashedETag(current.Version)
 		if req.Header().Get("If-Match") != currentETag {
-			return nil, connect.NewError(connect.CodeAborted, ErrStaleNote)
+			return nil, newETagMismatchError(req.Header().Get("If-Match"), currentETag)
 		}
 	}
 
