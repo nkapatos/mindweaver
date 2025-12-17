@@ -1,7 +1,15 @@
+--- Neoweaver - Neovim client for MindWeaver
 ---
---- init.lua - Neoweaver entry point (v3)
---- Public API for the neoweaver plugin
+--- A plugin for managing notes via the MindWeaver server API.
+--- Provides commands for creating, editing, and organizing notes directly
+--- within Neovim using markdown buffers.
 ---
+--- Requires:
+--- - Neovim 0.11+
+--- - plenary.nvim
+--- - MindWeaver server running
+---
+---@module neoweaver
 local M = {}
 
 --- Setup the neoweaver plugin
@@ -10,6 +18,43 @@ local M = {}
 --- Must be called before using any plugin functionality.
 ---
 ---@param opts? table Configuration options
+---@field opts.allow_multiple_empty_notes? boolean Allow multiple untitled notes (default: false)
+---@field opts.api? table API configuration (servers, debug_info)
+---@field opts.api.servers table Server configurations (required)
+---@field opts.api.debug_info? boolean Enable debug logging (default: true)
+---@field opts.keymaps? table Keymap configuration
+---@field opts.keymaps.enabled? boolean Enable default keymaps (default: false)
+---
+---@usage [[
+--- Basic setup with local server:
+--- require('neoweaver').setup({
+---   api = {
+---     servers = {
+---       local = { url = "http://localhost:9421", default = true }
+---     }
+---   }
+--- })
+---
+--- With multiple servers and keymaps:
+--- require('neoweaver').setup({
+---   allow_multiple_empty_notes = true,
+---   api = {
+---     servers = {
+---       local = { url = "http://localhost:9421", default = true },
+---       remote = { url = "https://api.example.com" }
+---     },
+---     debug_info = true
+---   },
+---   keymaps = {
+---     enabled = true,
+---     notes = {
+---       list = "<leader>nl",
+---       open = "<leader>no",
+---       new = "<leader>nn"
+---     }
+---   }
+--- })
+---]]
 function M.setup(opts)
 	opts = opts or {}
 
