@@ -254,7 +254,19 @@ local function handle_conflict(bufnr, note_id)
     local server_lines = vim.split(latest_note.body or "", "\n")
 
     -- Enable diff view for conflict resolution
-    vim.notify("Conflict resolver: Use ]c/[c to navigate, gh to apply hunk, :w to retry save", vim.log.levels.INFO)
+    -- Defer conflict count check until diff is initialized
+    vim.defer_fn(function()
+      local conflict_count = diff.get_conflict_count(bufnr)
+      local msg = string.format(
+        "⚠️  %d conflict%s detected\n"
+          .. "Resolve: gh (server) | gl (local) | gb (both)\n"
+          .. "Navigate: ]c (next) | [c (prev)\n"
+          .. "Save: :w (retry)",
+        conflict_count,
+        conflict_count > 1 and "s" or ""
+      )
+      vim.notify(msg, vim.log.levels.WARN)
+    end, 100)
 
     -- Ensure buffer is modifiable
     if not vim.api.nvim_get_option_value("modifiable", { buf = bufnr }) then
@@ -280,6 +292,17 @@ local function handle_conflict(bufnr, note_id)
       group = group,
       buffer = bufnr,
       callback = function()
+        -- Check for remaining conflicts
+        local remaining = diff.get_conflict_count(bufnr)
+        if remaining > 0 then
+          vim.notify(
+            string.format("⚠️  Saving with %d unresolved conflict%s", remaining, remaining > 1 and "s" or ""),
+            vim.log.levels.WARN
+          )
+        else
+          vim.notify("✓ All conflicts resolved - saving", vim.log.levels.INFO)
+        end
+
         -- Disable diff overlay
         diff.disable(bufnr)
         vim.api.nvim_del_augroup_by_id(group)
