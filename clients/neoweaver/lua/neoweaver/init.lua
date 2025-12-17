@@ -1,73 +1,45 @@
 ---
 --- init.lua - Neoweaver entry point (v3)
+--- Public API for the neoweaver plugin
 ---
 local M = {}
 
-local config = {
-	allow_multiple_empty_notes = false,
-	keymaps = {
-		enabled = false, -- Keymaps are opt-in
-		notes = {
-			-- Standard notes (using <leader>n* for "notes")
-			list = "<leader>nl",
-			open = "<leader>no",
-			new = "<leader>nn",
-			edit = "<leader>ne", -- Alias for open
-			delete = "<leader>nd",
-			meta = "<leader>nm", -- TODO: not implemented
-		},
-		quicknotes = {
-			-- Quicknotes (using <leader>q* for "quick")
-			new = "<leader>qn",
-			list = "<leader>ql",
-			amend = "<leader>qa",
-			-- Fast access alternatives (using <leader>.* for rapid capture)
-			new_fast = "<leader>.n",
-			amend_fast = "<leader>.a",
-			list_fast = "<leader>.l",
-		},
-	},
-}
-
+--- Setup the neoweaver plugin
+---
+--- Configures the API client, note handlers, and optional keymaps.
+--- Must be called before using any plugin functionality.
+---
+---@param opts? table Configuration options
 function M.setup(opts)
 	opts = opts or {}
 
-	if opts.allow_multiple_empty_notes ~= nil then
-		config.allow_multiple_empty_notes = opts.allow_multiple_empty_notes == true
-	else
-		config.allow_multiple_empty_notes = false
-	end
-
-	-- Merge keymap configuration
-	if opts.keymaps ~= nil then
-		if opts.keymaps.enabled ~= nil then
-			config.keymaps.enabled = opts.keymaps.enabled
-		end
-		if opts.keymaps.notes ~= nil then
-			config.keymaps.notes = vim.tbl_extend("force", config.keymaps.notes, opts.keymaps.notes)
-		end
-	end
+	-- Apply configuration
+	local config = require("neoweaver._internal.config")
+	config.apply(opts)
 
 	-- Setup API layer
-	local api = require("neoweaver.api")
+	local api = require("neoweaver._internal.api")
 	api.setup(opts.api or {})
 
 	-- Setup notes module
-	local notes = require("neoweaver.notes")
+	local notes = require("neoweaver._internal.notes")
 	notes.setup({
-		allow_multiple_empty_notes = config.allow_multiple_empty_notes,
+		allow_multiple_empty_notes = config.get().allow_multiple_empty_notes,
 	})
 
 	-- Setup keymaps if enabled
-	if config.keymaps.enabled then
+	if config.get().keymaps.enabled then
 		M.setup_keymaps()
 	end
 
 	vim.notify("Neoweaver v3 loaded!", vim.log.levels.INFO)
 end
 
+--- Setup keymaps for note operations
+--- @private
 function M.setup_keymaps()
-	local notes = require("neoweaver.notes")
+	local notes = require("neoweaver._internal.notes")
+	local config = require("neoweaver._internal.config").get()
 	local km_notes = config.keymaps.notes
 	local km_quick = config.keymaps.quicknotes
 
@@ -146,8 +118,11 @@ function M.setup_keymaps()
 	end
 end
 
+--- Get current configuration
+---
+--- @return table Current configuration
 function M.get_config()
-	return config
+	return require("neoweaver._internal.config").get()
 end
 
 return M

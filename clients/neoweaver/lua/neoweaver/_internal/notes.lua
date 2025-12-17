@@ -4,8 +4,8 @@
 ---
 --- Reference: clients/mw/notes.lua (v1 implementation)
 ---
-local api = require("neoweaver.api")
-local buffer_manager = require("neoweaver.buffer.manager")
+local api = require("neoweaver._internal.api")
+local buffer_manager = require("neoweaver._internal.buffer.manager")
 
 local M = {}
 
