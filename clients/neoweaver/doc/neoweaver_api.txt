@@ -1,0 +1,81 @@
+==============================================================================
+------------------------------------------------------------------------------
+                                                                             *M*
+                                      `M`
+Neoweaver - Neovim client for MindWeaver
+
+A plugin for managing notes via the MindWeaver server API.
+Provides commands for creating, editing, and organizing notes directly
+within Neovim using markdown buffers.
+
+Requires:
+- Neovim 0.11+
+- plenary.nvim
+- MindWeaver server running
+
+neoweaver
+
+------------------------------------------------------------------------------
+                                                                     *M.setup()*
+                               `M.setup`({opts})
+Setup the neoweaver plugin
+
+Configures the API client, note handlers, and optional keymaps.
+Must be called before using any plugin functionality.
+
+Parameters ~
+{opts} `(optional)` `(table)` Configuration options
+Fields ~
+{opts.allow_multiple_empty_notes} `(optional)` `(boolean)` Allow multiple untitled notes (default: false)
+{opts.api} `(optional)` `(table)` API configuration (servers, debug_info)
+{opts.api.servers} `(table)` Server configurations (required)
+{opts.api.debug_info} `(optional)` `(boolean)` Enable debug logging (default: true)
+{opts.keymaps} `(optional)` `(table)` Keymap configuration
+{opts.keymaps.enabled} `(optional)` `(boolean)` Enable default keymaps (default: false)
+
+Usage ~
+[[
+Basic setup with local server:
+require('neoweaver').setup({
+  api = {
+    servers = {
+      local = { url = "http://localhost:9421", default = true }
+    }
+  }
+})
+
+With multiple servers and keymaps:
+require('neoweaver').setup({
+  allow_multiple_empty_notes = true,
+  api = {
+    servers = {
+      local = { url = "http://localhost:9421", default = true },
+      remote = { url = "https://api.example.com" }
+    },
+    debug_info = true
+  },
+  keymaps = {
+    enabled = true,
+    notes = {
+      list = "<leader>nl",
+      open = "<leader>no",
+      new = "<leader>nn"
+    }
+  }
+})
+
+------------------------------------------------------------------------------
+                                                             *M.setup_keymaps()*
+                              `M.setup_keymaps`()
+Setup keymaps for note operations
+@private
+
+------------------------------------------------------------------------------
+                                                                *M.get_config()*
+                                `M.get_config`()
+Get current configuration
+
+@return table Current configuration
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
