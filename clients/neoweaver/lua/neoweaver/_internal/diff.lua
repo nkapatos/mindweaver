@@ -223,7 +223,9 @@ local function resolve_hunk(bufnr, strategy)
       elseif strategy == "local" then
         -- Keep local version (no buffer changes needed, just mark resolved)
         -- Local version is already in buffer
+        -- No additional buffer edits required
       elseif strategy == "both" then
+
         -- Keep both versions with markers
         -- TODO: Refine format based on user feedback
         -- Current approach: Insert both versions with clear separators

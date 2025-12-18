@@ -12,8 +12,10 @@ M.defaults = {
       -- Standard notes (using <leader>n* for "notes")
       list = "<leader>nl",
       open = "<leader>no",
-      new = "<leader>nn",
       edit = "<leader>ne", -- Alias for open
+      new = "<leader>nn",
+      new_with_title = "<leader>nN",
+      title = "<leader>nt",
       delete = "<leader>nd",
       meta = "<leader>nm", -- TODO: not implemented
     },
