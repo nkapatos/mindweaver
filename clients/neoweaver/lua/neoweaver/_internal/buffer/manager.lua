@@ -36,6 +36,7 @@ local M = {}
 ---@field buflisted? boolean Whether buffer appears in buffer list (default: true)
 ---@field bufhidden? string Buffer hide behavior (default: "wipe")
 ---@field data? table Initial entity data to store
+---@field win? number Target window ID to display buffer in (optional, will find suitable window if not provided)
 
 -- State management
 M.state = {
@@ -60,12 +61,89 @@ local function make_key(type, id)
   return type .. ":" .. tostring(id)
 end
 
+---Find a suitable window to display a buffer in
+---Excludes special buffers like explorer, terminal, etc.
+---@return number|nil window_id Window ID to use, or nil to use current
+local function find_target_window()
+  local current_win = vim.api.nvim_get_current_win()
+  local current_buf = vim.api.nvim_win_get_buf(current_win)
+  local current_buftype = vim.api.nvim_get_option_value("buftype", { buf = current_buf })
+  local current_filetype = vim.api.nvim_get_option_value("filetype", { buf = current_buf })
+  
+  -- If current window is a normal file buffer (not special UI), use it
+  if current_buftype == "" and current_filetype ~= "neoweaver_explorer" then
+    return current_win
+  end
+  
+  -- Otherwise, find a suitable window in the current tab
+  local wins = vim.api.nvim_tabpage_list_wins(0)
+  
+  -- Sort by last used buffer (most recent first)
+  table.sort(wins, function(a, b)
+    local ba = vim.api.nvim_win_get_buf(a)
+    local bb = vim.api.nvim_win_get_buf(b)
+    local info_a = vim.fn.getbufinfo(ba)[1]
+    local info_b = vim.fn.getbufinfo(bb)[1]
+    return (info_a and info_a.lastused or 0) > (info_b and info_b.lastused or 0)
+  end)
+  
+  -- Find first suitable window
+  for _, win in ipairs(wins) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      local buftype = vim.api.nvim_get_option_value("buftype", { buf = buf })
+      local filetype = vim.api.nvim_get_option_value("filetype", { buf = buf })
+      local win_config = vim.api.nvim_win_get_config(win)
+      local is_float = win_config.relative ~= ""
+      
+      -- Skip floating windows, special buffers, and explorer
+      if not is_float 
+         and buftype == "" 
+         and filetype ~= "neoweaver_explorer" then
+        return win
+      end
+    end
+  end
+  
+  -- No suitable window found - create a new split
+  -- Find the explorer window to split from
+  for _, win in ipairs(wins) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    local filetype = vim.api.nvim_get_option_value("filetype", { buf = buf })
+    if filetype == "neoweaver_explorer" then
+      -- Focus explorer and create vertical split to the right
+      vim.api.nvim_set_current_win(win)
+      vim.cmd("vsplit")
+      local new_win = vim.api.nvim_get_current_win()
+      return new_win
+    end
+  end
+  
+  -- Fallback: use current window (will create split if needed)
+  return nil
+end
+
 ---Register event handlers for a buffer type
 ---Handlers are called when buffers of this type trigger events
 ---@param type string Entity type (e.g., "note", "collection")
 ---@param handlers BufferHandlers Event handlers { on_save, on_close }
 function M.register_type(type, handlers)
   M.state.handlers[type] = handlers
+end
+
+---Switch to a buffer in a suitable window
+---Intelligently finds or creates a target window (not explorer, terminal, etc.)
+---@param bufnr integer Buffer number to switch to
+function M.switch_to_buffer(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+  
+  local target_win = find_target_window()
+  if target_win and vim.api.nvim_win_is_valid(target_win) then
+    vim.api.nvim_set_current_win(target_win)
+  end
+  vim.api.nvim_set_current_buf(bufnr)
 end
 
 ---Create a new managed buffer for an entity
@@ -77,10 +155,16 @@ function M.create(opts)
     error("buffer_manager.create: type and id are required")
   end
 
+  -- Determine target window
+  local target_win = opts.win or find_target_window()
+  
   -- Check if buffer already exists
   local existing = M.get(opts.type, opts.id)
   if existing and vim.api.nvim_buf_is_valid(existing) then
-    -- Buffer already exists, just switch to it
+    -- Buffer already exists, switch to target window and set buffer
+    if target_win and vim.api.nvim_win_is_valid(target_win) then
+      vim.api.nvim_set_current_win(target_win)
+    end
     vim.api.nvim_set_current_buf(existing)
     return existing
   end
@@ -144,7 +228,10 @@ function M.create(opts)
     end,
   })
 
-  -- Switch to buffer
+  -- Switch to target window and display buffer
+  if target_win and vim.api.nvim_win_is_valid(target_win) then
+    vim.api.nvim_set_current_win(target_win)
+  end
   vim.api.nvim_set_current_buf(bufnr)
 
   return bufnr

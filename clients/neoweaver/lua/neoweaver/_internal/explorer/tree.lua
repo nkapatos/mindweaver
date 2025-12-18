@@ -4,6 +4,7 @@
 local NuiTree = require("nui.tree")
 local NuiLine = require("nui.line")
 local collections = require("neoweaver._internal.collections")
+local notes = require("neoweaver._internal.notes")
 
 local M = {}
 
@@ -19,20 +20,38 @@ local state = {
   collections = nil,
 }
 
---- Build tree nodes recursively from flat collection list
+--- Build tree nodes recursively from flat collection list with notes
 ---@param collections table[] Flat list of collections
----@param parent_id string|nil Parent collection ID (nil for roots)
+---@param notes_by_collection table<number, table[]> Hashmap of notes grouped by collection_id
+---@param parent_id number|nil Parent collection ID (nil for roots)
 ---@return NuiTree.Node[]
-local function build_nodes(collections, parent_id)
+local function build_nodes(collections, notes_by_collection, parent_id)
   local nodes = {}
 
   -- Find all collections with the given parent_id
   for _, collection in ipairs(collections) do
     if collection.parentId == parent_id then
-      -- Build children recursively
-      local children = build_nodes(collections, collection.id)
+      local children = {}
+      
+      -- Add note children first (already sorted alphabetically)
+      local notes = notes_by_collection[collection.id] or {}
+      for _, note in ipairs(notes) do
+        local note_node = NuiTree.Node({
+          id = "note:" .. note.id,
+          type = "note",
+          name = note.title,
+          note_id = note.id,
+          collection_id = note.collectionId,
+          data = note,
+        })
+        table.insert(children, note_node)
+      end
+      
+      -- Then recursively add child collections
+      local child_collections = build_nodes(collections, notes_by_collection, collection.id)
+      vim.list_extend(children, child_collections)
 
-      -- Create node with collection data
+      -- Create collection node with all children
       local node = NuiTree.Node({
         id = "collection:" .. collection.id,
         type = "collection",
@@ -49,7 +68,7 @@ local function build_nodes(collections, parent_id)
   return nodes
 end
 
---- Prepare a node for rendering
+--- Prepare a node for rendering (handles both collections and notes)
 ---@param node NuiTree.Node
 ---@return NuiLine
 local function prepare_node(node)
@@ -70,26 +89,32 @@ local function prepare_node(node)
     line:append("  ")
   end
 
-  -- Icon for collection
-  if node.is_system then
-    line:append("󰉖 ", "Special") -- System collection icon
+  -- Icon and name based on node type
+  if node.type == "note" then
+    -- Note node
+    line:append("󰈙 ", "String")  -- Document icon
+    line:append(node.name, "Normal")
   else
-    line:append("󰉋 ", "Directory") -- Regular collection icon
+    -- Collection node
+    if node.is_system then
+      line:append("󰉖 ", "Special") -- System collection icon
+    else
+      line:append("󰉋 ", "Directory") -- Regular collection icon
+    end
+    local name_hl = node.is_system and "Comment" or "Directory"
+    line:append(node.name, name_hl)
   end
-
-  -- Collection name
-  local name_hl = node.is_system and "Comment" or "Directory"
-  line:append(node.name, name_hl)
 
   return line
 end
 
---- Build the tree from collections data
+--- Build the tree from collections and notes data
 ---@param bufnr number Buffer to render tree in
 ---@param collections_data table[] Array of collection objects
+---@param notes_by_collection table<number, table[]> Hashmap of notes grouped by collection_id
 ---@return NuiTree
-function M.build_tree(bufnr, collections_data)
-  local root_nodes = build_nodes(collections_data, nil)
+function M.build_tree(bufnr, collections_data, notes_by_collection)
+  local root_nodes = build_nodes(collections_data, notes_by_collection or {}, nil)
 
   local tree = NuiTree({
     bufnr = bufnr,
@@ -106,10 +131,19 @@ end
 local function setup_keymaps(bufnr, tree)
   local map_opts = { noremap = true, nowait = true }
 
-  -- Toggle expand/collapse on Enter or 'l'
+  -- Open note or toggle collection expand/collapse on Enter
   vim.keymap.set("n", "<CR>", function()
     local node = tree:get_node()
-    if node and node:has_children() then
+    if not node then return end
+    
+    -- Handle note nodes - open for editing
+    if node.type == "note" then
+      notes.open_note(node.note_id)
+      return
+    end
+    
+    -- Handle collection nodes - expand/collapse
+    if node:has_children() then
       if node:is_expanded() then
         node:collapse()
       else
@@ -117,7 +151,17 @@ local function setup_keymaps(bufnr, tree)
       end
       tree:render()
     end
-  end, vim.tbl_extend("force", map_opts, { buffer = bufnr, desc = "Toggle expand/collapse" }))
+  end, vim.tbl_extend("force", map_opts, { buffer = bufnr, desc = "Open note or toggle collection" }))
+
+  -- Open note with 'o' (alternative to Enter)
+  vim.keymap.set("n", "o", function()
+    local node = tree:get_node()
+    if not node then return end
+    
+    if node.type == "note" then
+      notes.open_note(node.note_id)
+    end
+  end, vim.tbl_extend("force", map_opts, { buffer = bufnr, desc = "Open note" }))
 
   vim.keymap.set("n", "l", function()
     local node = tree:get_node()
@@ -166,17 +210,17 @@ local function setup_keymaps(bufnr, tree)
   end, vim.tbl_extend("force", map_opts, { buffer = bufnr, desc = "Refresh tree" }))
 end
 
---- Load collections and render tree
---- Async function that fetches collections from API
+--- Load collections with notes and render tree
+--- Async function that fetches collections and notes from API
 ---@param bufnr number Buffer to render tree in
 function M.load_and_render(bufnr)
   state.bufnr = bufnr
   
   -- Show loading indicator
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Loading collections..." })
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Loading collections and notes..." })
   
-  -- Fetch collections from API
-  collections.list_collections({}, function(collections_data, err)
+  -- Fetch collections with notes from API (orchestrated call)
+  collections.list_collections_with_notes({}, function(data, err)
     if err then
       -- Clear loading message
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
@@ -186,17 +230,17 @@ function M.load_and_render(bufnr)
     end
     
     -- Handle empty collections
-    if not collections_data or #collections_data == 0 then
+    if not data or not data.collections or #data.collections == 0 then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No collections found" })
       vim.notify("No collections found", vim.log.levels.INFO)
       return
     end
     
     -- Store collections data
-    state.collections = collections_data
+    state.collections = data.collections
     
-    -- Build and render tree
-    state.tree = M.build_tree(bufnr, collections_data)
+    -- Build and render tree with notes
+    state.tree = M.build_tree(bufnr, data.collections, data.notes_by_collection)
     setup_keymaps(bufnr, state.tree)
     state.tree:render()
   end)
@@ -210,27 +254,27 @@ function M.init(bufnr)
 end
 
 --- Refresh the tree (rebuild and re-render)
---- Re-fetches collections from API
+--- Re-fetches collections and notes from API
 ---@param bufnr number
 function M.refresh(bufnr)
   if state.bufnr == bufnr then
     -- Show loading indicator
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Refreshing collections..." })
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Refreshing collections and notes..." })
     
-    -- Re-fetch collections from API
-    collections.list_collections({}, function(collections_data, err)
+    -- Re-fetch collections with notes from API (orchestrated call)
+    collections.list_collections_with_notes({}, function(data, err)
       if err then
         vim.notify("Failed to refresh collections: " .. (err.message or "unknown error"), vim.log.levels.ERROR)
         return
       end
       
       -- TODO: Store expanded state before rebuild and restore after
-      state.collections = collections_data
-      state.tree = M.build_tree(bufnr, collections_data)
+      state.collections = data.collections
+      state.tree = M.build_tree(bufnr, data.collections, data.notes_by_collection)
       setup_keymaps(bufnr, state.tree)
       state.tree:render()
       
-      vim.notify("Collections refreshed", vim.log.levels.INFO)
+      vim.notify("Collections and notes refreshed", vim.log.levels.INFO)
     end)
   end
 end
