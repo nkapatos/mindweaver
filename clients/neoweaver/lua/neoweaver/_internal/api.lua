@@ -248,6 +248,23 @@ M.list_notes_by_collection = function(collection_id, query, cb)
   M.notes.list(req, cb)
 end
 
+---@class CollectionsMethods Collections service methods
+---@field list fun(req: mind.v3.ListCollectionsRequest, cb: fun(res: ApiResponse)) List collections
+
+-- Collections Service
+---@type CollectionsMethods
+M.collections = {
+  -- POST /mind.v3.CollectionsService/ListCollections
+  -- Request: mind.v3.ListCollectionsRequest
+  -- Response: mind.v3.ListCollectionsResponse (contains collections array and totalSize)
+  list = function(req, cb)
+    request("GET", "/mind.v3.CollectionsService/ListCollections", {
+      body = vim.json.encode(req or {}),
+      headers = { ["Content-Type"] = "application/json" },
+    }, cb)
+  end,
+}
+
 function M.set_current_server(name)
   if not name or name == "" then
     error("MwServerUse: server name is required")

@@ -41,7 +41,6 @@ function M.open(config)
     size = config.size,
     buf_options = {
       buftype = "nofile",
-      modifiable = false,
       swapfile = false,
       filetype = "neoweaver_explorer",
     },
