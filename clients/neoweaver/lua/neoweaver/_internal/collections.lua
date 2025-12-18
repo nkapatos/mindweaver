@@ -43,6 +43,63 @@ function M.list_collections(opts, cb)
   end)
 end
 
+--- List collections with note titles
+--- Orchestrates two API calls: collections + notes, then returns combined data
+--- Returns: { collections: table[], notes_by_collection: table<number, table[]> }
+---@param opts? { pageSize?: number }
+---@param cb fun(data: { collections: table[], notes_by_collection: table }|nil, error: table|nil)
+function M.list_collections_with_notes(opts, cb)
+  opts = opts or {}
+  
+  -- Step 1: Fetch collections
+  M.list_collections(opts, function(collections, err)
+    if err then
+      cb(nil, err)
+      return
+    end
+    
+    -- Step 2: Fetch all notes (for now, fetch all notes without filtering)
+    ---@type mind.v3.ListNotesRequest
+    local notes_req = {
+      pageSize = opts.pageSize or 100, -- Fetch up to 100 notes (can adjust or paginate later)
+    }
+    
+    api.notes.list(notes_req, function(notes_res)
+      if notes_res.error then
+        cb(nil, notes_res.error)
+        return
+      end
+      
+      ---@type mind.v3.ListNotesResponse
+      local notes_list = notes_res.data
+      local notes = notes_list.notes or {}
+      
+      -- Step 3: Build hashmap - group notes by collection_id
+      local notes_by_collection = {}
+      for _, note in ipairs(notes) do
+        local cid = note.collectionId
+        if not notes_by_collection[cid] then
+          notes_by_collection[cid] = {}
+        end
+        table.insert(notes_by_collection[cid], note)
+      end
+      
+      -- Step 4: Sort notes alphabetically by title within each collection
+      for _, note_list in pairs(notes_by_collection) do
+        table.sort(note_list, function(a, b)
+          return a.title < b.title
+        end)
+      end
+      
+      -- Step 5: Return combined data
+      cb({
+        collections = collections,
+        notes_by_collection = notes_by_collection,
+      }, nil)
+    end)
+  end)
+end
+
 --- Create a new collection
 --- TODO: Implement when needed for explorer actions
 ---@param name string Collection display name

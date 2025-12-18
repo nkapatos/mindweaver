@@ -163,7 +163,7 @@ function M.open_note(note_id)
   -- Check if buffer already exists
   local existing = buffer_manager.get("note", note_id)
   if existing and vim.api.nvim_buf_is_valid(existing) then
-    vim.api.nvim_set_current_buf(existing)
+    buffer_manager.switch_to_buffer(existing)
     return
   end
 
