@@ -29,6 +29,17 @@ function M.check()
     })
   end
 
+  -- Check nui.nvim
+  local has_nui, _ = pcall(require, "nui.split")
+  if has_nui then
+    vim.health.ok("nui.nvim is installed")
+  else
+    vim.health.error("nui.nvim is required but not found", {
+      "Install via your plugin manager:",
+      "  { 'MunifTanjim/nui.nvim' }",
+    })
+  end
+
   -- Check if plugin is configured
   local config_ok, config = pcall(require, "neoweaver._internal.config")
   if not config_ok then

@@ -83,3 +83,27 @@ end, {
 vim.api.nvim_create_user_command("NeoweaverToggleDebug", function()
   require("neoweaver._internal.api").toggle_debug()
 end, { desc = "Toggle debug logging" })
+
+-- Explorer commands
+vim.api.nvim_create_user_command("NeoweaverExplorer", function(opts)
+  local explorer = require("neoweaver._internal.explorer")
+  local action = opts.args ~= "" and opts.args or "toggle"
+
+  if action == "open" then
+    explorer.open()
+  elseif action == "close" then
+    explorer.close()
+  elseif action == "toggle" then
+    explorer.toggle()
+  elseif action == "focus" then
+    explorer.focus()
+  else
+    vim.notify("Invalid action: " .. action .. ". Use: open, close, toggle, focus", vim.log.levels.WARN)
+  end
+end, {
+  nargs = "?",
+  complete = function()
+    return { "open", "close", "toggle", "focus" }
+  end,
+  desc = "Neoweaver collections explorer",
+})

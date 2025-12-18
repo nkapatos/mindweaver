@@ -6,6 +6,7 @@ Neovim client for MindWeaver. Provides note management commands inside Neovim, c
 
 - **Neovim 0.11+** - Required for plugin functionality
 - **[plenary.nvim](https://github.com/nvim-lua/plenary.nvim)** - Required dependency for HTTP requests
+- **[nui.nvim](https://github.com/MunifTanjim/nui.nvim)** - Required dependency for UI components
 
 ## Quick Start
 
@@ -24,7 +25,10 @@ return {
       "NeoweaverServerUse",
       "NeoweaverToggleDebug",
     },
-    dependencies = { "nvim-lua/plenary.nvim" },
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "MunifTanjim/nui.nvim",
+    },
     opts = {
       allow_multiple_empty_notes = false,
       api = {
