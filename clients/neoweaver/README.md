@@ -15,7 +15,15 @@ Install with your preferred package manager. Example using **lazy.nvim**:
 return {
   {
     dir = "path/to/neoweaver",
-    cmd = { "NotesList", "NotesOpen", "NotesNew", "MwServerUse", "MwToggleDebug" },
+    cmd = {
+      "NeoweaverNotesList",
+      "NeoweaverNotesOpen",
+      "NeoweaverNotesNew",
+      "NeoweaverNotesNewWithTitle",
+      "NeoweaverNotesTitle",
+      "NeoweaverServerUse",
+      "NeoweaverToggleDebug",
+    },
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
       allow_multiple_empty_notes = false,
@@ -24,6 +32,9 @@ return {
           local = { url = "http://localhost:9421", default = true },
         },
         debug_info = true,
+      },
+      keymaps = {
+        enabled = true,
       },
     },
   },
@@ -82,27 +93,53 @@ api = {
 ### `api.debug_info`
 
 - **Type:** boolean (default: `true`)
-- Toggles API logging. Can be toggled at runtime with `:MwToggleDebug`.
+- Toggles API logging. Can be toggled at runtime with `:NeoweaverToggleDebug`.
+
+### `keymaps`
+
+- **Type:** table (default: disabled)
+- Enable built-in defaults by passing `keymaps = { enabled = true }`.
+- Override any mapping by providing the `notes` or `quicknotes` tables.
+
+```lua
+keymaps = {
+  enabled = true,
+  notes = {
+    list = "<leader>nl",
+    open = "<leader>no",
+    new = "<leader>nn",
+    new_with_title = "<leader>nN",
+    title = "<leader>nt",
+    delete = "<leader>nd",
+  },
+}
+```
 
 ## Commands
 
-| Command          | Description                                     |
-| ---------------- | ----------------------------------------------- |
-| `:NotesList`     | Fetch the first page of notes and open a picker |
-| `:NotesOpen`     | Open a note by ID                               |
-| `:NotesNew`      | Create a new note on the server and open buffer |
-| `:MwServerUse`   | Switch to a configured backend server           |
-| `:MwToggleDebug` | Toggle API debug notifications                  |
+| Command                    | Description                            |
+| ------------------------- | -------------------------------------- |
+| `:NeoweaverNotesList`     | Fetch the first page of notes and pick |
+| `:NeoweaverNotesOpen`     | Open a note by ID                      |
+| `:NeoweaverNotesNew`      | Create a server-backed untitled note   |
+| `:NeoweaverNotesNewWithTitle` | Prompt for a title before creating |
+| `:NeoweaverNotesTitle`    | Edit the active note title             |
+| `:NeoweaverNotesDelete`   | Delete a note by ID                    |
+| `:NeoweaverServerUse`     | Switch to a configured backend server  |
+| `:NeoweaverToggleDebug`   | Toggle API debug notifications         |
 
 ## Keymaps
 
-Default mappings (can be remapped):
+Default mappings (can be remapped individually):
 
-| Mapping      | Action             |
-| ------------ | ------------------ |
-| `<leader>nl` | `NotesList`        |
-| `<leader>no` | Prompt for note ID |
-| `<leader>nn` | `NotesNew`         |
+| Mapping        | Action                          |
+| -------------- | -------------------------------- |
+| `<leader>nl`   | `NeoweaverNotesList`            |
+| `<leader>no`   | Prompt for note ID (open/edit)  |
+| `<leader>nn`   | `NeoweaverNotesNew`             |
+| `<leader>nN`   | `NeoweaverNotesNewWithTitle`    |
+| `<leader>nt`   | `NeoweaverNotesTitle`           |
+| `<leader>nd`   | `NeoweaverNotesDelete`          |
 
 ## Architecture
 

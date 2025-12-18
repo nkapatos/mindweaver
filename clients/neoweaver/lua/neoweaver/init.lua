@@ -88,6 +88,22 @@ function M.setup_keymaps()
   local km_notes = config.keymaps.notes
   local km_quick = config.keymaps.quicknotes
 
+  local function prompt_note_id(prompt, action)
+    vim.ui.input({ prompt = prompt }, function(input)
+      if input == nil or input == "" then
+        return
+      end
+
+      local id = tonumber(input)
+      if not id then
+        vim.notify("Invalid note ID", vim.log.levels.WARN)
+        return
+      end
+
+      action(id)
+    end)
+  end
+
   -- Standard notes keymaps
   if km_notes.list then
     vim.keymap.set("n", km_notes.list, notes.list_notes, { desc = "List notes" })
@@ -95,45 +111,36 @@ function M.setup_keymaps()
 
   if km_notes.open then
     vim.keymap.set("n", km_notes.open, function()
-      vim.ui.input({ prompt = "Note ID: " }, function(input)
-        local id = tonumber(input)
-        if id then
-          notes.open_note(id)
-        end
-      end)
+      prompt_note_id("Note ID:", notes.open_note)
     end, { desc = "Open note by ID" })
   end
 
   if km_notes.edit then
     vim.keymap.set("n", km_notes.edit, function()
-      vim.ui.input({ prompt = "Note ID: " }, function(input)
-        local id = tonumber(input)
-        if id then
-          notes.open_note(id)
-        end
-      end)
+      prompt_note_id("Note ID:", notes.open_note)
     end, { desc = "Edit note by ID" })
+  end
+
+  if km_notes.title then
+    vim.keymap.set("n", km_notes.title, notes.edit_title, { desc = "Edit current note title" })
   end
 
   if km_notes.new then
     vim.keymap.set("n", km_notes.new, notes.create_note, { desc = "Create new note" })
   end
 
+  if km_notes.new_with_title then
+    vim.keymap.set("n", km_notes.new_with_title, notes.create_note_with_title, { desc = "Create note with title" })
+  end
+
   if km_notes.delete then
     vim.keymap.set("n", km_notes.delete, function()
-      vim.ui.input({ prompt = "Note ID to delete: " }, function(input)
-        local id = tonumber(input)
-        if id then
-          notes.delete_note(id)
-        end
-      end)
+      prompt_note_id("Note ID to delete:", notes.delete_note)
     end, { desc = "Delete note by ID" })
   end
 
   if km_notes.meta then
-    vim.keymap.set("n", km_notes.meta, function()
-      notes.edit_metadata()
-    end, { desc = "Edit note metadata (TODO: not implemented)" })
+    vim.keymap.set("n", km_notes.meta, notes.edit_metadata, { desc = "Edit note metadata (TODO: not implemented)" })
   end
 
   -- Quicknotes keymaps

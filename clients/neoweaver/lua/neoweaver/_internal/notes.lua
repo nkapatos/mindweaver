@@ -41,12 +41,8 @@ local allow_multiple_empty_notes = false
 -- This is called once during setup
 local function register_handlers()
   buffer_manager.register_type("note", {
-    on_save = function(bufnr, id)
-      M.save_note(bufnr, id)
-    end,
-    on_close = function(bufnr, id)
-      -- Cleanup if needed in future
-    end,
+    on_save = M.save_note,
+    on_close = function() end,
   })
 end
 
@@ -105,10 +101,18 @@ function M.create_note()
   end
   last_create_time = now
 
+  -- Attempt to reuse the current note's collection when available
+  local collection_id = 1
+  local current_buf = vim.api.nvim_get_current_buf()
+  local base_entity = buffer_manager.get_entity(current_buf)
+  if base_entity and base_entity.type == "note" then
+    collection_id = vim.b[current_buf].note_collection_id or collection_id
+  end
+
   -- Call NewNote endpoint - server generates title automatically
   ---@type mind.v3.NewNoteRequest
   local req = {
-    collectionId = 1, -- Default collection (optional, server defaults to 1)
+    collectionId = collection_id,
   }
 
   api.notes.new(req, function(res)
@@ -205,8 +209,7 @@ end
 --- Edit note metadata (frontmatter)
 -- TODO: Implement metadata editing functionality
 -- This will allow editing YAML frontmatter (tags, custom fields, etc.)
----@param note_id? integer Optional note ID (if nil, uses current buffer)
-function M.edit_metadata(note_id)
+function M.edit_metadata()
   vim.notify("Metadata editing not yet implemented in v3", vim.log.levels.WARN)
   -- TODO: Implementation steps:
   -- 1. Get note_id from current buffer if not provided
@@ -322,14 +325,12 @@ local function handle_conflict(bufnr, note_id)
     -- Defer conflict count check until diff is initialized
     vim.defer_fn(function()
       local conflict_count = diff.get_conflict_count(bufnr)
-      local msg = string.format(
-        "⚠️  %d conflict%s detected\n"
-          .. "Resolve: gh (server) | gl (local) | gb (both)\n"
-          .. "Navigate: ]c (next) | [c (prev)\n"
-          .. "Save: :w (retry)",
-        conflict_count,
-        conflict_count > 1 and "s" or ""
-      )
+      local msg = table.concat({
+        string.format("⚠️  %d conflict%s detected", conflict_count, conflict_count > 1 and "s" or ""),
+        "Resolve: gh (server) | gl (local) | gb (both)",
+        "Navigate: ]c (next) | [c (prev)",
+        "Save: :w (retry)",
+      }, "\n")
       vim.notify(msg, vim.log.levels.WARN)
     end, 100)
 
