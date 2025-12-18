@@ -4,12 +4,17 @@
 local M = {}
 
 local window = require("neoweaver._internal.explorer.window")
+local tree = require("neoweaver._internal.explorer.tree")
 
 --- Open the explorer sidebar
 ---@param opts? { position?: "left"|"right", size?: number }
 function M.open(opts)
-  window.open(opts)
-  -- TODO: Initialize tree and render
+  local split = window.open(opts)
+  
+  -- Initialize and render tree if we just opened the window
+  if split and split.bufnr then
+    tree.init(split.bufnr)
+  end
 end
 
 --- Close the explorer sidebar
@@ -20,8 +25,11 @@ end
 --- Toggle the explorer sidebar
 ---@param opts? { position?: "left"|"right", size?: number }
 function M.toggle(opts)
-  window.toggle(opts)
-  -- TODO: Initialize tree if opening
+  if window.is_open() then
+    window.close()
+  else
+    M.open(opts)
+  end
 end
 
 --- Focus the explorer window (if open)
