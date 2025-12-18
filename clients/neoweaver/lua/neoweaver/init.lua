@@ -192,4 +192,7 @@ function M.get_config()
   return require("neoweaver._internal.config").get()
 end
 
+--- Explorer module for browsing collections and notes
+M.explorer = require("neoweaver._internal.explorer")
+
 return M
