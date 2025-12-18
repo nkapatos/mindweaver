@@ -47,6 +47,10 @@ vim.api.nvim_create_user_command("NotesDelete", function(opts)
 	end
 end, { nargs = 1, desc = "Delete note by ID" })
 
+vim.api.nvim_create_user_command("NotesTitle", function()
+	require("neoweaver._internal.notes").edit_title()
+end, { desc = "Edit current note title" })
+
 -- TODO: Metadata editing (not yet implemented in v3)
 vim.api.nvim_create_user_command("NotesMeta", function(opts)
 	local id = opts.args ~= "" and tonumber(opts.args) or nil

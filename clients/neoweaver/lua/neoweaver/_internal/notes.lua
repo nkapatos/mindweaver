@@ -216,6 +216,47 @@ function M.edit_metadata(note_id)
   -- 5. On save, update note with new frontmatter
 end
 
+--- Edit the current note title and persist immediately
+--- Uses buffer_manager to ensure buffer is managed and saves body + title together
+function M.edit_title()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local entity = buffer_manager.get_entity(bufnr)
+
+  if not entity or entity.type ~= "note" then
+    vim.notify("Current buffer is not a managed note", vim.log.levels.WARN)
+    return
+  end
+
+  local note_id = entity.id
+  local current_title = vim.b[bufnr].note_title or "Untitled"
+
+  vim.ui.input({
+    prompt = "Edit Title:",
+    default = current_title,
+  }, function(input)
+    if input == nil then
+      return
+    end
+
+    local new_title = vim.trim(input)
+
+    if new_title == "" then
+      vim.notify("Title cannot be empty", vim.log.levels.WARN)
+      return
+    end
+
+    if new_title == current_title then
+      return
+    end
+
+    vim.b[bufnr].note_title = new_title
+    vim.api.nvim_buf_set_name(bufnr, new_title)
+
+    -- Save immediately so server validates duplicates and updates etag/body
+    M.save_note(bufnr, note_id)
+  end)
+end
+
 --- Create a new quicknote in a floating window
 -- TODO: Implement quicknotes functionality
 -- Quicknotes are ephemeral floating windows for rapid note capture
