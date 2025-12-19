@@ -56,6 +56,9 @@ function M.open(config)
   state.split:mount()
   state.is_open = true
 
+  -- Set up status line
+  vim.wo[state.split.winid].statusline = "%{%v:lua.require'neoweaver._internal.explorer.statusline'.get_status()%}"
+
   -- Close on q
   state.split:map("n", "q", function()
     M.close()

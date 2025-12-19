@@ -233,6 +233,11 @@ function M.create(opts)
     vim.api.nvim_set_current_win(target_win)
   end
   vim.api.nvim_set_current_buf(bufnr)
+  
+  -- Setup statusline for the buffer in current window
+  local statusline = require("neoweaver._internal.buffer.statusline")
+  local current_win = vim.api.nvim_get_current_win()
+  statusline.setup(bufnr, current_win)
 
   return bufnr
 end

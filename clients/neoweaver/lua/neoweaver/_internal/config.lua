@@ -6,6 +6,9 @@ local M = {}
 
 M.defaults = {
   allow_multiple_empty_notes = false,
+  explorer = {
+    show_notifications = true, -- Show notifications on explorer refresh
+  },
   keymaps = {
     enabled = false, -- Keymaps are opt-in
     notes = {
@@ -41,6 +44,11 @@ function M.apply(opts)
 
   if opts.allow_multiple_empty_notes ~= nil then
     M.current.allow_multiple_empty_notes = opts.allow_multiple_empty_notes == true
+  end
+
+  -- Merge explorer configuration
+  if opts.explorer ~= nil then
+    M.current.explorer = vim.tbl_extend("force", M.current.explorer, opts.explorer)
   end
 
   -- Merge keymap configuration
