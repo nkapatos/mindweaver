@@ -4,47 +4,364 @@
     "results": [
       {
         "test": {
-          "filename": "notes/4-replace-note-no-meta.bru"
+          "filename": "collections/3-list-collections.bru"
         },
         "request": {
           "method": "POST",
-          "url": "http://localhost:9421/mind.v3.NotesService/ReplaceNote",
+          "url": "http://localhost:9421/mind.v3.CollectionsService/ListCollections",
           "headers": {
             "Content-Type": "application/json"
           },
-          "data": "{\n  \"id\": 23,\n  \"title\": \"Updated Note - No Metadata\",\n  \"body\": \"# Updated Content\\n\\nThis note has NO frontmatter.\\n\\nAll metadata should be removed.\",\n  \"description\": \"Updated - no metadata\"\n}"
+          "data": "{\n  \"page_size\": 50\n}"
         },
         "response": {
-          "status": 409,
-          "statusText": "Conflict",
+          "status": 200,
+          "statusText": "OK",
           "headers": {
             "accept-encoding": "gzip",
             "content-type": "application/json",
-            "x-request-id": "dca9da46-c3d2-4999-a55e-8b8dd5f2dbe4",
-            "date": "Wed, 10 Dec 2025 15:43:38 GMT",
-            "content-length": "466"
+            "x-request-id": "e874d982-ecc4-4212-bebf-5110052caa45",
+            "date": "Thu, 18 Dec 2025 19:10:23 GMT",
+            "content-length": "1194"
           },
           "data": {
-            "code": "already_exists",
-            "message": "notes already exists: title=Updated Note - No Metadata",
-            "details": [
+            "collections": [
               {
-                "type": "google.rpc.ErrorInfo",
-                "value": "ChdSRVNPVVJDRV9BTFJFQURZX0VYSVNUUxITbWluZC5taW5kd2VhdmVyLmNvbRoOCgVmaWVsZBIFdGl0bGUaIwoFdmFsdWUSGlVwZGF0ZWQgTm90ZSAtIE5vIE1ldGFkYXRhGhEKCHJlc291cmNlEgVub3Rlcw",
-                "debug": {
-                  "reason": "RESOURCE_ALREADY_EXISTS",
-                  "domain": "mind.mindweaver.com",
-                  "metadata": {
-                    "field": "title",
-                    "resource": "notes",
-                    "value": "Updated Note - No Metadata"
-                  }
-                }
+                "name": "collections/1",
+                "id": "1",
+                "displayName": "default",
+                "path": "default",
+                "description": "Default collection for uncategorized notes",
+                "position": "0",
+                "isSystem": true,
+                "createTime": "2025-12-16T19:28:15Z",
+                "updateTime": "2025-12-16T19:28:15Z"
+              },
+              {
+                "name": "collections/2",
+                "id": "2",
+                "displayName": "inbox",
+                "path": "inbox",
+                "description": "Staging area for imports and refinement",
+                "position": "1",
+                "isSystem": true,
+                "createTime": "2025-12-16T19:28:15Z",
+                "updateTime": "2025-12-16T19:28:15Z"
+              },
+              {
+                "name": "collections/3",
+                "id": "3",
+                "displayName": "Test Collection 1766050593",
+                "path": "test-collection-1766050593",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T09:36:33Z",
+                "updateTime": "2025-12-18T09:36:33Z"
+              },
+              {
+                "name": "collections/4",
+                "id": "4",
+                "displayName": "Work",
+                "path": "work",
+                "description": "Work-related notes and projects",
+                "createTime": "2025-12-18T13:46:03Z",
+                "updateTime": "2025-12-18T13:46:03Z"
+              },
+              {
+                "name": "collections/5",
+                "id": "5",
+                "displayName": "Projects",
+                "parentId": "4",
+                "path": "work/projects",
+                "description": "Active work projects",
+                "createTime": "2025-12-18T13:46:07Z",
+                "updateTime": "2025-12-18T13:46:07Z"
+              },
+              {
+                "name": "collections/6",
+                "id": "6",
+                "displayName": "Meetings",
+                "parentId": "4",
+                "path": "work/meetings",
+                "description": "Meeting notes and agendas",
+                "createTime": "2025-12-18T13:46:11Z",
+                "updateTime": "2025-12-18T13:46:11Z"
+              },
+              {
+                "name": "collections/7",
+                "id": "7",
+                "displayName": "Archive",
+                "parentId": "4",
+                "path": "work/archive",
+                "description": "Archived work materials",
+                "createTime": "2025-12-18T13:46:15Z",
+                "updateTime": "2025-12-18T13:46:15Z"
+              },
+              {
+                "name": "collections/8",
+                "id": "8",
+                "displayName": "Old Ideas",
+                "parentId": "7",
+                "path": "work/archive/old-ideas",
+                "description": "Archived project ideas",
+                "createTime": "2025-12-18T13:46:19Z",
+                "updateTime": "2025-12-18T13:46:19Z"
+              },
+              {
+                "name": "collections/9",
+                "id": "9",
+                "displayName": "Personal",
+                "path": "personal",
+                "description": "Personal notes and thoughts",
+                "createTime": "2025-12-18T13:46:23Z",
+                "updateTime": "2025-12-18T13:46:23Z"
+              },
+              {
+                "name": "collections/10",
+                "id": "10",
+                "displayName": "Journal",
+                "parentId": "9",
+                "path": "personal/journal",
+                "description": "Daily journal entries",
+                "createTime": "2025-12-18T13:46:27Z",
+                "updateTime": "2025-12-18T13:46:27Z"
+              },
+              {
+                "name": "collections/11",
+                "id": "11",
+                "displayName": "Learning",
+                "path": "learning",
+                "description": "Study notes and learning resources",
+                "createTime": "2025-12-18T13:46:30Z",
+                "updateTime": "2025-12-18T13:46:30Z"
+              },
+              {
+                "name": "collections/12",
+                "id": "12",
+                "displayName": "Test Collection 1766067069",
+                "path": "test-collection-1766067069",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:11:09Z",
+                "updateTime": "2025-12-18T14:11:09Z"
+              },
+              {
+                "name": "collections/13",
+                "id": "13",
+                "displayName": "Test Collection 1766067073",
+                "path": "test-collection-1766067073",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:11:13Z",
+                "updateTime": "2025-12-18T14:11:13Z"
+              },
+              {
+                "name": "collections/14",
+                "id": "14",
+                "displayName": "Test Collection 1766067078",
+                "path": "test-collection-1766067078",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:11:18Z",
+                "updateTime": "2025-12-18T14:11:18Z"
+              },
+              {
+                "name": "collections/15",
+                "id": "15",
+                "displayName": "Test Collection 1766067079",
+                "path": "test-collection-1766067079",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:11:19Z",
+                "updateTime": "2025-12-18T14:11:19Z"
+              },
+              {
+                "name": "collections/16",
+                "id": "16",
+                "displayName": "Test Collection 1766067083",
+                "path": "test-collection-1766067083",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:11:23Z",
+                "updateTime": "2025-12-18T14:11:23Z"
+              },
+              {
+                "name": "collections/17",
+                "id": "17",
+                "displayName": "Test Collection 1766067084",
+                "path": "test-collection-1766067084",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:11:24Z",
+                "updateTime": "2025-12-18T14:11:24Z"
+              },
+              {
+                "name": "collections/18",
+                "id": "18",
+                "displayName": "Test Collection 1766067088",
+                "path": "test-collection-1766067088",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:11:29Z",
+                "updateTime": "2025-12-18T14:11:29Z"
+              },
+              {
+                "name": "collections/19",
+                "id": "19",
+                "displayName": "Test Collection 1766067094",
+                "path": "test-collection-1766067094",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:11:34Z",
+                "updateTime": "2025-12-18T14:11:34Z"
+              },
+              {
+                "name": "collections/20",
+                "id": "20",
+                "displayName": "Test Collection 1766067099",
+                "path": "test-collection-1766067099",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:11:40Z",
+                "updateTime": "2025-12-18T14:11:40Z"
+              },
+              {
+                "name": "collections/21",
+                "id": "21",
+                "displayName": "Test Collection 1766067105",
+                "path": "test-collection-1766067105",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:11:45Z",
+                "updateTime": "2025-12-18T14:11:45Z"
+              },
+              {
+                "name": "collections/22",
+                "id": "22",
+                "displayName": "Test Collection 1766067110",
+                "path": "test-collection-1766067110",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:11:50Z",
+                "updateTime": "2025-12-18T14:11:50Z"
+              },
+              {
+                "name": "collections/23",
+                "id": "23",
+                "displayName": "Test Collection 1766067116",
+                "path": "test-collection-1766067116",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:11:56Z",
+                "updateTime": "2025-12-18T14:11:56Z"
+              },
+              {
+                "name": "collections/24",
+                "id": "24",
+                "displayName": "Test Collection 1766067122",
+                "path": "test-collection-1766067122",
+                "description": "A test collection for API testing",
+                "createTime": "2025-12-18T14:12:02Z",
+                "updateTime": "2025-12-18T14:12:02Z"
+              },
+              {
+                "name": "collections/25",
+                "id": "25",
+                "displayName": "Tech",
+                "path": "tech",
+                "description": "Technology notes",
+                "createTime": "2025-12-18T14:12:22Z",
+                "updateTime": "2025-12-18T14:12:22Z"
+              },
+              {
+                "name": "collections/26",
+                "id": "26",
+                "displayName": "Programming",
+                "parentId": "25",
+                "path": "tech/programming",
+                "createTime": "2025-12-18T14:12:27Z",
+                "updateTime": "2025-12-18T14:12:27Z"
+              },
+              {
+                "name": "collections/27",
+                "id": "27",
+                "displayName": "DevOps",
+                "parentId": "25",
+                "path": "tech/devops",
+                "createTime": "2025-12-18T14:12:27Z",
+                "updateTime": "2025-12-18T14:12:27Z"
+              },
+              {
+                "name": "collections/28",
+                "id": "28",
+                "displayName": "Security",
+                "parentId": "25",
+                "path": "tech/security",
+                "createTime": "2025-12-18T14:12:27Z",
+                "updateTime": "2025-12-18T14:12:27Z"
+              },
+              {
+                "name": "collections/29",
+                "id": "29",
+                "displayName": "Go",
+                "parentId": "26",
+                "path": "tech/programming/go",
+                "createTime": "2025-12-18T14:12:31Z",
+                "updateTime": "2025-12-18T14:12:31Z"
+              },
+              {
+                "name": "collections/30",
+                "id": "30",
+                "displayName": "Lua",
+                "parentId": "26",
+                "path": "tech/programming/lua",
+                "createTime": "2025-12-18T14:12:31Z",
+                "updateTime": "2025-12-18T14:12:31Z"
+              },
+              {
+                "name": "collections/31",
+                "id": "31",
+                "displayName": "Books",
+                "path": "books",
+                "createTime": "2025-12-18T14:12:37Z",
+                "updateTime": "2025-12-18T14:12:37Z"
+              },
+              {
+                "name": "collections/32",
+                "id": "32",
+                "displayName": "Fiction",
+                "parentId": "31",
+                "path": "books/fiction",
+                "createTime": "2025-12-18T14:12:37Z",
+                "updateTime": "2025-12-18T14:12:37Z"
+              },
+              {
+                "name": "collections/33",
+                "id": "33",
+                "displayName": "Technical Books",
+                "parentId": "31",
+                "path": "books/technical-books",
+                "createTime": "2025-12-18T14:12:37Z",
+                "updateTime": "2025-12-18T14:12:37Z"
+              },
+              {
+                "name": "collections/34",
+                "id": "34",
+                "displayName": "Recipes",
+                "path": "recipes",
+                "createTime": "2025-12-18T14:12:41Z",
+                "updateTime": "2025-12-18T14:12:41Z"
+              },
+              {
+                "name": "collections/35",
+                "id": "35",
+                "displayName": "Breakfast",
+                "parentId": "34",
+                "path": "recipes/breakfast",
+                "createTime": "2025-12-18T14:12:41Z",
+                "updateTime": "2025-12-18T14:12:41Z"
+              },
+              {
+                "name": "collections/36",
+                "id": "36",
+                "displayName": "Sweets",
+                "parentId": "34",
+                "path": "recipes/sweets",
+                "createTime": "2025-12-18T14:12:41Z",
+                "updateTime": "2025-12-18T14:12:41Z"
               }
-            ]
+            ],
+            "totalSize": 36
           },
-          "url": "http://localhost/mind.v3.NotesService/ReplaceNote",
-          "responseTime": 9
+          "url": "http://localhost/mind.v3.CollectionsService/ListCollections",
+          "responseTime": 13
         },
         "error": null,
         "status": "pass",
@@ -52,46 +369,41 @@
         "testResults": [
           {
             "description": "Status is 200",
-            "status": "fail",
-            "error": "expected 409 to equal 200",
-            "actual": 409,
-            "expected": 200,
-            "uid": "ZdGsf-yPK7IT4QIPN8d2V"
-          },
-          {
-            "description": "Response has correct note ID",
-            "status": "fail",
-            "error": "expected undefined to equal '23'",
-            "expected": "23",
-            "uid": "_Oe4WbXj6gv4yFoXyJIbJ"
-          },
-          {
-            "description": "Body has NO frontmatter",
             "status": "pass",
-            "uid": "TNmdzbeElxaXf5kytnhwM"
+            "uid": "xKPe8-6QJkCtiB9eAivLd"
+          },
+          {
+            "description": "Response has collections array",
+            "status": "pass",
+            "uid": "nmmYXp1G-jY8bO3NAzfO2"
+          },
+          {
+            "description": "Collections list is not empty",
+            "status": "pass",
+            "uid": "nY6_o4MSe2FP1bpyoXLxF"
           }
         ],
         "preRequestTestResults": [],
         "postResponseTestResults": [],
         "shouldStopRunnerExecution": false,
-        "runDuration": 0.12893875,
-        "name": "Replace Note (No Frontmatter)",
-        "path": "notes/4-replace-note-no-meta",
+        "runDuration": 0.254305041,
+        "name": "List Collections",
+        "path": "collections/3-list-collections",
         "iterationIndex": 0
       }
     ],
     "summary": {
       "totalRequests": 1,
-      "passedRequests": 0,
-      "failedRequests": 1,
+      "passedRequests": 1,
+      "failedRequests": 0,
       "errorRequests": 0,
       "skippedRequests": 0,
       "totalAssertions": 0,
       "passedAssertions": 0,
       "failedAssertions": 0,
       "totalTests": 3,
-      "passedTests": 1,
-      "failedTests": 2,
+      "passedTests": 3,
+      "failedTests": 0,
       "totalPreRequestTests": 0,
       "passedPreRequestTests": 0,
       "failedPreRequestTests": 0,
