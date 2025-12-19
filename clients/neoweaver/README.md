@@ -158,6 +158,16 @@ lua/neoweaver/
 
 The plugin expects a running MindWeaver server exposing the v3 RPC API.
 
+## Acknowledgements
+
+This plugin builds upon excellent work from the Neovim community:
+
+- **[nui.nvim](https://github.com/MunifTanjim/nui.nvim)** by [@MunifTanjim](https://github.com/MunifTanjim) - Provides the UI primitives (NuiTree, NuiSplit, NuiLine) that power the explorer interface. The clean API design and robust buffer/window management made building our tree explorer straightforward and reliable.
+
+- **[neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim)** - An excellent file explorer that served as a reference implementation for managing the NuiSplit and NuiTree lifecycle. Their approach to buffer management, state preservation, and tree rendering patterns provided valuable insights during our architecture design.
+
+Special thanks to both projects for their well-documented code and thoughtful API design, which made it possible to build a robust, maintainable explorer with proper separation of concerns.
+
 ## See Also
 
 - [Root README](../../README.md) - Project overview
