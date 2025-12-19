@@ -1,8 +1,8 @@
 version: '3'
 
 vars:
-  PROTO_DIR: ../../proto/mind/v3
-  TS_GEN_DIR: gen/ts
+  PROTO_DIR: ../../proto
+  TS_GEN_DIR: tmp
   TYPES_OUTPUT: lua/neoweaver/types.lua
   SCRIPTS_DIR: scripts
 
@@ -11,18 +11,18 @@ tasks:
     desc: Generate TypeScript types from proto files
     dir: '{{.PROTO_DIR}}'
     cmds:
-      - buf generate
+      - buf generate --template '{"version":"v2","plugins":[{"remote":"buf.build/bufbuild/es","out":"../clients/neoweaver/tmp","opt":["target=ts"]}],"inputs":[{"directory":"mind"}]}'
     sources:
-      - '*.proto'
+      - mind/v3/*.proto
     generates:
-      - ../../../clients/neoweaver/gen/ts/v3/*_pb.ts
+      - ../clients/neoweaver/tmp/v3/*_pb.ts
 
   types:ts-to-lua:
     desc: Convert TypeScript types to Lua annotations
     deps:
       - types:proto
     cmds:
-      - '{{.SCRIPTS_DIR}}/ts-to-lua.sh {{.TS_GEN_DIR}} {{.TYPES_OUTPUT}}'
+      - bun run {{.SCRIPTS_DIR}}/ts-to-lua.ts {{.TS_GEN_DIR}} {{.TYPES_OUTPUT}}
     sources:
       - '{{.TS_GEN_DIR}}/v3/*_pb.ts'
     generates:
