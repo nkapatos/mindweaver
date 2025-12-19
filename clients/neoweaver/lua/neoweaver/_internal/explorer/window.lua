@@ -1,5 +1,6 @@
 --- Window management for the neoweaver explorer
 --- Manages the NuiSplit sidebar
+--- Simple approach: let NuiSplit manage buffer lifecycle
 ---
 local Split = require("nui.split")
 
@@ -27,7 +28,7 @@ local default_config = {
 
 --- Create and mount the explorer split
 ---@param config? ExplorerWindowConfig
----@return NuiSplit
+---@return NuiSplit|nil
 function M.open(config)
   config = vim.tbl_deep_extend("force", default_config, config or {})
 
@@ -35,6 +36,7 @@ function M.open(config)
     return state.split
   end
 
+  -- Let NuiSplit create and manage everything
   state.split = Split({
     relative = "editor",
     position = config.position,

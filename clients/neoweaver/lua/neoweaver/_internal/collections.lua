@@ -206,6 +206,225 @@ function M.rename_collection(collection_id, new_name, cb)
   M.update_collection(collection_id, { displayName = new_name }, cb)
 end
 
+--- Build generic tree nodes from collections and notes data
+--- Recursive function that builds collection hierarchy with notes
+---@param collections_data table[] Flat list of collections
+---@param notes_by_collection table<number, table[]> Notes grouped by collection_id
+---@param parent_id number|nil Parent collection ID (nil for roots)
+---@return table[] Array of generic tree nodes
+local function build_collection_nodes_recursive(collections_data, notes_by_collection, parent_id)
+  local nodes = {}
+  
+  -- Find all collections with the given parent_id
+  for _, collection in ipairs(collections_data) do
+    if collection.parentId == parent_id then
+      local children = {}
+      
+      -- Add note children first
+      local collection_notes = notes_by_collection[collection.id] or {}
+      for _, note in ipairs(collection_notes) do
+        table.insert(children, {
+          id = "note:" .. note.id,
+          type = "note",
+          name = note.title,
+          icon = "󰈙",
+          highlight = "String",
+          note_id = note.id,
+          collection_id = note.collectionId,
+          data = note,
+        })
+      end
+      
+      -- Then recursively add child collections
+      local child_collections = build_collection_nodes_recursive(collections_data, notes_by_collection, collection.id)
+      vim.list_extend(children, child_collections)
+      
+      -- Create collection node
+      local node = {
+        id = "collection:" .. collection.id,
+        type = "collection",
+        name = collection.displayName,
+        icon = collection.isSystem and "󰉖" or "󰉋",
+        highlight = collection.isSystem and "Special" or "Directory",
+        collection_id = collection.id,
+        is_system = collection.isSystem or false,
+        data = collection,
+        children = children,
+      }
+      
+      table.insert(nodes, node)
+    end
+  end
+  
+  return nodes
+end
+
+--- Build tree nodes for collections mode (with server root)
+--- Fetches collections and notes, then builds generic tree node structure
+---@param callback fun(nodes: table[]|nil, error: table|nil, stats: { collections: number, notes: number }|nil)
+function M.build_tree_nodes(callback)
+  -- Fetch collections with notes
+  M.list_collections_with_notes({}, function(data, err)
+    if err then
+      callback(nil, err, nil)
+      return
+    end
+    
+    -- Handle empty collections
+    if not data or not data.collections or #data.collections == 0 then
+      callback({}, nil, { collections = 0, notes = 0 })
+      return
+    end
+    
+    -- Build collection hierarchy
+    local collection_nodes = build_collection_nodes_recursive(data.collections, data.notes_by_collection or {}, nil)
+    
+    -- Wrap in server node
+    local api_mod = require("neoweaver._internal.api")
+    local servers = api_mod.config.servers
+    local current_server = api_mod.config.current_server
+    local root_nodes = {}
+    
+    if current_server and servers[current_server] then
+      local server_node = {
+        id = "server:" .. current_server,
+        type = "server",
+        name = current_server,
+        icon = "󰒋",
+        highlight = "Title",
+        server_name = current_server,
+        server_url = servers[current_server].url,
+        is_default = true,
+        children = collection_nodes,
+      }
+      table.insert(root_nodes, server_node)
+    else
+      -- Fallback: show collections directly
+      root_nodes = collection_nodes
+    end
+    
+    -- Count notes
+    local note_count = 0
+    if data.notes_by_collection then
+      for _, note_list in pairs(data.notes_by_collection) do
+        note_count = note_count + #note_list
+      end
+    end
+    
+    -- Return nodes and stats
+    callback(root_nodes, nil, {
+      collections = #data.collections,
+      notes = note_count,
+    })
+  end)
+end
+
+--- Handle collection create action
+---@param node table Tree node
+---@param refresh_callback fun() Callback to refresh tree after action
+function M.handle_create(node, refresh_callback)
+  -- Allow creating collections under:
+  -- 1. Server nodes (creates root-level collection with no parent)
+  -- 2. Collection nodes (creates child collection)
+  if node.type ~= "server" and node.type ~= "collection" then
+    vim.notify("Can only create collections under servers or other collections", vim.log.levels.WARN)
+    return
+  end
+  
+  -- Determine parent_id: nil for server nodes, collection_id for collection nodes
+  local parent_id = nil
+  if node.type == "collection" then
+    parent_id = node.collection_id
+  end
+  
+  -- Prompt for collection name
+  vim.ui.input({ prompt = "New collection name: " }, function(name)
+    if not name or name == "" then
+      return
+    end
+    
+    M.create_collection(name, parent_id, function(collection, err)
+      if err then
+        vim.notify("Failed to create collection: " .. (err.message or vim.inspect(err)), vim.log.levels.ERROR)
+        return
+      end
+      
+      vim.notify("Created collection: " .. collection.displayName, vim.log.levels.INFO)
+      refresh_callback()
+    end)
+  end)
+end
+
+--- Handle collection rename action
+---@param node table Tree node
+---@param refresh_callback fun() Callback to refresh tree after action
+function M.handle_rename(node, refresh_callback)
+  -- Only allow renaming collections
+  if node.type ~= "collection" then
+    vim.notify("Can only rename collections", vim.log.levels.WARN)
+    return
+  end
+  
+  -- Don't allow renaming system collections
+  if node.is_system then
+    vim.notify("Cannot rename system collections", vim.log.levels.WARN)
+    return
+  end
+  
+  -- Prompt for new name
+  vim.ui.input({ prompt = "Rename to: ", default = node.name }, function(new_name)
+    if not new_name or new_name == "" or new_name == node.name then
+      return
+    end
+    
+    M.rename_collection(node.collection_id, new_name, function(collection, err)
+      if err then
+        vim.notify("Failed to rename collection: " .. (err.message or vim.inspect(err)), vim.log.levels.ERROR)
+        return
+      end
+      
+      vim.notify("Renamed collection to: " .. collection.displayName, vim.log.levels.INFO)
+      refresh_callback()
+    end)
+  end)
+end
+
+--- Handle collection delete action
+---@param node table Tree node
+---@param refresh_callback fun() Callback to refresh tree after action
+function M.handle_delete(node, refresh_callback)
+  -- Only allow deleting collections
+  if node.type ~= "collection" then
+    vim.notify("Can only delete collections", vim.log.levels.WARN)
+    return
+  end
+  
+  -- Don't allow deleting system collections
+  if node.is_system then
+    vim.notify("Cannot delete system collections", vim.log.levels.WARN)
+    return
+  end
+  
+  -- Confirm deletion
+  vim.ui.input({ 
+    prompt = "Delete collection '" .. node.name .. "'? (y/N): " 
+  }, function(confirm)
+    if confirm ~= "y" and confirm ~= "Y" then
+      return
+    end
+    
+    M.delete_collection(node.collection_id, function(_, err)
+      if err then
+        vim.notify("Failed to delete collection: " .. (err.message or vim.inspect(err)), vim.log.levels.ERROR)
+        return
+      end
+      
+      vim.notify("Deleted collection: " .. node.name, vim.log.levels.INFO)
+      refresh_callback()
+    end)
+  end)
+end
+
 function M.setup(opts)
   opts = opts or {}
   -- Future: Configuration options for collections
