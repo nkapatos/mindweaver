@@ -237,34 +237,36 @@ local function setup_keymaps(bufnr, tree)
   end, vim.tbl_extend("force", map_opts, { buffer = bufnr, desc = "Delete item" }))
 end
 
+--- Helper to set buffer lines (handles modifiable state)
+---@param bufnr number
+---@param lines string[]
+local function set_buffer_lines(bufnr, lines)
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+end
+
 --- Load collections with notes and render tree
 --- Async function that fetches collections and notes from API
 ---@param bufnr number Buffer to render tree in
 function M.load_and_render(bufnr)
   state.bufnr = bufnr
   
-  -- Temporarily make buffer modifiable for loading message
-  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Loading collections and notes..." })
-  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  -- Show loading indicator
+  set_buffer_lines(bufnr, { "Loading collections and notes..." })
   
   -- Fetch collections with notes from API (orchestrated call)
   collections.list_collections_with_notes({}, function(data, err)
     if err then
-      -- Clear loading message
-      vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-      vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-      -- Show error notification only (like notes module)
+      -- Clear loading message and show error
+      set_buffer_lines(bufnr, {})
       vim.notify("Failed to load collections: " .. vim.inspect(err), vim.log.levels.ERROR)
       return
     end
     
     -- Handle empty collections
     if not data or not data.collections or #data.collections == 0 then
-      vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No collections found" })
-      vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+      set_buffer_lines(bufnr, { "No collections found" })
       vim.notify("No collections found", vim.log.levels.INFO)
       return
     end
@@ -273,6 +275,7 @@ function M.load_and_render(bufnr)
     state.collections = data.collections
     
     -- Build and render tree with notes
+    -- NuiTree.render() handles modifiable state automatically
     state.tree = M.build_tree(bufnr, data.collections, data.notes_by_collection)
     setup_keymaps(bufnr, state.tree)
     state.tree:render()
@@ -291,10 +294,8 @@ end
 ---@param bufnr number
 function M.refresh(bufnr)
   if state.bufnr == bufnr then
-    -- Temporarily make buffer modifiable for loading indicator
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Refreshing collections and notes..." })
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+    -- Show loading indicator
+    set_buffer_lines(bufnr, { "Refreshing collections and notes..." })
     
     -- Re-fetch collections with notes from API (orchestrated call)
     collections.list_collections_with_notes({}, function(data, err)
@@ -307,6 +308,7 @@ function M.refresh(bufnr)
       state.collections = data.collections
       state.tree = M.build_tree(bufnr, data.collections, data.notes_by_collection)
       setup_keymaps(bufnr, state.tree)
+      -- NuiTree.render() handles modifiable state automatically
       state.tree:render()
       
       vim.notify("Collections and notes refreshed", vim.log.levels.INFO)
