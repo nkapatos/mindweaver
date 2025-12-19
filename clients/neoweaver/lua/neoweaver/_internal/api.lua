@@ -250,6 +250,10 @@ end
 
 ---@class CollectionsMethods Collections service methods
 ---@field list fun(req: mind.v3.ListCollectionsRequest, cb: fun(res: ApiResponse)) List collections
+---@field get fun(req: mind.v3.GetCollectionRequest, cb: fun(res: ApiResponse)) Get a collection
+---@field create fun(req: mind.v3.CreateCollectionRequest, cb: fun(res: ApiResponse)) Create a collection
+---@field update fun(req: mind.v3.UpdateCollectionRequest, cb: fun(res: ApiResponse)) Update a collection
+---@field delete fun(req: mind.v3.DeleteCollectionRequest, cb: fun(res: ApiResponse)) Delete a collection
 
 -- Collections Service
 ---@type CollectionsMethods
@@ -260,6 +264,46 @@ M.collections = {
   list = function(req, cb)
     request("GET", "/mind.v3.CollectionsService/ListCollections", {
       body = vim.json.encode(req or {}),
+      headers = { ["Content-Type"] = "application/json" },
+    }, cb)
+  end,
+
+  -- POST /mind.v3.CollectionsService/GetCollection
+  -- Request: mind.v3.GetCollectionRequest
+  -- Response: mind.v3.Collection
+  get = function(req, cb)
+    request("GET", "/mind.v3.CollectionsService/GetCollection", {
+      body = vim.json.encode(req),
+      headers = { ["Content-Type"] = "application/json" },
+    }, cb)
+  end,
+
+  -- POST /mind.v3.CollectionsService/CreateCollection
+  -- Request: mind.v3.CreateCollectionRequest
+  -- Response: mind.v3.Collection
+  create = function(req, cb)
+    request("POST", "/mind.v3.CollectionsService/CreateCollection", {
+      body = vim.json.encode(req),
+      headers = { ["Content-Type"] = "application/json" },
+    }, cb)
+  end,
+
+  -- POST /mind.v3.CollectionsService/UpdateCollection
+  -- Request: mind.v3.UpdateCollectionRequest
+  -- Response: mind.v3.Collection
+  update = function(req, cb)
+    request("PUT", "/mind.v3.CollectionsService/UpdateCollection", {
+      body = vim.json.encode(req),
+      headers = { ["Content-Type"] = "application/json" },
+    }, cb)
+  end,
+
+  -- POST /mind.v3.CollectionsService/DeleteCollection
+  -- Request: mind.v3.DeleteCollectionRequest
+  -- Response: google.protobuf.Empty
+  delete = function(req, cb)
+    request("DELETE", "/mind.v3.CollectionsService/DeleteCollection", {
+      body = vim.json.encode(req),
       headers = { ["Content-Type"] = "application/json" },
     }, cb)
   end,
