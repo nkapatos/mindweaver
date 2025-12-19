@@ -102,35 +102,108 @@ function M.list_collections_with_notes(opts, cb)
 end
 
 --- Create a new collection
---- TODO: Implement when needed for explorer actions
 ---@param name string Collection display name
----@param parent_id? string Parent collection ID (nil for root)
+---@param parent_id? number Parent collection ID (nil for root)
 ---@param cb fun(collection: table|nil, error: table|nil) Callback with created collection or error
 function M.create_collection(name, parent_id, cb)
-  vim.notify("Collection creation not yet implemented", vim.log.levels.WARN)
-  -- TODO: Implementation
-  -- api.collections.create({ displayName = name, parentId = parent_id }, cb)
+  ---@type mind.v3.CreateCollectionRequest
+  local req = {
+    displayName = name,
+  }
+  
+  if parent_id then
+    req.parentId = parent_id
+  end
+  
+  api.collections.create(req, function(res)
+    if res.error then
+      cb(nil, res.error)
+      return
+    end
+    
+    ---@type mind.v3.Collection
+    local collection = res.data
+    cb(collection, nil)
+  end)
 end
 
 --- Delete a collection
---- TODO: Implement when needed for explorer actions
----@param collection_id string Collection ID to delete
+---@param collection_id number Collection ID to delete
 ---@param cb fun(success: boolean, error: table|nil) Callback
 function M.delete_collection(collection_id, cb)
-  vim.notify("Collection deletion not yet implemented", vim.log.levels.WARN)
-  -- TODO: Implementation
-  -- api.collections.delete({ id = collection_id }, cb)
+  ---@type mind.v3.DeleteCollectionRequest
+  local req = {
+    id = collection_id,
+  }
+  
+  api.collections.delete(req, function(res)
+    if res.error then
+      cb(false, res.error)
+      return
+    end
+    
+    cb(true, nil)
+  end)
 end
 
---- Rename a collection
---- TODO: Implement when needed for explorer actions
----@param collection_id string Collection ID to rename
+--- Update a collection (rename and/or move)
+---@param collection_id number Collection ID to update
+---@param opts { displayName?: string, parentId?: number, description?: string, position?: number }
+---@param cb fun(collection: table|nil, error: table|nil) Callback
+function M.update_collection(collection_id, opts, cb)
+  -- First fetch current collection to get current values
+  api.collections.get({ id = collection_id }, function(get_res)
+    if get_res.error then
+      cb(nil, get_res.error)
+      return
+    end
+    
+    local current = get_res.data
+    
+    ---@type mind.v3.UpdateCollectionRequest
+    local req = {
+      id = collection_id,
+      displayName = opts.displayName or current.displayName,
+    }
+    
+    -- Optional fields
+    if opts.parentId ~= nil then
+      req.parentId = opts.parentId
+    elseif current.parentId then
+      req.parentId = current.parentId
+    end
+    
+    if opts.description ~= nil then
+      req.description = opts.description
+    elseif current.description then
+      req.description = current.description
+    end
+    
+    if opts.position ~= nil then
+      req.position = opts.position
+    elseif current.position then
+      req.position = current.position
+    end
+    
+    api.collections.update(req, function(res)
+      if res.error then
+        cb(nil, res.error)
+        return
+      end
+      
+      ---@type mind.v3.Collection
+      local collection = res.data
+      cb(collection, nil)
+    end)
+  end)
+end
+
+--- Rename a collection (convenience wrapper around update_collection)
+---@param collection_id number Collection ID to rename
 ---@param new_name string New display name
 ---@param cb fun(collection: table|nil, error: table|nil) Callback
 function M.rename_collection(collection_id, new_name, cb)
-  vim.notify("Collection renaming not yet implemented", vim.log.levels.WARN)
-  -- TODO: Implementation
-  -- api.collections.update({ id = collection_id, displayName = new_name }, cb)
+  M.update_collection(collection_id, { displayName = new_name }, cb)
 end
 
 function M.setup(opts)
