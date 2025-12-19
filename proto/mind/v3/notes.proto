@@ -173,6 +173,11 @@ message ListNotesRequest {
   
   // Optional: Filter by is_template flag
   optional bool is_template = 5;
+  
+  // Optional: Field mask to specify which fields to return (AIP-157)
+  // Example: "id,title,collection_id" returns only those fields
+  // If empty, all fields are returned
+  optional string field_mask = 6;
 }
 
 // Response message for ListNotes (AIP-132, AIP-158)
