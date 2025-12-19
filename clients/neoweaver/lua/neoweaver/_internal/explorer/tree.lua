@@ -208,6 +208,107 @@ local function setup_keymaps(bufnr, tree)
   vim.keymap.set("n", "R", function()
     M.refresh(bufnr)
   end, vim.tbl_extend("force", map_opts, { buffer = bufnr, desc = "Refresh tree" }))
+
+  -- Create new collection (a)
+  vim.keymap.set("n", "a", function()
+    local node = tree:get_node()
+    if not node then return end
+    
+    -- Only allow creating collections under collection nodes
+    if node.type ~= "collection" then
+      vim.notify("Can only create collections under other collections", vim.log.levels.WARN)
+      return
+    end
+    
+    -- Prompt for collection name
+    vim.ui.input({ prompt = "New collection name: " }, function(name)
+      if not name or name == "" then
+        return
+      end
+      
+      collections.create_collection(name, node.collection_id, function(collection, err)
+        if err then
+          vim.notify("Failed to create collection: " .. (err.message or vim.inspect(err)), vim.log.levels.ERROR)
+          return
+        end
+        
+        vim.notify("Created collection: " .. collection.displayName, vim.log.levels.INFO)
+        M.refresh(bufnr)
+      end)
+    end)
+  end, vim.tbl_extend("force", map_opts, { buffer = bufnr, desc = "Create new collection" }))
+
+  -- Rename collection (r)
+  vim.keymap.set("n", "r", function()
+    local node = tree:get_node()
+    if not node then return end
+    
+    -- Only allow renaming collections
+    if node.type ~= "collection" then
+      vim.notify("Can only rename collections", vim.log.levels.WARN)
+      return
+    end
+    
+    -- Don't allow renaming system collections
+    if node.is_system then
+      vim.notify("Cannot rename system collections", vim.log.levels.WARN)
+      return
+    end
+    
+    -- Prompt for new name
+    vim.ui.input({ prompt = "Rename to: ", default = node.name }, function(new_name)
+      if not new_name or new_name == "" or new_name == node.name then
+        return
+      end
+      
+      collections.rename_collection(node.collection_id, new_name, function(collection, err)
+        if err then
+          vim.notify("Failed to rename collection: " .. (err.message or vim.inspect(err)), vim.log.levels.ERROR)
+          return
+        end
+        
+        vim.notify("Renamed collection to: " .. collection.displayName, vim.log.levels.INFO)
+        M.refresh(bufnr)
+      end)
+    end)
+  end, vim.tbl_extend("force", map_opts, { buffer = bufnr, desc = "Rename collection" }))
+
+  -- Delete collection (d)
+  vim.keymap.set("n", "d", function()
+    local node = tree:get_node()
+    if not node then return end
+    
+    -- Only allow deleting collections
+    if node.type ~= "collection" then
+      vim.notify("Can only delete collections", vim.log.levels.WARN)
+      return
+    end
+    
+    -- Don't allow deleting system collections
+    if node.is_system then
+      vim.notify("Cannot delete system collections", vim.log.levels.WARN)
+      return
+    end
+    
+    -- Confirm deletion
+    vim.ui.input({ 
+      prompt = "Delete collection '" .. node.name .. "'? (y/N): " 
+    }, function(confirm)
+      if confirm ~= "y" and confirm ~= "Y" then
+        return
+      end
+      
+      collections.delete_collection(node.collection_id, function(success, err)
+        if err then
+          vim.notify("Failed to delete collection: " .. (err.message or vim.inspect(err)), vim.log.levels.ERROR)
+          return
+        end
+        
+        vim.notify("Deleted collection: " .. node.name, vim.log.levels.INFO)
+        M.refresh(bufnr)
+      end)
+    end)
+  end, vim.tbl_extend("force", map_opts, { buffer = bufnr, desc = "Delete collection" }))
 end
 
 --- Load collections with notes and render tree
