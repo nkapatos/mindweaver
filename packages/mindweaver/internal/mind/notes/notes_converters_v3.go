@@ -3,10 +3,11 @@ package notes
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
 	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -105,4 +106,78 @@ func ProtoNewNoteToParams(req *mindv3.NewNoteRequest) (collectionID int64, templ
 	}
 
 	return collectionID, templateID
+}
+
+// ApplyFieldMask applies field masking to a Note proto message.
+// If fieldMask is empty, returns the note unchanged (all fields).
+// Otherwise, returns a new Note with only the requested fields populated.
+// Field names are comma-separated (e.g., "id,title,collectionId").
+func ApplyFieldMask(note *mindv3.Note, fieldMask string) *mindv3.Note {
+	if fieldMask == "" {
+		return note
+	}
+
+	// Parse field mask into set
+	fields := make(map[string]bool)
+	for _, field := range strings.Split(fieldMask, ",") {
+		fields[strings.TrimSpace(field)] = true
+	}
+
+	// Create new note with only requested fields
+	masked := &mindv3.Note{}
+
+	if fields["id"] {
+		masked.Id = note.Id
+	}
+	if fields["uuid"] {
+		masked.Uuid = note.Uuid
+	}
+	if fields["name"] {
+		masked.Name = note.Name
+	}
+	if fields["title"] {
+		masked.Title = note.Title
+	}
+	if fields["body"] {
+		masked.Body = note.Body
+	}
+	if fields["description"] {
+		masked.Description = note.Description
+	}
+	if fields["noteTypeId"] || fields["note_type_id"] {
+		masked.NoteTypeId = note.NoteTypeId
+	}
+	if fields["collectionId"] || fields["collection_id"] {
+		masked.CollectionId = note.CollectionId
+	}
+	if fields["isTemplate"] || fields["is_template"] {
+		masked.IsTemplate = note.IsTemplate
+	}
+	if fields["etag"] {
+		masked.Etag = note.Etag
+	}
+	if fields["createTime"] || fields["create_time"] {
+		masked.CreateTime = note.CreateTime
+	}
+	if fields["updateTime"] || fields["update_time"] {
+		masked.UpdateTime = note.UpdateTime
+	}
+	if fields["metadata"] {
+		masked.Metadata = note.Metadata
+	}
+
+	return masked
+}
+
+// ApplyFieldMaskToNotes applies field masking to a slice of Note proto messages.
+func ApplyFieldMaskToNotes(notes []*mindv3.Note, fieldMask string) []*mindv3.Note {
+	if fieldMask == "" {
+		return notes
+	}
+
+	masked := make([]*mindv3.Note, len(notes))
+	for i, note := range notes {
+		masked[i] = ApplyFieldMask(note, fieldMask)
+	}
+	return masked
 }

@@ -186,8 +186,16 @@ func (h *NotesHandlerV3) ListNotes(
 	pageResp := pageReq.BuildResponse(len(notes), totalCount)
 	notes = pagination.TrimResults(notes, pageReq.PageSize)
 
+	// Convert to proto
+	protoNotes := StoreNotesToProto(notes)
+
+	// Apply field mask if provided
+	if req.Msg.FieldMask != nil && *req.Msg.FieldMask != "" {
+		protoNotes = ApplyFieldMaskToNotes(protoNotes, *req.Msg.FieldMask)
+	}
+
 	resp := &mindv3.ListNotesResponse{
-		Notes:         StoreNotesToProto(notes),
+		Notes:         protoNotes,
 		NextPageToken: pageResp.NextPageToken,
 	}
 
