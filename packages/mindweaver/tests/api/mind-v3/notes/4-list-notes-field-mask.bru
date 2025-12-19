@@ -1,0 +1,62 @@
+meta {
+  name: List Notes with Field Mask
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NotesService/ListNotes
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "pageSize": 10,
+    "fieldMask": "id,title,collectionId"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has notes array", function() {
+    expect(res.body).to.have.property("notes");
+    expect(res.body.notes).to.be.an("array");
+  });
+  
+  test("Notes only have requested fields (id, title, collectionId)", function() {
+    if (res.body.notes && res.body.notes.length > 0) {
+      const note = res.body.notes[0];
+      
+      // Should have these fields
+      expect(note).to.have.property("id");
+      expect(note).to.have.property("title");
+      expect(note).to.have.property("collectionId");
+      
+      // Should NOT have these fields (field mask filtering)
+      expect(note).to.not.have.property("body");
+      expect(note).to.not.have.property("description");
+      expect(note).to.not.have.property("uuid");
+      expect(note).to.not.have.property("etag");
+      expect(note).to.not.have.property("metadata");
+    }
+  });
+  
+  test("All notes respect field mask", function() {
+    if (res.body.notes) {
+      res.body.notes.forEach((note, index) => {
+        expect(note, `Note ${index} should have id`).to.have.property("id");
+        expect(note, `Note ${index} should have title`).to.have.property("title");
+        expect(note, `Note ${index} should have collectionId`).to.have.property("collectionId");
+        expect(note, `Note ${index} should not have body`).to.not.have.property("body");
+      });
+    }
+  });
+}
