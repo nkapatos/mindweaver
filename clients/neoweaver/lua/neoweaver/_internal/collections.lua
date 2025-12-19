@@ -58,10 +58,11 @@ function M.list_collections_with_notes(opts, cb)
       return
     end
     
-    -- Step 2: Fetch all notes (for now, fetch all notes without filtering)
+    -- Step 2: Fetch all notes with field masking (only id, title, collectionId)
     ---@type mind.v3.ListNotesRequest
     local notes_req = {
       pageSize = opts.pageSize or 100, -- Fetch up to 100 notes (can adjust or paginate later)
+      fieldMask = "id,title,collectionId", -- Only request fields needed for tree building
     }
     
     api.notes.list(notes_req, function(notes_res)
