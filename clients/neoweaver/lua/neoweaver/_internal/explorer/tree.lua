@@ -5,6 +5,9 @@ local NuiTree = require("nui.tree")
 local NuiLine = require("nui.line")
 local collections = require("neoweaver._internal.collections")
 local notes = require("neoweaver._internal.notes")
+local statusline = require("neoweaver._internal.explorer.statusline")
+local config = require("neoweaver._internal.config")
+local api = require("neoweaver._internal.api")
 
 local M = {}
 
@@ -12,12 +15,14 @@ local M = {}
 ---@field tree NuiTree|nil
 ---@field bufnr number|nil
 ---@field collections table[]|nil
+---@field keymaps_configured boolean Whether keymaps have been set up for the buffer
 
 ---@type ExplorerTreeState
 local state = {
   tree = nil,
   bufnr = nil,
   collections = nil,
+  keymaps_configured = false,
 }
 
 --- Build tree nodes recursively from flat collection list with notes
@@ -90,7 +95,15 @@ local function prepare_node(node)
   end
 
   -- Icon and name based on node type
-  if node.type == "note" then
+  if node.type == "server" then
+    -- Server node (root)
+    line:append("󰒋 ", "Title")  -- Server/database icon
+    line:append(node.name, "Title")
+    if node.is_default then
+      line:append(" ", "Comment")
+      line:append("(default)", "Comment")
+    end
+  elseif node.type == "note" then
     -- Note node
     line:append("󰈙 ", "String")  -- Document icon
     line:append(node.name, "Normal")
@@ -114,11 +127,35 @@ end
 ---@param notes_by_collection table<number, table[]> Hashmap of notes grouped by collection_id
 ---@return NuiTree
 function M.build_tree(bufnr, collections_data, notes_by_collection)
-  local root_nodes = build_nodes(collections_data, notes_by_collection or {}, nil)
+  -- Build collection hierarchy
+  local collection_nodes = build_nodes(collections_data, notes_by_collection or {}, nil)
+  
+  -- Wrap collections in server nodes
+  local server_nodes = {}
+  local servers = api.config.servers
+  local current_server = api.config.current_server
+  
+  -- For now, we show only the current server as root
+  -- Future enhancement: support multiple servers with server switching
+  if current_server and servers[current_server] then
+    local server_node = NuiTree.Node({
+      id = "server:" .. current_server,
+      type = "server",
+      name = current_server,
+      server_name = current_server,
+      server_url = servers[current_server].url,
+      is_default = true,
+    }, collection_nodes)
+    
+    table.insert(server_nodes, server_node)
+  else
+    -- Fallback: if no server context, show collections directly
+    server_nodes = collection_nodes
+  end
 
   local tree = NuiTree({
     bufnr = bufnr,
-    nodes = root_nodes,
+    nodes = server_nodes,
     prepare_node = prepare_node,
   })
 
@@ -237,36 +274,46 @@ local function setup_keymaps(bufnr, tree)
   end, vim.tbl_extend("force", map_opts, { buffer = bufnr, desc = "Delete item" }))
 end
 
---- Helper to set buffer lines (handles modifiable state)
----@param bufnr number
----@param lines string[]
-local function set_buffer_lines(bufnr, lines)
-  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+--- Count total notes across all collections
+---@param notes_by_collection table<number, table[]> Hashmap of notes grouped by collection_id
+---@return integer
+local function count_notes(notes_by_collection)
+  local count = 0
+  if notes_by_collection then
+    for _, note_list in pairs(notes_by_collection) do
+      count = count + #note_list
+    end
+  end
+  return count
 end
 
 --- Load collections with notes and render tree
 --- Async function that fetches collections and notes from API
 ---@param bufnr number Buffer to render tree in
-function M.load_and_render(bufnr)
+---@param show_notification? boolean Show completion notification (respects config if nil)
+function M.load_and_render(bufnr, show_notification)
   state.bufnr = bufnr
+  local cfg = config.get()
   
-  -- Show loading indicator
-  set_buffer_lines(bufnr, { "Loading collections and notes..." })
+  -- Default to config setting if not explicitly specified
+  if show_notification == nil then
+    show_notification = cfg.explorer.show_notifications
+  end
+  
+  -- Set loading state in statusline
+  statusline.set_loading()
   
   -- Fetch collections with notes from API (orchestrated call)
   collections.list_collections_with_notes({}, function(data, err)
     if err then
-      -- Clear loading message and show error
-      set_buffer_lines(bufnr, {})
+      statusline.set_error(err.message or "Failed to load")
       vim.notify("Failed to load collections: " .. vim.inspect(err), vim.log.levels.ERROR)
       return
     end
     
     -- Handle empty collections
     if not data or not data.collections or #data.collections == 0 then
-      set_buffer_lines(bufnr, { "No collections found" })
+      statusline.set_ready(0, 0)
       vim.notify("No collections found", vim.log.levels.INFO)
       return
     end
@@ -274,11 +321,30 @@ function M.load_and_render(bufnr)
     -- Store collections data
     state.collections = data.collections
     
+    -- Count and update statusline
+    local collection_count = #data.collections
+    local note_count = count_notes(data.notes_by_collection)
+    statusline.set_ready(collection_count, note_count)
+    
     -- Build and render tree with notes
     -- NuiTree.render() handles modifiable state automatically
     state.tree = M.build_tree(bufnr, data.collections, data.notes_by_collection)
-    setup_keymaps(bufnr, state.tree)
+    
+    -- Setup keymaps only once per buffer
+    if not state.keymaps_configured then
+      setup_keymaps(bufnr, state.tree)
+      state.keymaps_configured = true
+    end
+    
     state.tree:render()
+    
+    -- Show notification if enabled
+    if show_notification then
+      vim.notify(
+        string.format("Loaded %d collections, %d notes", collection_count, note_count),
+        vim.log.levels.INFO
+      )
+    end
   end)
 end
 
@@ -291,28 +357,23 @@ end
 
 --- Refresh the tree (rebuild and re-render)
 --- Re-fetches collections and notes from API
+--- 
+--- NOTE: Currently does a full refresh (re-fetch and rebuild).
+--- 
+--- TODO: Future optimization - implement smart refresh:
+---   - Preserve expanded/collapsed state of nodes
+---   - Only update changed nodes (add/remove/update)
+---   - Handle external changes (notes/collections created via commands)
+---   - Consider using tree:set_nodes() for partial updates
+---   - Track node state before rebuild and restore after
+---
 ---@param bufnr number
 function M.refresh(bufnr)
   if state.bufnr == bufnr then
-    -- Show loading indicator
-    set_buffer_lines(bufnr, { "Refreshing collections and notes..." })
-    
-    -- Re-fetch collections with notes from API (orchestrated call)
-    collections.list_collections_with_notes({}, function(data, err)
-      if err then
-        vim.notify("Failed to refresh collections: " .. (err.message or "unknown error"), vim.log.levels.ERROR)
-        return
-      end
-      
-      -- TODO: Store expanded state before rebuild and restore after
-      state.collections = data.collections
-      state.tree = M.build_tree(bufnr, data.collections, data.notes_by_collection)
-      setup_keymaps(bufnr, state.tree)
-      -- NuiTree.render() handles modifiable state automatically
-      state.tree:render()
-      
-      vim.notify("Collections and notes refreshed", vim.log.levels.INFO)
-    end)
+    -- For now, do a complete reload (same as load_and_render)
+    -- This ensures consistency and handles all edge cases
+    -- including actions triggered outside the explorer
+    M.load_and_render(bufnr)
   end
 end
 

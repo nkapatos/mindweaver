@@ -11,10 +11,18 @@ local collections = require("neoweaver._internal.collections")
 local function setup_collection_actions()
   -- Handle create action
   tree.on_create = function(node, bufnr)
-    -- Only allow creating collections under collection nodes
-    if node.type ~= "collection" then
-      vim.notify("Can only create collections under other collections", vim.log.levels.WARN)
+    -- Allow creating collections under:
+    -- 1. Server nodes (creates root-level collection with no parent)
+    -- 2. Collection nodes (creates child collection)
+    if node.type ~= "server" and node.type ~= "collection" then
+      vim.notify("Can only create collections under servers or other collections", vim.log.levels.WARN)
       return
+    end
+    
+    -- Determine parent_id: nil for server nodes, collection_id for collection nodes
+    local parent_id = nil
+    if node.type == "collection" then
+      parent_id = node.collection_id
     end
     
     -- Prompt for collection name
@@ -23,7 +31,7 @@ local function setup_collection_actions()
         return
       end
       
-      collections.create_collection(name, node.collection_id, function(collection, err)
+      collections.create_collection(name, parent_id, function(collection, err)
         if err then
           vim.notify("Failed to create collection: " .. (err.message or vim.inspect(err)), vim.log.levels.ERROR)
           return
