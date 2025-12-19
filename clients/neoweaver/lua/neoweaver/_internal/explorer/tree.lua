@@ -243,14 +243,18 @@ end
 function M.load_and_render(bufnr)
   state.bufnr = bufnr
   
-  -- Show loading indicator
+  -- Temporarily make buffer modifiable for loading message
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Loading collections and notes..." })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
   
   -- Fetch collections with notes from API (orchestrated call)
   collections.list_collections_with_notes({}, function(data, err)
     if err then
       -- Clear loading message
+      vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+      vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
       -- Show error notification only (like notes module)
       vim.notify("Failed to load collections: " .. vim.inspect(err), vim.log.levels.ERROR)
       return
@@ -258,7 +262,9 @@ function M.load_and_render(bufnr)
     
     -- Handle empty collections
     if not data or not data.collections or #data.collections == 0 then
+      vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No collections found" })
+      vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
       vim.notify("No collections found", vim.log.levels.INFO)
       return
     end
@@ -285,8 +291,10 @@ end
 ---@param bufnr number
 function M.refresh(bufnr)
   if state.bufnr == bufnr then
-    -- Show loading indicator
+    -- Temporarily make buffer modifiable for loading indicator
+    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Refreshing collections and notes..." })
+    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
     
     -- Re-fetch collections with notes from API (orchestrated call)
     collections.list_collections_with_notes({}, function(data, err)
