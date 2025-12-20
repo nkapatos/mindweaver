@@ -203,6 +203,18 @@ The mindweaver server is a single binary containing both Mind and Brain services
 - Can release without server changes
 - Document compatibility: "requires mindweaver >= X.Y.Z"
 
+### Dedicated Client Repository (neoweaver.nvim)
+
+The Neovim client is automatically synced to a dedicated repository for plugin manager compatibility:
+
+- **Development:** All work happens in `clients/neoweaver/` in the monorepo
+- **Distribution:** Auto-synced to `github.com/nkapatos/neoweaver.nvim` on release
+- **Tags:** Monorepo `neoweaver/v0.6.0` → `v0.6.0` in dedicated repo
+- **Files synced:** lua/, plugin/, doc/, README.md, CHANGELOG.md, LICENSE
+- **License:** MIT (client) vs AGPL-3.0 (server)
+- **User installation:** `{ "nkapatos/neoweaver.nvim" }`
+- **Issue tracking:** File issues in monorepo, not mirror
+
 **Shared Libraries (`packages/pkg`):**
 - Currently not independently versioned
 - Used internally by mindweaver
