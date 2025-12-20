@@ -55,13 +55,20 @@ jobs:
   changes:
     name: Detect Changes
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
     outputs:
       mindweaver: ${{ steps.filter.outputs.mindweaver }}
       neoweaver: ${{ steps.filter.outputs.neoweaver }}
       root-config: ${{ steps.filter.outputs.root-config }}
     steps:
+      # For pull_request events, paths-filter uses GitHub API (no checkout needed)
+      # For push events, it needs git history to compare commits
       - name: Checkout code
+        if: github.event_name == 'push'
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
 
       - name: Check paths
         uses: dorny/paths-filter@v3

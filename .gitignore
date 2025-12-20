@@ -25,6 +25,9 @@ Thumbs.db
 # Local development and reference directories (matches at any depth)
 project_local_files/
 
+# Local GitHub Actions testing (act)
+.github/act/
+
 # Go workspace files (developer-specific)
 go.work
 go.work.sum
