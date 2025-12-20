@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  prepare:
+    desc: Prepare generated assets for CI
+    cmds:
+      - task: :mw:proto:generate
+      - task: :mind:db:store:generate
+
+  test:
+    desc: Run mindweaver tests with coverage
+    deps:
+      - prepare
+    cmds:
+      - go test -v -race -coverprofile=coverage.out ./...
+
+  build:
+    desc: Build mindweaver binary for CI
+    deps:
+      - prepare
+    cmds:
+      - task: :mw:build

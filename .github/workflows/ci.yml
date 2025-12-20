@@ -57,6 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       mindweaver: ${{ steps.filter.outputs.mindweaver }}
+      neoweaver: ${{ steps.filter.outputs.neoweaver }}
       root-config: ${{ steps.filter.outputs.root-config }}
     steps:
       - name: Checkout code
@@ -70,9 +71,12 @@ jobs:
             mindweaver:
               - 'packages/mindweaver/**'
               - '!packages/mindweaver/tests/**'
+            neoweaver:
+              - 'clients/neoweaver/**'
             root-config:
               - 'packages/Taskfile.yaml'
               - '.mise.toml'
+
 
   # ---------------------------------------------------------------------------
   # Test mindweaver package
@@ -92,6 +96,7 @@ jobs:
         with:
           go-version: '1.25.5'
           cache: true
+          cache-dependency-path: packages/mindweaver/go.sum
 
       - name: Setup Task
         uses: go-task/setup-task@v1
@@ -111,6 +116,7 @@ jobs:
       - name: Generate code
         run: task mw:proto:generate && task mind:db:store:generate
         working-directory: packages/mindweaver
+
 
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
@@ -144,6 +150,7 @@ jobs:
         with:
           go-version: '1.25.5'
           cache: true
+          cache-dependency-path: packages/mindweaver/go.sum
 
       - name: Setup Task
         uses: go-task/setup-task@v1
@@ -163,6 +170,7 @@ jobs:
       - name: Build binary
         run: task mw:build
         working-directory: packages/mindweaver
+
 
       - name: Verify binary
         run: ./bin/mindweaver --version || true

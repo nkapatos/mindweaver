@@ -46,8 +46,9 @@ jobs:
           cp ../clients/neoweaver/CHANGELOG.md .
           cp ../clients/neoweaver/LICENSE .
           
-          # Add sync notice to README (prepend)
-          cat > README.tmp.md << 'NOTICE'
+          # Add sync notice to README once (prepend)
+          if ! grep -q "READ-ONLY MIRROR" README.md; then
+            cat > README.tmp.md << 'NOTICE'
           > **⚠️ READ-ONLY MIRROR:** This repository is automatically synchronized from the [MindWeaver monorepo](https://github.com/nkapatos/mindweaver/tree/main/clients/neoweaver).
           >
           > **For issues, PRs, and development:** Please visit the [main repository](https://github.com/nkapatos/mindweaver).
@@ -55,8 +56,9 @@ jobs:
           ---
           
           NOTICE
-          cat README.md >> README.tmp.md
-          mv README.tmp.md README.md
+            cat README.md >> README.tmp.md
+            mv README.tmp.md README.md
+          fi
           
           # Commit and push
           git add -A
@@ -68,4 +70,4 @@ jobs:
           
           # Create and push tag
           git tag "${TAG_NAME}" || true
-          git push origin main --tags
+          git push origin HEAD:main --tags
