@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/nkapatos/mindweaver/compare/neoweaver/v0.1.2...neoweaver/v0.1.3) (2025-12-20)
+
+
+### Maintenance
+
+* **neoweaver:** remove old api.bak file from v3 ([#23](https://github.com/nkapatos/mindweaver/issues/23)) ([79e2c5d](https://github.com/nkapatos/mindweaver/commit/79e2c5d0234573bb85aaebbce5375c1ea0181fa1))
+
 ## [0.1.2](https://github.com/nkapatos/mindweaver/compare/neoweaver/v0.1.1...neoweaver/v0.1.2) (2025-12-20)
 
 
