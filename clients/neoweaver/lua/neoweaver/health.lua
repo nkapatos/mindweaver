@@ -1,6 +1,7 @@
 ---
 --- health.lua - Health check for neoweaver plugin
 --- Provides diagnostics via :checkhealth neoweaver
+--- Updated for testing release automation
 ---
 local M = {}
 
