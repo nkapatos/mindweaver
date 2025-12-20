@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/nkapatos/mindweaver/compare/neoweaver/v0.1.3...neoweaver/v0.1.4) (2025-12-20)
+
+
+### Bug Fixes
+
+* **ci:** fix path filtering and add manual neoweaver sync trigger ([#25](https://github.com/nkapatos/mindweaver/issues/25)) ([4e88290](https://github.com/nkapatos/mindweaver/commit/4e882902beba417730a126455ff3dcb3986386be))
+
 ## [0.1.3](https://github.com/nkapatos/mindweaver/compare/neoweaver/v0.1.2...neoweaver/v0.1.3) (2025-12-20)
 
 
