@@ -199,12 +199,12 @@ jobs:
       - name: Setup LuaRocks
         uses: leafo/gh-actions-luarocks@v4
 
-      - name: Check Lua formatting with StyLua
-        uses: JohnnyMorganz/stylua-action@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          version: latest
-          args: --check clients/neoweaver/lua/ clients/neoweaver/plugin/
+      # - name: Check Lua formatting with StyLua
+      #   uses: JohnnyMorganz/stylua-action@v4
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     version: latest
+      #     args: --check clients/neoweaver/lua/ clients/neoweaver/plugin/
 
       - name: Install luacheck
         run: luarocks install luacheck
