@@ -15,7 +15,7 @@ Install with your preferred package manager. Example using **lazy.nvim**:
 ```lua
 return {
   {
-    dir = "path/to/neoweaver",
+    "nkapatos/neoweaver.nvim",
     cmd = {
       "NeoweaverNotesList",
       "NeoweaverNotesOpen",
