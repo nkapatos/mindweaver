@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/nkapatos/mindweaver/compare/neoweaver/v0.1.4...neoweaver/v0.1.5) (2025-12-20)
+
+
+### Bug Fixes
+
+* **neoweaver:** update health check documentation ([084eead](https://github.com/nkapatos/mindweaver/commit/084eead1ee7c1df3bff819f7d4b9822b1151fe22))
+
 ## [0.1.4](https://github.com/nkapatos/mindweaver/compare/neoweaver/v0.1.3...neoweaver/v0.1.4) (2025-12-20)
 
 
