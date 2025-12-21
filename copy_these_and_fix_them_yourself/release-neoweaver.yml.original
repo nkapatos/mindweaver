@@ -1,0 +1,71 @@
+name: Release Neoweaver
+
+on:
+  push:
+    tags:
+      - 'neoweaver/v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish Neoweaver assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync to dedicated repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.NEOWEAVER_SYNC_TOKEN }}
+        run: |
+          # Extract version from tag (neoweaver/v0.6.0 -> v0.6.0)
+          TAG_NAME="${GITHUB_REF_NAME#neoweaver/}"
+          
+          # Configure git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Clone dedicated repo
+          git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/nkapatos/neoweaver.nvim.git" sync-repo
+          cd sync-repo
+          
+          # Remove all existing files (clean slate)
+          git rm -rf . 2>/dev/null || true
+          git clean -fdx
+          
+          # Copy runtime files from monorepo
+          cp -r ../clients/neoweaver/lua .
+          cp -r ../clients/neoweaver/plugin .
+          cp -r ../clients/neoweaver/doc .
+          cp ../clients/neoweaver/README.md .
+          cp ../clients/neoweaver/CHANGELOG.md .
+          cp ../clients/neoweaver/LICENSE .
+          
+          # Add sync notice to README (prepend)
+          cat > README.tmp.md << 'NOTICE'
+          > **⚠️ READ-ONLY MIRROR:** This repository is automatically synchronized from the [MindWeaver monorepo](https://github.com/nkapatos/mindweaver/tree/main/clients/neoweaver).
+          >
+          > **For issues, PRs, and development:** Please visit the [main repository](https://github.com/nkapatos/mindweaver).
+          
+          ---
+          
+          NOTICE
+          cat README.md >> README.tmp.md
+          mv README.tmp.md README.md
+          
+          # Commit and push
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "sync: release ${TAG_NAME}"
+          fi
+          
+          # Create and push tag
+          git tag "${TAG_NAME}" || true
+          git push origin main --tags
