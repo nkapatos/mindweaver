@@ -6,10 +6,3 @@
 dist/
 *.zip
 *.tar.gz
-
-# Keep generated docs tracked for distribution
-# These files are generated but committed:
-# - doc/neoweaver.txt (user guide from panvimdoc)
-# - doc/neoweaver_api.txt (API reference from mini.doc)
-# - doc/neoweaver_types.txt (type reference from mini.doc)
-# - doc/tags (vim help tags)
