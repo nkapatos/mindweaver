@@ -1,5 +1,6 @@
 /gen/
 /tmp/
+/deps/
 
 # Plugin packaging artifacts
 dist/

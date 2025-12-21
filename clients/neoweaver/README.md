@@ -1,51 +1,57 @@
 # Neoweaver
 
-Neovim client for MindWeaver. Provides note management commands inside Neovim, communicating with the MindWeaver server over the Connect RPC API.
-
-## Prerequisites
-
-- **Neovim 0.11+** - Required for plugin functionality
-- **[plenary.nvim](https://github.com/nvim-lua/plenary.nvim)** - Required dependency for HTTP requests
-- **[nui.nvim](https://github.com/MunifTanjim/nui.nvim)** - Required dependency for UI components
+Neovim client for MindWeaver. Manage your notes directly from Neovim, communicating with the MindWeaver server over the Connect RPC API.
 
 ## Quick Start
 
-Install with your preferred package manager. Example using **lazy.nvim**:
+Install with **lazy.nvim**:
 
 ```lua
-return {
-  {
-    "nkapatos/neoweaver.nvim",
-    cmd = {
-      "NeoweaverNotesList",
-      "NeoweaverNotesOpen",
-      "NeoweaverNotesNew",
-      "NeoweaverNotesNewWithTitle",
-      "NeoweaverNotesTitle",
-      "NeoweaverServerUse",
-      "NeoweaverToggleDebug",
-    },
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "MunifTanjim/nui.nvim",
-    },
-    opts = {
-      allow_multiple_empty_notes = false,
-      api = {
-        servers = {
-          local = { url = "http://localhost:9421", default = true },
-        },
-        debug_info = true,
-      },
-      keymaps = {
-        enabled = true,
+{
+  "nkapatos/neoweaver.nvim",
+  dependencies = {
+    "nvim-lua/plenary.nvim",
+    "MunifTanjim/nui.nvim",
+  },
+  opts = {
+    api = {
+      servers = {
+        local = { url = "http://localhost:9421", default = true },
       },
     },
   },
 }
 ```
 
+For complete installation instructions including **vim.pack()** (Neovim 0.12+), see [Installation](docs/installation.md) or `:help neoweaver-installation`.
+
+## Documentation
+
+**For complete documentation, see `:help neoweaver` inside Neovim.**
+
+The help system provides comprehensive documentation including:
+
+- `:help neoweaver-installation` - Installation instructions
+- `:help neoweaver-configuration` - Configuration options
+- `:help neoweaver-commands` - Available commands
+- `:help neoweaver-keymaps` - Keymap configuration
+- `:help neoweaver-api` - API reference (auto-generated from source)
+
+You can also read the documentation in markdown format:
+
+- [Installation](docs/installation.md)
+- [Configuration](docs/configuration.md)
+- [Commands](docs/commands.md)
+- [Keymaps](docs/keymaps.md)
+
 ## Development
+
+### Prerequisites
+
+- Go 1.23+
+- Task
+- buf (protocol buffers)
+- Neovim 0.11+
 
 ### Code Generation
 
@@ -71,88 +77,36 @@ Generation pipeline:
 
 See [TESTING.md](TESTING.md) for test suite documentation.
 
-## Configuration
+### Documentation Generation
 
-### `allow_multiple_empty_notes`
+```bash
+# Generate API reference from LuaLS annotations
+task neoweaver:docs:api
 
-- **Type:** boolean (default: `false`)
-- When `true`, new note buffers are marked as modified immediately, allowing multiple untitled notes without Neovim blocking on `:w`.
+# Generate user guide from markdown
+task neoweaver:docs:gen:panvimdoc
 
-### `api.servers`
-
-- **Type:** table (required)
-- Map of server names to configuration. Each entry must provide a `url`. Set `default = true` on one entry to select it automatically.
-
-Example:
-
-```lua
-api = {
-  servers = {
-    local = { url = "http://localhost:9421", default = true },
-    cloud = "https://api.example.com",
-  },
-}
+# Generate help tags
+task neoweaver:docs:tags
 ```
 
-### `api.debug_info`
-
-- **Type:** boolean (default: `true`)
-- Toggles API logging. Can be toggled at runtime with `:NeoweaverToggleDebug`.
-
-### `keymaps`
-
-- **Type:** table (default: disabled)
-- Enable built-in defaults by passing `keymaps = { enabled = true }`.
-- Override any mapping by providing the `notes` or `quicknotes` tables.
-
-```lua
-keymaps = {
-  enabled = true,
-  notes = {
-    list = "<leader>nl",
-    open = "<leader>no",
-    new = "<leader>nn",
-    new_with_title = "<leader>nN",
-    title = "<leader>nt",
-    delete = "<leader>nd",
-  },
-}
-```
-
-## Commands
-
-| Command                    | Description                            |
-| ------------------------- | -------------------------------------- |
-| `:NeoweaverNotesList`     | Fetch the first page of notes and pick |
-| `:NeoweaverNotesOpen`     | Open a note by ID                      |
-| `:NeoweaverNotesNew`      | Create a server-backed untitled note   |
-| `:NeoweaverNotesNewWithTitle` | Prompt for a title before creating |
-| `:NeoweaverNotesTitle`    | Edit the active note title             |
-| `:NeoweaverNotesDelete`   | Delete a note by ID                    |
-| `:NeoweaverServerUse`     | Switch to a configured backend server  |
-| `:NeoweaverToggleDebug`   | Toggle API debug notifications         |
-
-## Keymaps
-
-Default mappings (can be remapped individually):
-
-| Mapping        | Action                          |
-| -------------- | -------------------------------- |
-| `<leader>nl`   | `NeoweaverNotesList`            |
-| `<leader>no`   | Prompt for note ID (open/edit)  |
-| `<leader>nn`   | `NeoweaverNotesNew`             |
-| `<leader>nN`   | `NeoweaverNotesNewWithTitle`    |
-| `<leader>nt`   | `NeoweaverNotesTitle`           |
-| `<leader>nd`   | `NeoweaverNotesDelete`          |
+For development guidelines, see [docs/dev/guidelines.md](docs/dev/guidelines.md).
 
 ## Architecture
 
 ```
 lua/neoweaver/
-├── api.lua           - HTTP client for Connect RPC API
-├── notes.lua         - Note operations and commands
-├── buffer/
-│   └── manager.lua   - Buffer lifecycle management
+├── init.lua          - Public API and setup
+├── _internal/
+│   ├── api.lua       - HTTP client for Connect RPC API
+│   ├── notes.lua     - Note operations and commands
+│   ├── buffer/
+│   │   ├── manager.lua   - Buffer lifecycle management
+│   │   └── statusline.lua - Status line integration
+│   └── explorer/
+│       ├── init.lua      - Explorer entry point
+│       ├── tree.lua      - Tree rendering
+│       └── window.lua    - Window management
 └── types.lua         - Generated Lua type annotations
 ```
 
@@ -170,7 +124,5 @@ Special thanks to both projects for their well-documented code and thoughtful AP
 
 ## See Also
 
-- [Root README](../../README.md) - Project overview
-- [docs/WORKFLOW.md](../../docs/WORKFLOW.md) - Contribution guidelines
-- [docs/guidelines.md](docs/guidelines.md) - Development guidelines
-- [rules/conventions.md](rules/conventions.md) - Code conventions
+- [Root README](../../README.md) - Monorepo overview
+- [Workflow Documentation](../../docs/workflow.md) - Contribution guidelines
