@@ -49,33 +49,89 @@ tasks:
       - rm -f {{.TYPES_OUTPUT}}
       - rm -rf {{.TS_GEN_DIR}}
 
+  deps:
+    desc: Download dependencies for testing and documents gen
+    cmds:
+      - mkdir -p deps
+      - task: deps:mini
+      - task: deps:panvimdoc
+
+  deps:mini:
+    desc: Download mini.test and mini.doc dependencies in the deps directory
+    dir: deps
+    cmds:
+      - git clone --filter=blob:none https://github.com/echasnovski/mini.nvim
+    status:
+      - test -d mini.nvim/.git
+
+  deps:panvimdoc:
+    desc: Download panvimdoc for generating documentation
+    dir: deps
+    cmds:
+      - git clone --filter=blob:none https://github.com/kdheepak/panvimdoc
+    status:
+      - test -d panvimdoc/.git
+
+  docs:gen:
+    desc: Generate nvim help file documentation
+    deps: ['deps']
+
+  docs:gen:panvimdoc:
+    desc: Generate vimdoc from markdown using panvimdoc
+    deps: ['deps:panvimdoc']
+    cmds:
+      - >
+        pandoc
+        --shift-heading-level-by=0
+        --metadata=project:neoweaver
+        --metadata=vimversion:"Neovim 0.11+"
+        --metadata=toc:true
+        --metadata=description:"Neoweaver - Neovim client for MindWeaver"
+        --metadata=treesitter:true
+        --metadata=incrementheadinglevelby:0
+        --metadata=dedupsubheadings:true
+        --metadata=ignorerawblocks:false
+        --metadata=docmapping:false
+        --metadata=docmappingprojectname:true
+        --metadata=demojify:false
+        --lua-filter=deps/panvimdoc/scripts/include-files.lua
+        --lua-filter=deps/panvimdoc/scripts/skip-blocks.lua
+        --lua-filter=scripts/pandoc.lua
+        -t deps/panvimdoc/scripts/panvimdoc.lua
+        docs/vimdoc.md
+        -o doc/neoweaver.txt
+    sources:
+      - docs/vimdoc.md
+      - docs/installation.md
+      - docs/configuration.md
+      - docs/commands.md
+      - docs/keymaps.md
+      - scripts/pandoc.lua
+    generates:
+      - doc/neoweaver.txt
+
+
+  #   desc: Remove generated documentation files
+  #   cmds:
+  #     - rm -f doc/neoweaver_api.txt doc/neoweaver_types.txt doc/tags
+
   docs:api:
     desc: Generate API documentation from LuaLS annotations using mini.doc
+    deps: ['deps:mini']
     cmds:
-      - nvim -u scripts/make_api_documentation/minimal_init.lua -l scripts/make_api_documentation/main.lua
+      - nvim --headless --noplugin -u scripts/minimal_init_docs.lua -c "quit"
     sources:
       - lua/neoweaver/init.lua
       - lua/neoweaver/types.lua
     generates:
       - doc/neoweaver_api.txt
-      - doc/neoweaver_types.txt
 
   docs:tags:
     desc: Generate vim help tags
     deps: [docs:api]
     cmds:
-      - nvim -c 'helptags doc' -c 'quit'
+      - nvim --headless -c 'helptags doc' -c 'quit'
     sources:
       - doc/*.txt
     generates:
       - doc/tags
-
-  docs:generate:
-    desc: Generate all documentation (API docs + vim tags)
-    aliases: [docs:gen, docs]
-    deps: [docs:api, docs:tags]
-
-  docs:clean:
-    desc: Remove generated documentation files
-    cmds:
-      - rm -f doc/neoweaver_api.txt doc/neoweaver_types.txt doc/tags
