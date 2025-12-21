@@ -63,7 +63,6 @@ jobs:
           cp -r ../clients/neoweaver/scripts .
           cp -r ../clients/neoweaver/tasks .
           cp -r ../clients/neoweaver/docs .
-          cp -r ../clients/neoweaver/.github .
           cp ../clients/neoweaver/README.md .
           cp ../clients/neoweaver/CHANGELOG.md .
           cp ../clients/neoweaver/LICENSE .
