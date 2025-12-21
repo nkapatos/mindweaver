@@ -1,0 +1,99 @@
+name: Generate Documentation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'lua/**'
+      - 'docs/**'
+      - 'scripts/**'
+      - 'tasks/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate-docs:
+    name: Generate and commit documentation
+    runs-on: ubuntu-latest
+    # Only run on PRs from sync branch
+    if: startsWith(github.head_ref, 'sync/')
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: v0.11.0
+
+      - name: Install Pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+
+      - name: Install Task
+        run: |
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
+
+      - name: Setup dependencies
+        run: |
+          # Install mini.nvim for API docs
+          mkdir -p deps
+          git clone --filter=blob:none --depth=1 https://github.com/echasnovski/mini.nvim deps/mini.nvim
+          
+          # Install panvimdoc for vimdoc generation
+          git clone --filter=blob:none --depth=1 https://github.com/kdheepak/panvimdoc deps/panvimdoc
+
+      - name: Generate documentation
+        run: |
+          # Generate vimdoc from markdown
+          task neoweaver:docs:gen:panvimdoc
+          
+          # Generate API docs from Lua annotations
+          task neoweaver:docs:api
+          
+          # Generate help tags
+          task neoweaver:docs:tags
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if [ -n "$(git status --porcelain doc/)" ]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit generated docs
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git add doc/
+          git commit -m "docs: generate help files and tags"
+          git push
+
+      - name: Comment on PR
+        if: steps.check_changes.outputs.changes == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Documentation generated successfully and committed to this PR.'
+            })
+
+      - name: Mark check as passed
+        if: steps.check_changes.outputs.changes == 'false'
+        run: echo "No documentation changes needed"
