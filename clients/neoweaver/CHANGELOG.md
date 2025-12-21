@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.6](https://github.com/nkapatos/mindweaver/compare/neoweaver/v0.1.5...neoweaver/v0.1.6) (2025-12-21)
+
+
+### Documentation
+
+* **neoweaver:** improve documentation system with preprocessor and structured vimdoc ([faeedd9](https://github.com/nkapatos/mindweaver/commit/faeedd98eea457405413bb3a70c107bba679564a))
+
+
+### Maintenance
+
+* **neoweaver:** remove generated docs and task cache from monorepo ([e31b93f](https://github.com/nkapatos/mindweaver/commit/e31b93f4244dfeb5b274156f8117138b20a32547))
+* **neoweaver:** remove workflow file meant only for destination repo ([3ebaef6](https://github.com/nkapatos/mindweaver/commit/3ebaef6054d0fbdb9b3ecd52d42dc07a0d286882))
+
+
+### CI/CD
+
+* **neoweaver:** migrate sync workflow to PR-based approach with automated docs generation ([64d9cfc](https://github.com/nkapatos/mindweaver/commit/64d9cfc6e14cbd10efbc22317e715d0098e87759))
+
 ## [0.1.5](https://github.com/nkapatos/mindweaver/compare/neoweaver/v0.1.4...neoweaver/v0.1.5) (2025-12-20)
 
 
