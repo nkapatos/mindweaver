@@ -37,3 +37,6 @@ go.work.sum
 **/dist/
 **/tmp/
 **/gen/
+
+# Task cache files
+**/.task/
