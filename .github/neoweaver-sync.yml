@@ -1,0 +1,4 @@
+nkapatos/neoweaver.nvim:
+  source: clients/neoweaver/   # Trailing / to sync the entire directory contents
+  dest: ./                     # Sync to the root of the target repo
+  deleteOrphaned: true         # Optional: delete files in target root that no longer exist in source
