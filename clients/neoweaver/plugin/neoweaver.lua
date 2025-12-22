@@ -51,16 +51,16 @@ vim.api.nvim_create_user_command("NeoweaverNotesMeta", function(opts)
 end, { nargs = "?", desc = "Edit note metadata (TODO: not implemented)" })
 
 vim.api.nvim_create_user_command("NeoweaverNotesQuick", function()
-  require("neoweaver._internal.notes").create_quicknote()
-end, { desc = "Create quicknote (TODO: not implemented)" })
+  require("neoweaver._internal.quicknote").open()
+end, { desc = "Capture a quicknote" })
 
 vim.api.nvim_create_user_command("NeoweaverNotesQuickList", function()
-  require("neoweaver._internal.notes").list_quicknotes()
-end, { desc = "List quicknotes (TODO: not implemented)" })
+  require("neoweaver._internal.quicknote").list()
+end, { desc = "List quicknotes (TODO)" })
 
 vim.api.nvim_create_user_command("NeoweaverNotesQuickAmend", function()
-  require("neoweaver._internal.notes").amend_quicknote()
-end, { desc = "Amend quicknote (TODO: not implemented)" })
+  require("neoweaver._internal.quicknote").amend()
+end, { desc = "Amend quicknote (TODO)" })
 
 -- API/Server commands
 vim.api.nvim_create_user_command("NeoweaverServerUse", function(opts)

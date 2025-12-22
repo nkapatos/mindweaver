@@ -84,6 +84,7 @@ end
 --- @private
 function M.setup_keymaps()
   local notes = require("neoweaver._internal.notes")
+  local quicknote = require("neoweaver._internal.quicknote")
   local config = require("neoweaver._internal.config").get()
   local km_notes = config.keymaps.notes
   local km_quick = config.keymaps.quicknotes
@@ -129,10 +130,6 @@ function M.setup_keymaps()
     vim.keymap.set("n", km_notes.new, notes.create_note, { desc = "Create new note" })
   end
 
-  if km_notes.new_with_title then
-    vim.keymap.set("n", km_notes.new_with_title, notes.create_note_with_title, { desc = "Create note with title" })
-  end
-
   if km_notes.delete then
     vim.keymap.set("n", km_notes.delete, function()
       prompt_note_id("Note ID to delete:", notes.delete_note)
@@ -145,43 +142,28 @@ function M.setup_keymaps()
 
   -- Quicknotes keymaps
   if km_quick.new then
-    vim.keymap.set("n", km_quick.new, notes.create_quicknote, { desc = "New quicknote (TODO: not implemented)" })
+    vim.keymap.set("n", km_quick.new, quicknote.open, { desc = "Capture quicknote" })
   end
 
   if km_quick.list then
-    vim.keymap.set("n", km_quick.list, notes.list_quicknotes, { desc = "List quicknotes (TODO: not implemented)" })
+    vim.keymap.set("n", km_quick.list, quicknote.list, { desc = "List quicknotes (TODO)" })
   end
 
   if km_quick.amend then
-    vim.keymap.set("n", km_quick.amend, notes.amend_quicknote, { desc = "Amend quicknote (TODO: not implemented)" })
+    vim.keymap.set("n", km_quick.amend, quicknote.amend, { desc = "Amend quicknote (TODO)" })
   end
 
   -- Fast access quicknotes keymaps
   if km_quick.new_fast then
-    vim.keymap.set(
-      "n",
-      km_quick.new_fast,
-      notes.create_quicknote,
-      { desc = "New quicknote (fast) (TODO: not implemented)" }
-    )
+    vim.keymap.set("n", km_quick.new_fast, quicknote.open, { desc = "Capture quicknote (fast)" })
   end
 
   if km_quick.amend_fast then
-    vim.keymap.set(
-      "n",
-      km_quick.amend_fast,
-      notes.amend_quicknote,
-      { desc = "Amend quicknote (fast) (TODO: not implemented)" }
-    )
+    vim.keymap.set("n", km_quick.amend_fast, quicknote.amend, { desc = "Amend quicknote (fast) (TODO)" })
   end
 
   if km_quick.list_fast then
-    vim.keymap.set(
-      "n",
-      km_quick.list_fast,
-      notes.list_quicknotes,
-      { desc = "List quicknotes (fast) (TODO: not implemented)" }
-    )
+    vim.keymap.set("n", km_quick.list_fast, quicknote.list, { desc = "List quicknotes (fast) (TODO)" })
   end
 end
 
