@@ -39,6 +39,11 @@ local M = {}
 
 -- Forward declarations
 local handle_conflict
+
+--- Handle ETag conflict by showing diff and resolving
+---@param bufnr integer
+---@param note_id integer
+handle_conflict = function(bufnr, note_id)
   vim.notify("ETag conflict detected - fetching latest version from server...", vim.log.levels.WARN)
 
   ---@type mind.v3.GetNoteRequest

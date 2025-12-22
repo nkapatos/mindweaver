@@ -35,6 +35,12 @@ local function get_config()
       },
       border = {
         style = "rounded",
+        padding = {
+          top = 1,
+          bottom = 1,
+          left = 2,
+          right = 2,
+        },
         text = {
           top = "Quick Note",
           top_align = "center",
@@ -57,6 +63,12 @@ local function build_popup_options(cfg)
 
   options.border = vim.tbl_deep_extend("force", {
     style = "rounded",
+    padding = {
+      top = 1,
+      bottom = 1,
+      left = 2,
+      right = 2,
+    },
     text = {
       top = "Quick Note",
       top_align = "center",
@@ -164,8 +176,14 @@ function M.open()
     close_popup(state.popup)
   end
 
+  local cfg = get_config()
+  local title = vim.fn.strftime(cfg.title_template or "%Y%m%d%H%M")
+
   local popup = create_popup()
   popup:mount()
+
+  -- Update the title to show the generated note title
+  popup.border:set_text("top", " " .. title .. " ", "center")
 
   vim.api.nvim_buf_set_name(popup.bufnr, "Quicknote")
   vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, {})
@@ -173,6 +191,9 @@ function M.open()
   popup.border:set_text("bottom", "", "center")
 
   state.popup = popup
+
+  -- Enter insert mode
+  vim.cmd("startinsert")
 end
 
 function M.amend()
