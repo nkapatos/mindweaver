@@ -7,7 +7,9 @@ Neoweaver provides the following commands for note management:
 | `:NeoweaverNotesList`           | Fetch and display the first page of notes     |
 | `:NeoweaverNotesOpen`           | Open a note by ID (prompts for ID)            |
 | `:NeoweaverNotesNew`            | Create a new untitled note                     |
-| `:NeoweaverNotesNewWithTitle`   | Prompt for a title before creating note        |
+| `:NeoweaverNotesQuick`          | Open an ephemeral quicknote capture window     |
+| `:NeoweaverNotesQuickList`      | List saved quicknotes (TODO)                   |
+| `:NeoweaverNotesQuickAmend`     | Reopen last quicknote (TODO)                   |
 | `:NeoweaverNotesTitle`          | Edit the title of the currently active note   |
 | `:NeoweaverNotesDelete`         | Delete a note by ID (prompts for ID)          |
 | `:NeoweaverServerUse`           | Switch to a configured backend server          |
@@ -21,8 +23,8 @@ Neoweaver provides the following commands for note management:
 " Create a new untitled note
 :NeoweaverNotesNew
 
-" Create a note with a title
-:NeoweaverNotesNewWithTitle
+" Capture a quicknote
+:NeoweaverNotesQuick
 ```
 
 ### Managing Notes

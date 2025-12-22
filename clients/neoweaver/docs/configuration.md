@@ -90,11 +90,88 @@ keymaps = {
 }
 ```
 
+### quicknotes
+
+- **Type:** table
+- **Default:** see below
+
+Quicknotes configure the floating capture window. The default configuration matches the built-in capture flow:
+
+```lua
+quicknotes = {
+  title_template = "%Y%m%d%H%M",
+  collection_id = 2,
+  note_type_id = 2,
+  popup = {
+    relative = "editor",
+    position = "50%",
+    size = {
+      width = "40%",
+      height = "20%",
+    },
+    border = {
+      style = "rounded",
+      text = {
+        top = "Quick Note",
+        top_align = "center",
+      },
+    },
+  },
+}
+```
+
+Notes:
+
+- `title_template` is passed to `strftime()` when a quicknote saves. Use any valid strftime pattern.
+- `collection_id` and `note_type_id` are currently hard-coded defaults while user preferences sync is designed.
+- Metadata enrichment is not yet configurable (TODO).
+
 ## Complete Setup Example
 
 ```lua
 require('neoweaver').setup({
   allow_multiple_empty_notes = true,
+  quicknotes = {
+    popup = {
+      position = {
+        row = 4,
+        col = 10,
+      },
+      size = {
+        width = 80,
+        height = 20,
+      },
+      border = {
+        text = {
+          top = "Scratchpad",
+        },
+      },
+    },
+  },
+
+}
+```
+
+Notes:
+
+- `title_template` is passed to `strftime()` when a quicknote saves. Use any valid strftime pattern.
+- `collection_id` and `note_type_id` are currently hard-coded defaults while user preferences sync is designed.
+- Metadata enrichment is not yet configurable (TODO).
+
+## Complete Setup Example
+
+```lua
+require('neoweaver').setup({
+  allow_multiple_empty_notes = true,
+  quicknotes = {
+    window = {
+      width = 80,
+      height = 20,
+      row = 2,
+      col = 10,
+      title = "Scratchpad",
+    },
+  },
   api = {
     servers = {
       local = { url = "http://localhost:9421", default = true },
@@ -111,6 +188,10 @@ require('neoweaver').setup({
       new_with_title = "<leader>nN",
       title = "<leader>nt",
       delete = "<leader>nd",
+    },
+    quicknotes = {
+      new = "<leader>qn",
+      new_fast = "<leader>.n",
     },
   },
 })

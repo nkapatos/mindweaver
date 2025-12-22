@@ -9,9 +9,14 @@ When keymaps are enabled (`keymaps = { enabled = true }`), the following default
 | `<leader>nl`   | `:NeoweaverNotesList`        | List all notes                  |
 | `<leader>no`   | `:NeoweaverNotesOpen`        | Open note (prompts for ID)      |
 | `<leader>nn`   | `:NeoweaverNotesNew`         | Create new untitled note        |
-| `<leader>nN`   | `:NeoweaverNotesNewWithTitle`| Create note with title          |
 | `<leader>nt`   | `:NeoweaverNotesTitle`       | Edit current note title         |
 | `<leader>nd`   | `:NeoweaverNotesDelete`      | Delete note (prompts for ID)    |
+| `<leader>qn`   | `:NeoweaverNotesQuick`       | Capture quicknote               |
+| `<leader>ql`   | `:NeoweaverNotesQuickList`   | List quicknotes (TODO)          |
+| `<leader>qa`   | `:NeoweaverNotesQuickAmend`  | Reopen last quicknote (TODO)    |
+| `<leader>.n`   | `:NeoweaverNotesQuick`       | Capture quicknote (fast)        |
+| `<leader>.l`   | `:NeoweaverNotesQuickList`   | List quicknotes (TODO)          |
+| `<leader>.a`   | `:NeoweaverNotesQuickAmend`  | Reopen last quicknote (TODO)    |
 
 ## Customizing Keymaps
 

@@ -9,7 +9,30 @@ M.defaults = {
   explorer = {
     show_notifications = true, -- Show notifications on explorer refresh
   },
+  quicknotes = {
+    title_template = "%Y%m%d%H%M",
+    collection_id = 2,
+    note_type_id = 2,
+    -- TODO: allow configuring quicknote payload via editor preferences
+    popup = {
+      relative = "editor",
+      position = "50%",
+      size = {
+        width = "40%",
+        height = "20%",
+      },
+      border = {
+        style = "rounded",
+        text = {
+          top = "Quick Note",
+          top_align = "center",
+        },
+      },
+    },
+  },
+
   keymaps = {
+
     enabled = false, -- Keymaps are opt-in
     notes = {
       -- Standard notes (using <leader>n* for "notes")
@@ -49,6 +72,10 @@ function M.apply(opts)
   -- Merge explorer configuration
   if opts.explorer ~= nil then
     M.current.explorer = vim.tbl_extend("force", M.current.explorer, opts.explorer)
+  end
+
+  if opts.quicknotes ~= nil then
+    M.current.quicknotes = vim.tbl_deep_extend("force", M.current.quicknotes, opts.quicknotes)
   end
 
   -- Merge keymap configuration
