@@ -193,42 +193,40 @@ function M.show(opts)
 
   --- Update menu items based on current state
   update_menu_items = function()
-    vim.schedule(function()
-      if not results_menu or not results_menu.tree then
-        return
-      end
+    if not results_menu or not results_menu.tree then
+      return
+    end
 
-      local menu_items = {}
+    local menu_items = {}
 
-      if is_loading then
-        table.insert(menu_items, Menu.separator("🔍 Searching...", { text_align = "center" }))
-      elseif #current_results == 0 then
-        if #current_query < min_query_length then
-          table.insert(
-            menu_items,
-            Menu.separator("Type at least " .. min_query_length .. " characters to search", { text_align = "center" })
-          )
-        else
-          table.insert(menu_items, Menu.separator(empty_message, { text_align = "center" }))
-        end
+    if is_loading then
+      table.insert(menu_items, Menu.separator("🔍 Searching...", { text_align = "center" }))
+    elseif #current_results == 0 then
+      if #current_query < min_query_length then
+        table.insert(
+          menu_items,
+          Menu.separator("Type at least " .. min_query_length .. " characters to search", { text_align = "center" })
+        )
       else
-        -- Add actual results
-        for idx, result in ipairs(current_results) do
-          local text = opts.format_item(result, idx)
-          table.insert(menu_items, Menu.item(text, { item = result, index = idx }))
-        end
-
-        -- Add "Load more" indicator if there are more pages
-        if has_more_pages then
-          table.insert(menu_items, Menu.separator(""))
-          table.insert(menu_items, Menu.separator("Press <C-n> to load more...", { text_align = "center" }))
-        end
+        table.insert(menu_items, Menu.separator(empty_message, { text_align = "center" }))
+      end
+    else
+      -- Add actual results
+      for idx, result in ipairs(current_results) do
+        local text = opts.format_item(result, idx)
+        table.insert(menu_items, Menu.item(text, { item = result, index = idx }))
       end
 
-      -- Update tree and render
-      results_menu.tree:set_nodes(menu_items)
-      results_menu.tree:render()
-    end)
+      -- Add "Load more" indicator if there are more pages
+      if has_more_pages then
+        table.insert(menu_items, Menu.separator(""))
+        table.insert(menu_items, Menu.separator("Press <C-n> to load more...", { text_align = "center" }))
+      end
+    end
+
+    -- Update tree and render (direct, no schedule)
+    results_menu.tree:set_nodes(menu_items)
+    results_menu.tree:render()
   end
 
   --- Perform search via callback
