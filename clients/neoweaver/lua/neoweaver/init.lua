@@ -19,6 +19,8 @@ local M = {}
 ---
 ---@param opts? table Configuration options
 ---@field opts.allow_multiple_empty_notes? boolean Allow multiple untitled notes (default: false)
+---@field opts.metadata? table Metadata extraction configuration
+---@field opts.metadata.enabled? boolean Enable .weaverc.json extraction (default: false, EXPERIMENTAL)
 ---@field opts.api? table API configuration (servers, debug_info)
 ---@field opts.api.servers table Server configurations (required)
 ---@field opts.api.debug_info? boolean Enable debug logging (default: true)
@@ -51,6 +53,18 @@ local M = {}
 ---       list = "<leader>nl",
 ---       open = "<leader>no",
 ---       new = "<leader>nn"
+---     }
+---   }
+--- })
+---
+--- EXPERIMENTAL - Enable metadata extraction from .weaverc.json:
+--- require('neoweaver').setup({
+---   metadata = {
+---     enabled = true
+---   },
+---   api = {
+---     servers = {
+---       local = { url = "http://localhost:9421", default = true }
 ---     }
 ---   }
 --- })

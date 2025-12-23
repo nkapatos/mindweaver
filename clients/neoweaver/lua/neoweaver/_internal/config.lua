@@ -6,6 +6,9 @@ local M = {}
 
 M.defaults = {
   allow_multiple_empty_notes = false,
+  metadata = {
+    enabled = false, -- EXPERIMENTAL: Enable metadata extraction from .weaverc.json
+  },
   explorer = {
     show_notifications = true, -- Show notifications on explorer refresh
   },
@@ -76,6 +79,11 @@ function M.apply(opts)
 
   if opts.quicknotes ~= nil then
     M.current.quicknotes = vim.tbl_deep_extend("force", M.current.quicknotes, opts.quicknotes)
+  end
+
+  -- Merge metadata configuration
+  if opts.metadata ~= nil then
+    M.current.metadata = vim.tbl_extend("force", M.current.metadata, opts.metadata)
   end
 
   -- Merge keymap configuration
