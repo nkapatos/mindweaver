@@ -1,0 +1,62 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+labels: ["type: enhancement", "status: triage", "priority: low"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature Request
+        Have an idea for improving Mindweaver? We'd love to hear it!
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the system would this affect?
+      options:
+        - mindweaver (server/backend)
+        - mind (Notes/PKM service)
+        - brain (AI/Assistant service)
+        - neoweaver (Neovim client)
+        - proto (API design)
+        - shared (Shared packages)
+        - documentation
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user need or pain point
+      placeholder: As a user, I want to... so that I can...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you solve this problem?
+      placeholder: Describe your proposed solution
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches have you thought about?
+      placeholder: List any alternative solutions or features you've considered
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Mockups, examples, references, etc.
+      placeholder: Any other relevant information
+    validations:
+      required: false

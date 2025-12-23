@@ -1,0 +1,47 @@
+name: Close stale issues
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Weekly on Sunday at midnight UTC
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          # Days before marking as stale
+          days-before-stale: 90
+          
+          # Days before closing after marked stale
+          days-before-close: 14
+          
+          # Label to apply when stale
+          stale-issue-label: 'status: stale'
+          stale-pr-label: 'status: stale'
+          
+          # Messages
+          stale-issue-message: |
+            This issue has been inactive for 90 days and will be closed in 14 days if there is no activity.
+            
+            If this is still relevant, please comment to keep it open.
+          
+          stale-pr-message: |
+            This pull request has been inactive for 90 days and will be closed in 14 days if there is no activity.
+            
+            If this is still relevant, please comment to keep it open.
+          
+          close-issue-message: 'Closing due to inactivity. Please reopen if this is still needed.'
+          close-pr-message: 'Closing due to inactivity. Please reopen if this is still needed.'
+          
+          # Exempt labels - issues with these labels won't be marked stale
+          exempt-issue-labels: 'priority: critical,priority: high,status: blocked,needs-rfc'
+          exempt-pr-labels: 'priority: critical,priority: high,status: blocked'
+          
+          # Only process issues/PRs (set to false to include both)
+          exempt-all-milestones: false

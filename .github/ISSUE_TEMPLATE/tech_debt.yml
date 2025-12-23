@@ -1,0 +1,74 @@
+name: Tech Debt / Cleanup
+description: Code cleanup, refactoring, or technical improvements
+labels: ["type: tech-debt", "status: triage", "priority: low"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Technical Debt / Code Cleanup
+        Help us keep the codebase clean and maintainable!
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the codebase needs cleanup?
+      options:
+        - mindweaver (server/backend)
+        - mind (Notes/PKM service)
+        - brain (AI/Assistant service)
+        - neoweaver (Neovim client)
+        - proto (Protocol buffers)
+        - shared (Shared packages)
+        - ci/cd (GitHub Actions)
+        - documentation
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current state
+      description: What's wrong with the current code?
+      placeholder: |
+        Describe the current situation:
+        - What code needs improvement?
+        - What problems does it cause?
+        - Include file paths and line numbers if relevant
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed improvement
+      description: How should it be improved?
+      placeholder: |
+        Describe the desired state:
+        - How should the code be refactored?
+        - What patterns should be used?
+        - What should be removed/added?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      description: How much does this affect development or users?
+      options:
+        - High - Blocks development or causes confusion
+        - Medium - Should be addressed soon
+        - Low - Nice to have cleanup
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: References, examples, related issues
+      placeholder: Any other relevant information
+    validations:
+      required: false
