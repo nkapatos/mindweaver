@@ -69,15 +69,15 @@ local function find_target_window()
   local current_buf = vim.api.nvim_win_get_buf(current_win)
   local current_buftype = vim.api.nvim_get_option_value("buftype", { buf = current_buf })
   local current_filetype = vim.api.nvim_get_option_value("filetype", { buf = current_buf })
-  
+
   -- If current window is a normal file buffer (not special UI), use it
   if current_buftype == "" and current_filetype ~= "neoweaver_explorer" then
     return current_win
   end
-  
+
   -- Otherwise, find a suitable window in the current tab
   local wins = vim.api.nvim_tabpage_list_wins(0)
-  
+
   -- Sort by last used buffer (most recent first)
   table.sort(wins, function(a, b)
     local ba = vim.api.nvim_win_get_buf(a)
@@ -86,7 +86,7 @@ local function find_target_window()
     local info_b = vim.fn.getbufinfo(bb)[1]
     return (info_a and info_a.lastused or 0) > (info_b and info_b.lastused or 0)
   end)
-  
+
   -- Find first suitable window
   for _, win in ipairs(wins) do
     if vim.api.nvim_win_is_valid(win) then
@@ -95,16 +95,14 @@ local function find_target_window()
       local filetype = vim.api.nvim_get_option_value("filetype", { buf = buf })
       local win_config = vim.api.nvim_win_get_config(win)
       local is_float = win_config.relative ~= ""
-      
+
       -- Skip floating windows, special buffers, and explorer
-      if not is_float 
-         and buftype == "" 
-         and filetype ~= "neoweaver_explorer" then
+      if not is_float and buftype == "" and filetype ~= "neoweaver_explorer" then
         return win
       end
     end
   end
-  
+
   -- No suitable window found - create a new split
   -- Find the explorer window to split from
   for _, win in ipairs(wins) do
@@ -118,7 +116,7 @@ local function find_target_window()
       return new_win
     end
   end
-  
+
   -- Fallback: use current window (will create split if needed)
   return nil
 end
@@ -138,7 +136,7 @@ function M.switch_to_buffer(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
-  
+
   local target_win = find_target_window()
   if target_win and vim.api.nvim_win_is_valid(target_win) then
     vim.api.nvim_set_current_win(target_win)
@@ -157,7 +155,7 @@ function M.create(opts)
 
   -- Determine target window
   local target_win = opts.win or find_target_window()
-  
+
   -- Check if buffer already exists
   local existing = M.get(opts.type, opts.id)
   if existing and vim.api.nvim_buf_is_valid(existing) then
@@ -233,7 +231,7 @@ function M.create(opts)
     vim.api.nvim_set_current_win(target_win)
   end
   vim.api.nvim_set_current_buf(bufnr)
-  
+
   -- Setup statusline for the buffer in current window
   local statusline = require("neoweaver._internal.buffer.statusline")
   local current_win = vim.api.nvim_get_current_win()

@@ -50,10 +50,10 @@ function M.find_project_root(start_dir)
   -- Project markers in priority order
   local markers = {
     ".weaverc.json", -- Primary marker
-    ".git",          -- Git repository root
-    "package.json",  -- Node.js/JavaScript projects
-    "go.mod",        -- Go projects
-    "Cargo.toml",    -- Rust projects
+    ".git", -- Git repository root
+    "package.json", -- Node.js/JavaScript projects
+    "go.mod", -- Go projects
+    "Cargo.toml", -- Rust projects
     "pyproject.toml", -- Python projects
     "composer.json", -- PHP projects
   }
@@ -126,10 +126,7 @@ function M.load(root_dir)
   -- Load and parse file
   local content = vim.fn.readfile(weaverc_path)
   if not content or #content == 0 then
-    vim.notify(
-      string.format("[weaverc] Empty file: %s", weaverc_path),
-      vim.log.levels.WARN
-    )
+    vim.notify(string.format("[weaverc] Empty file: %s", weaverc_path), vim.log.levels.WARN)
     return nil
   end
 
@@ -137,10 +134,7 @@ function M.load(root_dir)
   local ok, decoded = pcall(vim.json.decode, content_str)
 
   if not ok then
-    vim.notify(
-      string.format("[weaverc] Invalid JSON in %s: %s", weaverc_path, tostring(decoded)),
-      vim.log.levels.ERROR
-    )
+    vim.notify(string.format("[weaverc] Invalid JSON in %s: %s", weaverc_path, tostring(decoded)), vim.log.levels.ERROR)
     return nil
   end
 

@@ -41,18 +41,20 @@ local modes = {
 ---@param bufnr number Buffer number
 local function setup_keymaps(bufnr)
   local map_opts = { noremap = true, nowait = true, buffer = bufnr }
-  
+
   -- Open/expand/collapse (Enter)
   vim.keymap.set("n", "<CR>", function()
     local node = tree.get_node()
-    if not node then return end
-    
+    if not node then
+      return
+    end
+
     -- Handle note nodes - open for editing
     if node.type == "note" then
       notes.open_note(node.note_id)
       return
     end
-    
+
     -- Handle server/collection nodes - expand/collapse
     if node:has_children() then
       if node:is_expanded() then
@@ -63,7 +65,7 @@ local function setup_keymaps(bufnr)
       tree.render()
     end
   end, vim.tbl_extend("force", map_opts, { desc = "Open note or toggle node" }))
-  
+
   -- Open note (o)
   vim.keymap.set("n", "o", function()
     local node = tree.get_node()
@@ -71,7 +73,7 @@ local function setup_keymaps(bufnr)
       notes.open_note(node.note_id)
     end
   end, vim.tbl_extend("force", map_opts, { desc = "Open note" }))
-  
+
   -- Expand (l)
   vim.keymap.set("n", "l", function()
     local node = tree.get_node()
@@ -80,12 +82,14 @@ local function setup_keymaps(bufnr)
       tree.render()
     end
   end, vim.tbl_extend("force", map_opts, { desc = "Expand node" }))
-  
+
   -- Collapse or go to parent (h)
   vim.keymap.set("n", "h", function()
     local node = tree.get_node()
-    if not node then return end
-    
+    if not node then
+      return
+    end
+
     if node:is_expanded() and node:has_children() then
       node:collapse()
       tree.render()
@@ -104,23 +108,23 @@ local function setup_keymaps(bufnr)
       end
     end
   end, vim.tbl_extend("force", map_opts, { desc = "Collapse or go to parent" }))
-  
+
   -- Navigation (j/k)
   vim.keymap.set("n", "j", function()
     vim.cmd("normal! j")
   end, vim.tbl_extend("force", map_opts, { desc = "Move down" }))
-  
+
   vim.keymap.set("n", "k", function()
     vim.cmd("normal! k")
   end, vim.tbl_extend("force", map_opts, { desc = "Move up" }))
-  
+
   -- Refresh (R)
   vim.keymap.set("n", "R", function()
     M.refresh()
   end, vim.tbl_extend("force", map_opts, { desc = "Refresh tree" }))
-  
+
   -- Generic actions - delegate to mode-specific handlers
-  
+
   -- Create (a)
   vim.keymap.set("n", "a", function()
     local node = tree.get_node()
@@ -128,7 +132,7 @@ local function setup_keymaps(bufnr)
       M.handle_create(node)
     end
   end, vim.tbl_extend("force", map_opts, { desc = "Create item" }))
-  
+
   -- Rename (r)
   vim.keymap.set("n", "r", function()
     local node = tree.get_node()
@@ -136,7 +140,7 @@ local function setup_keymaps(bufnr)
       M.handle_rename(node)
     end
   end, vim.tbl_extend("force", map_opts, { desc = "Rename item" }))
-  
+
   -- Delete (d)
   vim.keymap.set("n", "d", function()
     local node = tree.get_node()
@@ -188,24 +192,24 @@ local function load_and_render_tree(show_notification)
     vim.notify("Explorer window not open", vim.log.levels.ERROR)
     return
   end
-  
+
   local cfg = config.get()
-  
+
   -- Default to config setting if not explicitly specified
   if show_notification == nil then
     show_notification = cfg.explorer.show_notifications
   end
-  
+
   -- Get current mode
   local mode = modes[state.current_mode]
   if not mode or not mode.load_data then
     vim.notify("Invalid mode: " .. state.current_mode, vim.log.levels.ERROR)
     return
   end
-  
+
   -- Set loading state
   statusline.set_loading()
-  
+
   -- Load data using mode-specific loader
   mode.load_data(function(nodes, err, stats)
     if err then
@@ -213,22 +217,22 @@ local function load_and_render_tree(show_notification)
       vim.notify("Failed to load data: " .. vim.inspect(err), vim.log.levels.ERROR)
       return
     end
-    
+
     -- Handle empty result
     if not nodes or #nodes == 0 then
       statusline.set_ready(0, 0)
       vim.notify("No data found", vim.log.levels.INFO)
       return
     end
-    
+
     -- Update statusline with stats
     if stats then
       statusline.set_ready(stats.collections or 0, stats.notes or 0)
     end
-    
+
     -- Build and render tree with state preservation
     tree.build_and_render_with_state(bufnr, nodes)
-    
+
     -- Show notification if enabled
     if show_notification and stats then
       vim.notify(
@@ -251,7 +255,7 @@ function M.switch_mode(mode_name)
     vim.notify("Unknown mode: " .. mode_name, vim.log.levels.ERROR)
     return
   end
-  
+
   state.current_mode = mode_name
   M.refresh()
 end
@@ -261,15 +265,15 @@ end
 function M.open(opts)
   -- Open window (NuiSplit creates window + buffer)
   local split = window.open(opts)
-  
+
   if not split then
     vim.notify("Failed to open explorer window", vim.log.levels.ERROR)
     return
   end
-  
+
   -- Setup keymaps on the new buffer
   setup_keymaps(split.bufnr)
-  
+
   -- Load and render tree data
   load_and_render_tree(true)
 end
@@ -283,7 +287,7 @@ end
 ---@param opts? { position?: "left"|"right", size?: number }
 function M.toggle(opts)
   if window.is_open() then
-    M.close()  -- Use M.close() to properly clean up tree state
+    M.close() -- Use M.close() to properly clean up tree state
   else
     M.open(opts)
   end
