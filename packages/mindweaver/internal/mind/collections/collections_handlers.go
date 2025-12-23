@@ -47,9 +47,9 @@ func (h *CollectionsHandler) CreateCollection(
 	path, err := h.service.GenerateCollectionPath(ctx, req.Msg.DisplayName, parentID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, connect.NewError(connect.CodeNotFound, ErrInvalidParentCollection)
+			return nil, apierrors.NewInvalidArgumentError("parent_id", ErrInvalidParentCollection.Error())
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to generate collection path", err)
 	}
 
 	params := ProtoCreateCollectionToStore(req.Msg, path)
@@ -60,9 +60,9 @@ func (h *CollectionsHandler) CreateCollection(
 			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "collection", "path", path)
 		}
 		if apierrors.IsForeignKeyConstraintError(err) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrInvalidParentCollection)
+			return nil, apierrors.NewInvalidArgumentError("parent_id", ErrInvalidParentCollection.Error())
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to create collection", err)
 	}
 
 	return connect.NewResponse(StoreCollectionToProto(collection)), nil
@@ -77,7 +77,7 @@ func (h *CollectionsHandler) GetCollection(
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "collection", strconv.FormatInt(req.Msg.Id, 10))
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get collection", err)
 	}
 
 	return connect.NewResponse(StoreCollectionToProto(collection)), nil
@@ -92,11 +92,11 @@ func (h *CollectionsHandler) UpdateCollection(
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "collection", strconv.FormatInt(req.Msg.Id, 10))
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get collection", err)
 	}
 
 	if current.IsSystem {
-		return nil, connect.NewError(connect.CodePermissionDenied, ErrCollectionIsSystem)
+		return nil, apierrors.NewPermissionDeniedError(apierrors.MindDomain, ErrCollectionIsSystem.Error())
 	}
 
 	// Regenerate path if name or parent changed
@@ -108,9 +108,9 @@ func (h *CollectionsHandler) UpdateCollection(
 	path, err := h.service.GenerateCollectionPath(ctx, req.Msg.DisplayName, parentID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, connect.NewError(connect.CodeNotFound, ErrInvalidParentCollection)
+			return nil, apierrors.NewInvalidArgumentError("parent_id", ErrInvalidParentCollection.Error())
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to generate collection path", err)
 	}
 
 	params := ProtoUpdateCollectionToStore(req.Msg, path, current.IsSystem)
@@ -121,22 +121,22 @@ func (h *CollectionsHandler) UpdateCollection(
 			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "collection", "path", path)
 		}
 		if apierrors.IsForeignKeyConstraintError(err) {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrInvalidParentCollection)
+			return nil, apierrors.NewInvalidArgumentError("parent_id", ErrInvalidParentCollection.Error())
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to update collection", err)
 	}
 
 	// If path changed, update descendant paths
 	if path != current.Path {
 		err = h.service.UpdateDescendantPaths(ctx, req.Msg.Id, path)
 		if err != nil {
-			return nil, connect.NewError(connect.CodeInternal, err)
+			return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to update descendant paths", err)
 		}
 	}
 
 	updated, err := h.service.GetCollectionByID(ctx, req.Msg.Id)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to retrieve updated collection", err)
 	}
 
 	return connect.NewResponse(StoreCollectionToProto(updated)), nil
@@ -151,11 +151,11 @@ func (h *CollectionsHandler) DeleteCollection(
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "collection", strconv.FormatInt(req.Msg.Id, 10))
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get collection", err)
 	}
 
 	if collection.IsSystem {
-		return nil, connect.NewError(connect.CodePermissionDenied, ErrCollectionIsSystem)
+		return nil, apierrors.NewPermissionDeniedError(apierrors.MindDomain, ErrCollectionIsSystem.Error())
 	}
 
 	err = h.service.DeleteCollection(ctx, req.Msg.Id)
@@ -167,7 +167,7 @@ func (h *CollectionsHandler) DeleteCollection(
 			}
 			return nil, apierrors.NewFailedPreconditionError(apierrors.MindDomain, "COLLECTION_HAS_NOTES", metadata)
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to delete collection", err)
 	}
 
 	return connect.NewResponse(&emptypb.Empty{}), nil
@@ -199,7 +199,7 @@ func (h *CollectionsHandler) ListCollections(
 	}
 
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to list collections", err)
 	}
 
 	// Build pagination response
@@ -231,7 +231,7 @@ func (h *CollectionsHandler) ListCollectionChildren(
 	parentID := utils.NullInt64(req.Msg.ParentId)
 	collections, err := h.service.ListCollectionsByParentPaginated(ctx, parentID, params.Limit, params.Offset)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to list collection children", err)
 	}
 
 	var totalCount int64
@@ -266,13 +266,13 @@ func (h *CollectionsHandler) GetCollectionTree(
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "collection", strconv.FormatInt(req.Msg.RootId, 10))
 		}
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get collection", err)
 	}
 
 	maxDepth := int(req.Msg.MaxDepth)
 	descendants, err := h.service.GetCollectionSubtree(ctx, req.Msg.RootId, maxDepth)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get collection subtree", err)
 	}
 
 	resp := &mindv3.GetCollectionTreeResponse{
