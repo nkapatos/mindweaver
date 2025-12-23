@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
+	apierrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3/mindv3connect"
 )
@@ -24,7 +25,7 @@ func (h *NoteMetaHandler) ListMeta(
 ) (*connect.Response[mindv3.ListMetaResponse], error) {
 	metaItems, err := h.service.GetNoteMetaByNoteID(ctx, req.Msg.NoteId)
 	if err != nil {
-		return nil, newInternalError("failed to retrieve note metadata", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to retrieve note metadata", err)
 	}
 
 	protoItems := StoreNoteMetasToProto(metaItems)

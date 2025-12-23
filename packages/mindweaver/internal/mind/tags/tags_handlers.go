@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
+	apierrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3/mindv3connect"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
@@ -53,7 +54,7 @@ func (h *TagsHandler) ListTags(
 	}
 
 	if err != nil {
-		return nil, newInternalError("failed to list tags", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to list tags", err)
 	}
 
 	// Build pagination response

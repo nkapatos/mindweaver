@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/dberrors"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/middleware"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
 )
@@ -59,7 +59,7 @@ func (s *NoteTypesService) CountNoteTypes(ctx context.Context) (int64, error) {
 func (s *NoteTypesService) GetNoteTypeByID(ctx context.Context, id int64) (store.NoteType, error) {
 	item, err := s.store.GetNoteTypeByID(ctx, id)
 	if err != nil {
-		if dberrors.IsNotFoundError(err) {
+		if errors.IsNotFoundError(err) {
 			return store.NoteType{}, ErrNoteTypeNotFound
 		}
 		s.logger.Error("failed to get note_type by id", "id", id, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -91,7 +91,7 @@ func (s *NoteTypesService) GetNoteTypesByTypes(ctx context.Context, types []stri
 func (s *NoteTypesService) CreateNoteType(ctx context.Context, params store.CreateNoteTypeParams) (int64, error) {
 	id, err := s.store.CreateNoteType(ctx, params)
 	if err != nil {
-		if dberrors.IsUniqueConstraintError(err) {
+		if errors.IsUniqueConstraintError(err) {
 			return 0, ErrNoteTypeAlreadyExists
 		}
 		s.logger.Error("failed to create note_type", "params", params, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -107,7 +107,7 @@ func (s *NoteTypesService) UpdateNoteType(ctx context.Context, params store.Upda
 	// First check if it's a system type
 	noteType, err := s.store.GetNoteTypeByID(ctx, params.ID)
 	if err != nil {
-		if dberrors.IsNotFoundError(err) {
+		if errors.IsNotFoundError(err) {
 			return ErrNoteTypeNotFound
 		}
 		s.logger.Error("failed to get note_type for update check", "id", params.ID, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -123,10 +123,10 @@ func (s *NoteTypesService) UpdateNoteType(ctx context.Context, params store.Upda
 
 	err = s.store.UpdateNoteTypeByID(ctx, params)
 	if err != nil {
-		if dberrors.IsNotFoundError(err) {
+		if errors.IsNotFoundError(err) {
 			return ErrNoteTypeNotFound
 		}
-		if dberrors.IsUniqueConstraintError(err) {
+		if errors.IsUniqueConstraintError(err) {
 			return ErrNoteTypeAlreadyExists
 		}
 		s.logger.Error("failed to update note_type", "params", params, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -141,7 +141,7 @@ func (s *NoteTypesService) DeleteNoteType(ctx context.Context, id int64) error {
 	// First check if it's a system type
 	noteType, err := s.store.GetNoteTypeByID(ctx, id)
 	if err != nil {
-		if dberrors.IsNotFoundError(err) {
+		if errors.IsNotFoundError(err) {
 			return ErrNoteTypeNotFound
 		}
 		s.logger.Error("failed to get note_type for deletion check", "id", id, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -154,7 +154,7 @@ func (s *NoteTypesService) DeleteNoteType(ctx context.Context, id int64) error {
 
 	err = s.store.DeleteNoteTypeByID(ctx, id)
 	if err != nil {
-		if dberrors.IsNotFoundError(err) {
+		if errors.IsNotFoundError(err) {
 			return ErrNoteTypeNotFound
 		}
 		s.logger.Error("failed to delete note_type", "id", id, "err", err, "request_id", middleware.GetRequestID(ctx))

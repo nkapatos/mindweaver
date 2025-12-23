@@ -1,9 +1,9 @@
-// Package dberrors provides utilities for detecting and handling database errors.
+// Package errors provides utilities for detecting and handling errors across the application.
 //
-// This package consolidates database error detection helpers that are shared across
-// the mind and brain services. It handles SQLC-generated query errors from the
-// modernc.org/sqlite driver.
-package dberrors
+// This package consolidates error handling logic that is shared across services:
+// - Database error detection (SQLC/SQLite errors)
+// - Connect-RPC error builders (AIP-193 compliant)
+package errors
 
 import (
 	"errors"
@@ -17,7 +17,7 @@ import (
 //
 // Example usage in service layer:
 //
-//	if dberrors.IsUniqueConstraintError(err) {
+//	if errors.IsUniqueConstraintError(err) {
 //		return 0, ErrResourceAlreadyExists
 //	}
 func IsUniqueConstraintError(err error) bool {
@@ -40,7 +40,7 @@ func IsUniqueConstraintError(err error) bool {
 //
 // Example usage in service layer:
 //
-//	if dberrors.IsNotFoundError(err) {
+//	if errors.IsNotFoundError(err) {
 //		return store.Tag{}, ErrTagNotFound
 //	}
 func IsNotFoundError(err error) bool {
@@ -57,7 +57,7 @@ func IsNotFoundError(err error) bool {
 //
 // Example usage in service layer:
 //
-//	if dberrors.IsForeignKeyConstraintError(err) {
+//	if errors.IsForeignKeyConstraintError(err) {
 //		return ErrResourceInUse
 //	}
 func IsForeignKeyConstraintError(err error) bool {
