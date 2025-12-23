@@ -277,3 +277,80 @@ func (h *NotesHandler) NewNote(
 	}
 	return connect.NewResponse(StoreNoteToProto(note)), nil
 }
+
+// FindNotes implements the AIP-136 :find custom method for notes.
+// Searches notes by title and optional filters (collection, type, template).
+// Default behavior: global search across all collections.
+// Always includes collection_path in results for "where is it?" UX.
+func (h *NotesHandler) FindNotes(
+	ctx context.Context,
+	req *connect.Request[mindv3.FindNotesRequest],
+) (*connect.Response[mindv3.FindNotesResponse], error) {
+	// Parse pagination request (with defaults for optional fields)
+	pageSize := int32(0)
+	if req.Msg.PageSize != nil {
+		pageSize = *req.Msg.PageSize
+	}
+	pageToken := ""
+	if req.Msg.PageToken != nil {
+		pageToken = *req.Msg.PageToken
+	}
+	pageReq := pagination.ParseRequest(pageSize, pageToken)
+	params := pageReq.ToParams()
+
+	// Build find parameters (all filters are optional)
+	findParams := store.FindNotesParams{
+		Title:        req.Msg.Title,
+		CollectionID: req.Msg.CollectionId,
+		NoteTypeID:   req.Msg.NoteTypeId,
+		IsTemplate:   req.Msg.IsTemplate,
+		Limit:        int64(params.Limit),
+		Offset:       int64(params.Offset),
+	}
+
+	// Execute find query
+	rows, err := h.service.FindNotesPaginated(ctx, findParams)
+	if err != nil {
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to find notes", err)
+	}
+
+	// Get total count (only on first page)
+	var totalCount int64
+	if pageReq.IsFirstPage() {
+		countParams := store.CountFindNotesParams{
+			Title:        req.Msg.Title,
+			CollectionID: req.Msg.CollectionId,
+			NoteTypeID:   req.Msg.NoteTypeId,
+			IsTemplate:   req.Msg.IsTemplate,
+		}
+		totalCount, _ = h.service.CountFindNotes(ctx, countParams)
+	}
+
+	// Convert rows to proto notes
+	protoNotes := make([]*mindv3.Note, 0, len(rows))
+	for _, row := range rows {
+		protoNotes = append(protoNotes, FindNotesRowToProto(row))
+	}
+
+	// Apply field mask if specified
+	if req.Msg.FieldMask != nil && *req.Msg.FieldMask != "" {
+		protoNotes = ApplyFieldMaskToNotes(protoNotes, *req.Msg.FieldMask)
+	}
+
+	// Build pagination response
+	pagResp := pageReq.BuildResponse(len(rows), totalCount)
+	protoNotes = pagination.TrimResults(protoNotes, pageReq.PageSize)
+
+	resp := &mindv3.FindNotesResponse{
+		Notes:         protoNotes,
+		NextPageToken: pagResp.NextPageToken,
+	}
+
+	// Include total size only on first page
+	if pageReq.IsFirstPage() {
+		totalSize := int32(totalCount)
+		resp.TotalSize = &totalSize
+	}
+
+	return connect.NewResponse(resp), nil
+}

@@ -354,6 +354,41 @@ func (s *NotesService) CountNotesByIsTemplate(ctx context.Context, isTemplate sq
 	return count, err
 }
 
+// FindNotesPaginated finds notes by title and optional filters with pagination.
+// Default behavior: searches globally across all collections.
+// Filters can narrow scope (collection_id, note_type_id, is_template).
+// Returns notes with collection_path populated from JOIN for "where is it?" UX.
+// Used by UI pickers and Brain service for structured metadata queries.
+func (s *NotesService) FindNotesPaginated(ctx context.Context, params store.FindNotesParams) ([]store.FindNotesRow, error) {
+	notes, err := s.store.FindNotes(ctx, params)
+	if err != nil {
+		s.logger.Error(
+			"failed to find notes",
+			"title", params.Title,
+			"collection_id", params.CollectionID,
+			"err", err,
+			"request_id", middleware.GetRequestID(ctx),
+		)
+	}
+	return notes, err
+}
+
+// CountFindNotes counts notes matching find criteria.
+// Uses same filter logic as FindNotesPaginated for consistency.
+func (s *NotesService) CountFindNotes(ctx context.Context, params store.CountFindNotesParams) (int64, error) {
+	count, err := s.store.CountFindNotes(ctx, params)
+	if err != nil {
+		s.logger.Error(
+			"failed to count find notes",
+			"title", params.Title,
+			"collection_id", params.CollectionID,
+			"err", err,
+			"request_id", middleware.GetRequestID(ctx),
+		)
+	}
+	return count, err
+}
+
 // ============================================================================
 // Internal Helper Methods - Parsing and Data Extraction
 // ============================================================================

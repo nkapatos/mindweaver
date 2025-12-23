@@ -378,34 +378,32 @@ end
 function M.find_notes()
   local search_picker = require("neoweaver._internal.ui.search_picker")
 
-  -- Mock data for testing (will be replaced with real API call later)
-  local mock_notes = {
-    { id = 1, title = "Meeting Notes", collection_path = "work/projects" },
-    { id = 2, title = "Daily Meeting", collection_path = "work/daily" },
-    { id = 3, title = "Meeting Agenda", collection_path = "personal" },
-    { id = 4, title = "Project Planning", collection_path = "work/projects" },
-    { id = 5, title = "Ideas", collection_path = "personal" },
-  }
-
-  --- Mock search function - filters notes by title
+  --- Search function - calls FindNotes API
   ---@param query string Search query
-  ---@param page_token string|nil Pagination token (unused in mock)
+  ---@param page_token string|nil Pagination token
   ---@param callback function Callback(items, error, has_more, next_token)
-  local function mock_search(query, page_token, callback)
-    -- Simulate async behavior
-    vim.defer_fn(function()
-      local query_lower = query:lower()
-      local filtered = {}
+  local function search_fn(query, page_token, callback)
+    ---@type mind.v3.FindNotesRequest
+    local req = {
+      title = query,
+      pageSize = 100,
+      pageToken = page_token,
+      fieldMask = "id,title,collectionId,collectionPath",
+    }
 
-      for _, note in ipairs(mock_notes) do
-        if note.title:lower():find(query_lower, 1, true) then
-          table.insert(filtered, note)
-        end
+    api.notes.find(req, function(res)
+      if res.error then
+        callback(nil, res.error.message, false, nil)
+        return
       end
 
-      -- Mock callback: (items, error, has_more, next_token)
-      callback(filtered, nil, false, nil)
-    end, 100) -- 100ms simulated latency
+      ---@type mind.v3.FindNotesResponse
+      local find_res = res.data
+      local notes = find_res.notes or {}
+      local has_more = find_res.nextPageToken ~= nil and find_res.nextPageToken ~= ""
+
+      callback(notes, nil, has_more, find_res.nextPageToken)
+    end)
   end
 
   -- Show search picker
@@ -414,15 +412,15 @@ function M.find_notes()
     min_query_length = 3,
     debounce_ms = 300,
     empty_message = "No notes found",
-    search_fn = mock_search,
+    search_fn = search_fn,
     format_item = function(note, _idx)
       -- Format: "Note Title          collection-path"
-      local title = note.title
-      local path = note.collection_path
+      local title = note.title or "Untitled"
+      local path = note.collectionPath or ""
       return string.format("%-40s %s", title, path)
     end,
     on_select = function(note, _idx)
-      M.open_note(note.id)
+      M.open_note(tonumber(note.id))
     end,
     on_close = function()
       -- Optional: handle picker close
