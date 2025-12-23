@@ -26,17 +26,17 @@ import (
 // - CountNotesInCollection: Count notes in a collection (may belong in Notes service)
 // Consider adding these as needed based on client requirements.
 
-type CollectionsHandlerV3 struct {
+type CollectionsHandler struct {
 	service *CollectionsService
 }
 
-func NewCollectionsHandlerV3(service *CollectionsService) *CollectionsHandlerV3 {
-	return &CollectionsHandlerV3{
+func NewCollectionsHandler(service *CollectionsService) *CollectionsHandler {
+	return &CollectionsHandler{
 		service: service,
 	}
 }
 
-func (h *CollectionsHandlerV3) CreateCollection(
+func (h *CollectionsHandler) CreateCollection(
 	ctx context.Context,
 	req *connect.Request[mindv3.CreateCollectionRequest],
 ) (*connect.Response[mindv3.Collection], error) {
@@ -69,7 +69,7 @@ func (h *CollectionsHandlerV3) CreateCollection(
 	return connect.NewResponse(StoreCollectionToProto(collection)), nil
 }
 
-func (h *CollectionsHandlerV3) GetCollection(
+func (h *CollectionsHandler) GetCollection(
 	ctx context.Context,
 	req *connect.Request[mindv3.GetCollectionRequest],
 ) (*connect.Response[mindv3.Collection], error) {
@@ -84,7 +84,7 @@ func (h *CollectionsHandlerV3) GetCollection(
 	return connect.NewResponse(StoreCollectionToProto(collection)), nil
 }
 
-func (h *CollectionsHandlerV3) UpdateCollection(
+func (h *CollectionsHandler) UpdateCollection(
 	ctx context.Context,
 	req *connect.Request[mindv3.UpdateCollectionRequest],
 ) (*connect.Response[mindv3.Collection], error) {
@@ -143,7 +143,7 @@ func (h *CollectionsHandlerV3) UpdateCollection(
 	return connect.NewResponse(StoreCollectionToProto(updated)), nil
 }
 
-func (h *CollectionsHandlerV3) DeleteCollection(
+func (h *CollectionsHandler) DeleteCollection(
 	ctx context.Context,
 	req *connect.Request[mindv3.DeleteCollectionRequest],
 ) (*connect.Response[emptypb.Empty], error) {
@@ -182,7 +182,7 @@ func (h *CollectionsHandlerV3) DeleteCollection(
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
-func (h *CollectionsHandlerV3) ListCollections(
+func (h *CollectionsHandler) ListCollections(
 	ctx context.Context,
 	req *connect.Request[mindv3.ListCollectionsRequest],
 ) (*connect.Response[mindv3.ListCollectionsResponse], error) {
@@ -229,7 +229,7 @@ func (h *CollectionsHandlerV3) ListCollections(
 	return connect.NewResponse(resp), nil
 }
 
-func (h *CollectionsHandlerV3) ListCollectionChildren(
+func (h *CollectionsHandler) ListCollectionChildren(
 	ctx context.Context,
 	req *connect.Request[mindv3.ListCollectionChildrenRequest],
 ) (*connect.Response[mindv3.ListCollectionsResponse], error) {
@@ -266,7 +266,7 @@ func (h *CollectionsHandlerV3) ListCollectionChildren(
 	return connect.NewResponse(resp), nil
 }
 
-func (h *CollectionsHandlerV3) GetCollectionTree(
+func (h *CollectionsHandler) GetCollectionTree(
 	ctx context.Context,
 	req *connect.Request[mindv3.GetCollectionTreeRequest],
 ) (*connect.Response[mindv3.GetCollectionTreeResponse], error) {

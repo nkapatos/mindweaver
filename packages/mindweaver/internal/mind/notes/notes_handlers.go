@@ -19,9 +19,9 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// NotesHandlerV3 implements the Connect-RPC NotesService handlers.
+// NotesHandler implements the Connect-RPC NotesService handlers.
 // Orchestrates multiple services (notes, meta, links, tags) for sub-resource endpoints.
-type NotesHandlerV3 struct {
+type NotesHandler struct {
 	mindv3connect.UnimplementedNotesServiceHandler
 	service      *NotesService
 	metaService  *meta.NoteMetaService
@@ -29,9 +29,9 @@ type NotesHandlerV3 struct {
 	tagsSvc      *tags.TagsService
 }
 
-// NewNotesHandlerV3 creates a new NotesHandlerV3.
-func NewNotesHandlerV3(service *NotesService, metaService *meta.NoteMetaService, linksService *links.LinksService, tagsSvc *tags.TagsService) *NotesHandlerV3 {
-	return &NotesHandlerV3{
+// NewNotesHandler creates a new NotesHandler.
+func NewNotesHandler(service *NotesService, metaService *meta.NoteMetaService, linksService *links.LinksService, tagsSvc *tags.TagsService) *NotesHandler {
+	return &NotesHandler{
 		service:      service,
 		metaService:  metaService,
 		linksService: linksService,
@@ -39,7 +39,7 @@ func NewNotesHandlerV3(service *NotesService, metaService *meta.NoteMetaService,
 	}
 }
 
-func (h *NotesHandlerV3) CreateNote(
+func (h *NotesHandler) CreateNote(
 	ctx context.Context,
 	req *connect.Request[mindv3.CreateNoteRequest],
 ) (*connect.Response[mindv3.Note], error) {
@@ -64,7 +64,7 @@ func (h *NotesHandlerV3) CreateNote(
 	return connect.NewResponse(StoreNoteToProto(note)), nil
 }
 
-func (h *NotesHandlerV3) GetNote(
+func (h *NotesHandler) GetNote(
 	ctx context.Context,
 	req *connect.Request[mindv3.GetNoteRequest],
 ) (*connect.Response[mindv3.Note], error) {
@@ -79,7 +79,7 @@ func (h *NotesHandlerV3) GetNote(
 	return connect.NewResponse(StoreNoteToProto(note)), nil
 }
 
-func (h *NotesHandlerV3) ReplaceNote(
+func (h *NotesHandler) ReplaceNote(
 	ctx context.Context,
 	req *connect.Request[mindv3.ReplaceNoteRequest],
 ) (*connect.Response[mindv3.Note], error) {
@@ -120,7 +120,7 @@ func (h *NotesHandlerV3) ReplaceNote(
 	return connect.NewResponse(StoreNoteToProto(updated)), nil
 }
 
-func (h *NotesHandlerV3) DeleteNote(
+func (h *NotesHandler) DeleteNote(
 	ctx context.Context,
 	req *connect.Request[mindv3.DeleteNoteRequest],
 ) (*connect.Response[emptypb.Empty], error) {
@@ -140,7 +140,7 @@ func (h *NotesHandlerV3) DeleteNote(
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
-func (h *NotesHandlerV3) ListNotes(
+func (h *NotesHandler) ListNotes(
 	ctx context.Context,
 	req *connect.Request[mindv3.ListNotesRequest],
 ) (*connect.Response[mindv3.ListNotesResponse], error) {
@@ -208,7 +208,7 @@ func (h *NotesHandlerV3) ListNotes(
 	return connect.NewResponse(resp), nil
 }
 
-func (h *NotesHandlerV3) GetNoteMeta(
+func (h *NotesHandler) GetNoteMeta(
 	ctx context.Context,
 	req *connect.Request[mindv3.GetNoteMetaRequest],
 ) (*connect.Response[mindv3.GetNoteMetaResponse], error) {
@@ -227,7 +227,7 @@ func (h *NotesHandlerV3) GetNoteMeta(
 	return connect.NewResponse(resp), nil
 }
 
-func (h *NotesHandlerV3) GetNoteRelationships(
+func (h *NotesHandler) GetNoteRelationships(
 	ctx context.Context,
 	req *connect.Request[mindv3.GetNoteRelationshipsRequest],
 ) (*connect.Response[mindv3.GetNoteRelationshipsResponse], error) {
@@ -248,7 +248,7 @@ func (h *NotesHandlerV3) GetNoteRelationships(
 	return connect.NewResponse(resp), nil
 }
 
-func (h *NotesHandlerV3) NewNote(
+func (h *NotesHandler) NewNote(
 	ctx context.Context,
 	req *connect.Request[mindv3.NewNoteRequest],
 ) (*connect.Response[mindv3.Note], error) {

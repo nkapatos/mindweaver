@@ -9,18 +9,18 @@ import (
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
 )
 
-type LinksHandlerV3 struct {
+type LinksHandler struct {
 	mindv3connect.UnimplementedLinksServiceHandler
 	service *LinksService
 }
 
-func NewLinksHandlerV3(service *LinksService) *LinksHandlerV3 {
-	return &LinksHandlerV3{service: service}
+func NewLinksHandler(service *LinksService) *LinksHandler {
+	return &LinksHandler{service: service}
 }
 
 // Links are derived from wikilinks in note body - read-only List operation only
 
-func (h *LinksHandlerV3) ListLinks(
+func (h *LinksHandler) ListLinks(
 	ctx context.Context,
 	req *connect.Request[mindv3.ListLinksRequest],
 ) (*connect.Response[mindv3.ListLinksResponse], error) {

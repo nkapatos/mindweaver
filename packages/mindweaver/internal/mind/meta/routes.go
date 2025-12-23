@@ -1,5 +1,6 @@
-// NoteTypes V3 Route Registration (Connect-RPC)
-package notetypes
+// NoteMeta V3 Routes Registration
+// Registers Connect-RPC routes for note metadata sub-resource
+package meta
 
 import (
 	"context"
@@ -14,13 +15,9 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// RegisterNoteTypesV3Routes registers V3 note types routes (Connect-RPC with both gRPC and HTTP/JSON support)
-func RegisterNoteTypesV3Routes(e *echo.Echo, handler *NoteTypesHandlerV3, logger *slog.Logger) error {
-	// Connect-RPC automatically supports:
-	// - gRPC (binary protobuf over HTTP/2)
-	// - gRPC-Web (for browsers)
-	// - Connect protocol (JSON or binary over HTTP/1.1 or HTTP/2)
-
+// RegisterNoteMetaRoutes registers Connect-RPC routes for NoteMeta V3
+// Routes: GET /v3/notes/{note_id}/meta
+func RegisterNoteMetaRoutes(e *echo.Echo, handler *NoteMetaHandler, logger *slog.Logger) error {
 	// Initialize protovalidate validator
 	validator, err := protovalidate.New()
 	if err != nil {
@@ -30,7 +27,7 @@ func RegisterNoteTypesV3Routes(e *echo.Echo, handler *NoteTypesHandlerV3, logger
 	// Create validation interceptor
 	validationInterceptor := connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
-			// Validate request message (cast to proto.Message)
+			// Validate request message
 			if msg, ok := req.Any().(interface{ ProtoReflect() protoreflect.Message }); ok {
 				if err := validator.Validate(msg); err != nil {
 					return nil, connect.NewError(connect.CodeInvalidArgument, err)
@@ -40,20 +37,21 @@ func RegisterNoteTypesV3Routes(e *echo.Echo, handler *NoteTypesHandlerV3, logger
 		}
 	})
 
-	// Create handler with validation interceptor
-	path, connectHandler := mindv3connect.NewNoteTypesServiceHandler(
+	// Create Connect-RPC handler with validation
+	path, connectHandler := mindv3connect.NewNoteMetaServiceHandler(
 		handler,
 		connect.WithInterceptors(validationInterceptor),
 	)
 
-	// Wrap Connect handler for Echo
-	// Connect needs HTTP/2 for gRPC, h2c allows HTTP/2 without TLS
+	// Wrap in h2c handler (HTTP/2 without TLS)
 	h2cHandler := h2c.NewHandler(connectHandler, &http2.Server{})
 
-	// Register Connect handler directly - it handles its own routing
-	// Use Match to catch all methods and let Connect handle routing
+	// Register with Echo - Connect-RPC uses POST by default
+	// Although proto defines GET, Connect protocol requires POST for RPC calls
 	e.Match([]string{"GET", "POST", "PUT", "DELETE", "PATCH"}, path+"*", echo.WrapHandler(h2cHandler))
 
-	logger.Info("Registered V3 NoteTypes routes with automatic validation", "path", path)
+	logger.Info("Registered V3 NoteMeta routes with automatic validation",
+		"path", path)
+
 	return nil
 }

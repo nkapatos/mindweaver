@@ -17,18 +17,18 @@ import (
 // - SearchTagsByName: Search tags by name pattern
 // Note: Tags are derived from note content, so Create/Update/Delete are not needed.
 
-type TagsHandlerV3 struct {
+type TagsHandler struct {
 	mindv3connect.UnimplementedTagsServiceHandler
 	service *TagsService
 }
 
-func NewTagsHandlerV3(service *TagsService) *TagsHandlerV3 {
-	return &TagsHandlerV3{service: service}
+func NewTagsHandler(service *TagsService) *TagsHandler {
+	return &TagsHandler{service: service}
 }
 
 // Tags are derived from note content (frontmatter/body) - read-only List operation only
 
-func (h *TagsHandlerV3) ListTags(
+func (h *TagsHandler) ListTags(
 	ctx context.Context,
 	req *connect.Request[mindv3.ListTagsRequest],
 ) (*connect.Response[mindv3.ListTagsResponse], error) {

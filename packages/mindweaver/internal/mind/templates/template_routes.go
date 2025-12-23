@@ -1,6 +1,5 @@
-package tags
-
-// Tags V3 Route Registration (Connect-RPC)
+// Templates V3 Route Registration (Connect-RPC)
+package templates
 
 import (
 	"context"
@@ -15,8 +14,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// RegisterTagsV3Routes registers V3 tags routes (Connect-RPC with both gRPC and HTTP/JSON support)
-func RegisterTagsV3Routes(e *echo.Echo, handler *TagsHandlerV3, logger *slog.Logger) error {
+// RegisterTemplatesRoutes registers V3 templates routes (Connect-RPC with both gRPC and HTTP/JSON support)
+func RegisterTemplatesRoutes(e *echo.Echo, handler *TemplatesHandler, logger *slog.Logger) error {
 	// Connect-RPC automatically supports:
 	// - gRPC (binary protobuf over HTTP/2)
 	// - gRPC-Web (for browsers)
@@ -42,7 +41,7 @@ func RegisterTagsV3Routes(e *echo.Echo, handler *TagsHandlerV3, logger *slog.Log
 	})
 
 	// Create handler with validation interceptor
-	path, connectHandler := mindv3connect.NewTagsServiceHandler(
+	path, connectHandler := mindv3connect.NewTemplatesServiceHandler(
 		handler,
 		connect.WithInterceptors(validationInterceptor),
 	)
@@ -60,6 +59,6 @@ func RegisterTagsV3Routes(e *echo.Echo, handler *TagsHandlerV3, logger *slog.Log
 	// - AIP-193: {error: {code: 400, message: "...", status: "INVALID_ARGUMENT", details: [...]}}
 	// For full AIP-193, would need custom error interceptor (deferred post-PoC)
 
-	logger.Info("Registered V3 Tags routes with automatic validation", "path", path)
+	logger.Info("Registered V3 Templates routes with automatic validation", "path", path)
 	return nil
 }
