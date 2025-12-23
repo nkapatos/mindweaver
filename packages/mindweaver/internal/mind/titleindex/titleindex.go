@@ -1,4 +1,4 @@
-// FIXME: this is not the right place for this
+// Note: Package location under review - See issue #43
 // Package titleindex provides a persistent key-value store for note title→uuid mapping
 // using BadgerDB. This enables fast WikiLink resolution without database queries.
 package titleindex

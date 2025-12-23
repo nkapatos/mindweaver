@@ -225,7 +225,7 @@ func TestTemplatesService_UpdateTemplate_NotFound(t *testing.T) {
 	// SQLite UPDATE with no rows affected returns nil error
 	// Service should detect this via RowsAffected, but current implementation doesn't
 	// For now, we just verify no panic occurs
-	assert.NoError(t, err) // TODO: Should be ErrorIs(ErrTemplateNotFound) after service fix
+	assert.NoError(t, err) // See issue #42
 }
 
 // TestTemplatesService_DeleteTemplate tests deleting a template
@@ -259,7 +259,7 @@ func TestTemplatesService_DeleteTemplate_NotFound(t *testing.T) {
 	err := svc.DeleteTemplate(context.Background(), 99999)
 	// SQLite DELETE with no rows affected returns nil error
 	// Service should detect this via RowsAffected, but current implementation doesn't
-	assert.NoError(t, err) // TODO: Should be ErrorIs(ErrTemplateNotFound) after service fix
+	assert.NoError(t, err) // See issue #42
 }
 
 // TestTemplatesService_ListTemplatesPaginated tests paginated listing

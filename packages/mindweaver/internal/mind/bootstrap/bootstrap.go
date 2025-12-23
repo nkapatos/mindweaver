@@ -80,16 +80,7 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 		return nil, nil, fmt.Errorf("failed to ensure default collections: %w", err)
 	}
 
-	// Extract directory from database path for title index
-	// dbDir := filepath.Dir(dbPath)
-
-	// Initialize title index (BadgerDB for title→uuid lookup)
-	// titleIndexPath := filepath.Join(dbDir, "titleindex")
-	// titleIndex, err := titleindex.NewTitleIndex(titleIndexPath, logger)
-	if err != nil {
-		db.Close()
-		return nil, nil, fmt.Errorf("failed to initialize title index: %w", err)
-	}
+	// Note: titleindex initialization removed - See issue #37 and #43
 
 	noteMetaService := meta.NewNoteMetaService(querier, db, logger, "Notes Meta Service")
 	notesService := notes.NewNotesService(db, querier, logger, "Notes Service")
@@ -109,9 +100,7 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 	noteMetaHandler := meta.NewNoteMetaHandler(noteMetaService)
 	searchHandlerV3 := search.NewSearchHandlerV3(searchService)
 
-	// Create /mind subgroup under the provided API group
-	// This creates routes like: /api/mind/import
-	// mindGroup := apiGroup.Group("/mind")
+	// Note: V3 uses Connect-RPC which registers at Echo root level, not in groups
 
 	// Register V3 routes (Connect-RPC with protobuf) - supports gRPC + HTTP/JSON
 	// Note: Connect-RPC requires registration at Echo root level (not in a group)
@@ -150,14 +139,7 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 		return nil, nil, fmt.Errorf("failed to register search V3 routes: %w", err)
 	}
 
-	// FIXME: after we migrate the routes to v3
-	// Register import routes (V1 REST - still used for file imports)
-	// opStore := importservice.NewOperationStore()
-	// batchProcessor := importservice.NewBatchProcessor(db, titleIndex, logger)
-	// linkResolver := importservice.NewLinkResolver(db, titleIndex, logger)
-
-	// importHandlers := importservice.NewImportHandlers(opStore, batchProcessor, linkResolver, logger)
-	// importservice.RegisterImportRoutes(mindGroup, importHandlers)
+	// Note: Import service registration removed - See issue #37 for decision on restoration
 
 	logger.Info("✅ Mind service ready")
 

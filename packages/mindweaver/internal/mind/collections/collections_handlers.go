@@ -15,15 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// TODO: V1 to V3 Migration - Missing Endpoints
-// The following V1 endpoints are not yet implemented in V3:
-// - GetCollectionByPath: Get collection by file path (alternative to ID-based lookup)
-// - GetCollectionAncestors: Get parent chain for breadcrumb navigation
-// - GetCollectionDescendants: Get all descendants recursively
-// - GetCollectionSubtree: Get subtree starting at a specific collection
-// - ListCollectionNotes: List notes in a collection (may belong in Notes service)
-// - CountNotesInCollection: Count notes in a collection (may belong in Notes service)
-// Consider adding these as needed based on client requirements.
+// Note: Some V1 endpoints not yet ported to V3 - See issue #38
 
 type CollectionsHandler struct {
 	service *CollectionsService

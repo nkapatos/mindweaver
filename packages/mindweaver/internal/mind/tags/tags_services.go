@@ -162,16 +162,3 @@ func (s *TagsService) ListNotesForTag(ctx context.Context, tagID int64) ([]store
 	}
 	return notes, err
 }
-
-// ============================================================================
-// What was done:
-// - Rebuilt TagsService from scratch, matching the DB schema and sqlc queries.
-// - Used notes service as a template for structure, logging, and error handling.
-// - Only CRUD and search methods present, no legacy logic.
-// Next steps:
-// - Refactor handlers.go and routes.go for tags to use this service.
-// - Add/adjust tests for the new service layer.
-// Suggestions:
-// - Keep all business logic in the service layer, avoid leaking DB or HTTP details.
-// - If new queries are needed, add them to tags.sql and regenerate sqlc code.
-// ============================================================================

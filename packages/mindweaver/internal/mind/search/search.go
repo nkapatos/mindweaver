@@ -1,11 +1,7 @@
 // Package search provides full-text search functionality for Mind notes.
 // This service uses FTS5 (SQLite Full-Text Search) for efficient text searching.
 //
-// TODO: Future enhancements:
-// - Composable search filters (e.g., search within specific meta keys, tags, or collections)
-// - Multi-resource search (search across notes + collections simultaneously)
-// - Advanced query syntax support (phrases, boolean operators, field-specific search)
-// - Search result highlighting and context snippets
+// Note: Future enhancements tracked in issue #41
 package search
 
 import (

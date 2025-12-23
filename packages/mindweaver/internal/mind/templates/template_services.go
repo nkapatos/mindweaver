@@ -114,16 +114,3 @@ func (s *TemplatesService) DeleteTemplate(ctx context.Context, id int64) error {
 }
 
 // Note: Template search methods removed - use general search with filters instead
-
-// ============================================================================
-// What was done:
-// - Rebuilt TemplatesService from scratch, matching the DB schema and sqlc queries.
-// - Used notes service as a template for structure, logging, and error handling.
-// - Only CRUD and search methods present, no legacy logic.
-// Next steps:
-// - Refactor handlers.go and routes.go for templates to use this service.
-// - Add/adjust tests for the new service layer.
-// Suggestions:
-// - Keep all business logic in the service layer, avoid leaking DB or HTTP details.
-// - If new queries are needed, add them to templates.sql and regenerate sqlc code.
-// ============================================================================

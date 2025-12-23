@@ -160,7 +160,7 @@ func (c *ChangeAccumulator) flush(ctx context.Context) error {
 			"error", err,
 			"count", len(changesToFlush))
 
-		// TODO: Implement retry queue for failed batches
+		// Note: Retry queue not implemented - See issue #40
 		// For now, we log and drop (Brain can re-ingest via manual API if needed)
 		return err
 	}

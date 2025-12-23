@@ -1,9 +1,4 @@
-// TODO: Future search endpoint enhancements:
-// - Support filter params: ?meta=key:value, ?tags=tag1,tag2, ?collection_id=123
-// - Support sort params: ?sort=relevance|created|title
-// - Support faceted search results (group by collection, type, tags)
-// ============================================================================
-
+// Note: Future enhancements tracked in issue #41
 package search
 
 import (

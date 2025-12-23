@@ -4,19 +4,14 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	apierrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3/mindv3connect"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
+	apierrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
 )
 
-// TODO: V1 to V3 Migration - Missing Endpoints
-// The following V1 read endpoints are not yet implemented in V3:
-// - GetTagByID: Get single tag by ID
-// - GetTagNotes: List all notes that have a specific tag (IMPORTANT - core PKM feature for tag navigation)
-// - SearchTagsByName: Search tags by name pattern
-// Note: Tags are derived from note content, so Create/Update/Delete are not needed.
+// Note: Missing V3 endpoints - See issue #39
 
 type TagsHandler struct {
 	mindv3connect.UnimplementedTagsServiceHandler
