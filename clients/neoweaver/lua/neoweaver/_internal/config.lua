@@ -16,7 +16,7 @@ M.defaults = {
     title_template = "%Y%m%d%H%M",
     collection_id = 2,
     note_type_id = 2,
-    -- TODO: allow configuring quicknote payload via editor preferences
+    -- Note: Quicknote payload configuration - See issue #46
     popup = {
       relative = "editor",
       position = "50%",
@@ -46,7 +46,7 @@ M.defaults = {
       new_with_title = "<leader>nN",
       title = "<leader>nt",
       delete = "<leader>nd",
-      meta = "<leader>nm", -- TODO: not implemented
+      meta = "<leader>nm", -- Note: Not implemented - See issue #44
     },
     quicknotes = {
       -- Quicknotes (using <leader>q* for "quick")

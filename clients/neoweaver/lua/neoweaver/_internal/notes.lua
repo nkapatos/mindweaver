@@ -14,7 +14,7 @@ local DEBOUNCE_MS = 500
 
 local allow_multiple_empty_notes = false
 
--- NOTE: This is temp here
+-- Note: ConnectCode enum temporary - See issue #53
 local ConnectCode = {
   OK = "ok",
   CANCELLED = "cancelled",
@@ -251,7 +251,7 @@ end
 
 --- Edit note metadata (placeholder)
 function M.edit_metadata()
-  vim.notify("Metadata editing not yet implemented in v3", vim.log.levels.WARN)
+  vim.notify("Metadata editing not yet implemented in v3 - See issue #44", vim.log.levels.WARN)
 end
 
 --- Edit the current note title and persist immediately
