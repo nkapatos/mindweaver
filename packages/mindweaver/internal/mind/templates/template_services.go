@@ -2,10 +2,12 @@ package templates
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"log/slog"
 
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
+	sharedErrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/middleware"
 )
 
@@ -57,7 +59,7 @@ func (s *TemplatesService) CountTemplates(ctx context.Context) (int64, error) {
 func (s *TemplatesService) GetTemplateByID(ctx context.Context, id int64) (store.Template, error) {
 	template, err := s.store.GetTemplateByID(ctx, id)
 	if err != nil {
-		if errors.IsNotFoundError(err) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return store.Template{}, ErrTemplateNotFound
 		}
 		s.logger.Error("failed to get template by id", "id", id, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -70,7 +72,7 @@ func (s *TemplatesService) GetTemplateByID(ctx context.Context, id int64) (store
 func (s *TemplatesService) CreateTemplate(ctx context.Context, params store.CreateTemplateParams) (int64, error) {
 	id, err := s.store.CreateTemplate(ctx, params)
 	if err != nil {
-		if errors.IsUniqueConstraintError(err) {
+		if sharedErrors.IsUniqueConstraintError(err) {
 			return 0, ErrTemplateAlreadyExists
 		}
 		s.logger.Error("failed to create template", "params", params, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -84,10 +86,10 @@ func (s *TemplatesService) CreateTemplate(ctx context.Context, params store.Crea
 func (s *TemplatesService) UpdateTemplate(ctx context.Context, params store.UpdateTemplateByIDParams) error {
 	err := s.store.UpdateTemplateByID(ctx, params)
 	if err != nil {
-		if errors.IsNotFoundError(err) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return ErrTemplateNotFound
 		}
-		if errors.IsUniqueConstraintError(err) {
+		if sharedErrors.IsUniqueConstraintError(err) {
 			return ErrTemplateAlreadyExists
 		}
 		s.logger.Error("failed to update template", "params", params, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -101,7 +103,7 @@ func (s *TemplatesService) UpdateTemplate(ctx context.Context, params store.Upda
 func (s *TemplatesService) DeleteTemplate(ctx context.Context, id int64) error {
 	err := s.store.DeleteTemplateByID(ctx, id)
 	if err != nil {
-		if errors.IsNotFoundError(err) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return ErrTemplateNotFound
 		}
 		s.logger.Error("failed to delete template", "id", id, "err", err, "request_id", middleware.GetRequestID(ctx))
