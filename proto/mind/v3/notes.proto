@@ -68,6 +68,12 @@ message Note {
   // Combined frontmatter-derived and system metadata
   // Use GET /v3/notes/{note}/meta sub-resource to read
   map<string, string> metadata = 13 [(google.api.field_behavior) = OUTPUT_ONLY];
+  
+  // Collection path (slugified, e.g., "work/projects")
+  // Output-only field, populated via JOIN when present
+  // Always included in FindNotes response for "where is it?" UX
+  // Not populated for GetNote, ListNotes (no JOIN overhead)
+  optional string collection_path = 14 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // Request message for CreateNote (AIP-133)
@@ -192,6 +198,48 @@ message ListNotesResponse {
   optional int32 total_size = 3;
 }
 
+// Request message for FindNotes (AIP-136 custom method)
+// Global search with optional filters - default searches across all collections
+// Used by UI pickers and Brain service for metadata-based finding
+message FindNotesRequest {
+  // Title query (case-insensitive substring match)
+  // If empty, returns all notes matching other filters
+  optional string title = 1 [(buf.validate.field).string.max_len = 255];
+  
+  // Optional: Narrow search to specific collection
+  // If omitted, searches globally across ALL collections (default behavior)
+  optional int64 collection_id = 2 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional: Filter by note type
+  optional int64 note_type_id = 3 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional: Filter by template flag
+  optional bool is_template = 4;
+  
+  // Pagination (default: 50, max: 100)
+  optional int32 page_size = 10 [(buf.validate.field).int32 = {
+    gte: 1,
+    lte: 100
+  }];
+  optional string page_token = 11;
+  
+  // Field mask for partial responses (client controls payload shape)
+  optional string field_mask = 12;
+}
+
+// Response message for FindNotes
+message FindNotesResponse {
+  // Matching notes (with collection_path always populated from JOIN)
+  repeated Note notes = 1;
+  
+  // Next page token for pagination
+  string next_page_token = 2;
+  
+  // Total matching notes (for UI "X results found")
+  optional int32 total_size = 3;
+}
+
+
 // Notes service definition (Connect-RPC compatible)
 service NotesService {
   // Create a new note (AIP-133)
@@ -254,6 +302,17 @@ service NotesService {
   rpc GetNoteRelationships(GetNoteRelationshipsRequest) returns (GetNoteRelationshipsResponse) {
     option (google.api.http) = {
       get: "/v3/notes/{note_id}/relationships"
+    };
+  }
+  
+  // Find notes by title and filters (AIP-136 custom method)
+  // Default behavior: global search across all collections
+  // Use collection_id filter to narrow scope when context is known
+  // Used by UI pickers and Brain service for structured metadata queries
+  rpc FindNotes(FindNotesRequest) returns (FindNotesResponse) {
+    option (google.api.http) = {
+      post: "/v3/notes:find"
+      body: "*"
     };
   }
 }

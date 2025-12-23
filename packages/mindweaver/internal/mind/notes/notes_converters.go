@@ -164,6 +164,9 @@ func ApplyFieldMask(note *mindv3.Note, fieldMask string) *mindv3.Note {
 	if fields["metadata"] {
 		masked.Metadata = note.Metadata
 	}
+	if fields["collectionPath"] || fields["collection_path"] {
+		masked.CollectionPath = note.CollectionPath
+	}
 
 	return masked
 }
@@ -179,4 +182,46 @@ func ApplyFieldMaskToNotes(notes []*mindv3.Note, fieldMask string) []*mindv3.Not
 		masked[i] = ApplyFieldMask(note, fieldMask)
 	}
 	return masked
+}
+
+// FindNotesRowToProto converts a store.FindNotesRow to the proto Note message.
+// FindNotesRow includes collection_path from the JOIN with collections table.
+func FindNotesRowToProto(row store.FindNotesRow) *mindv3.Note {
+	note := &mindv3.Note{
+		Name:         fmt.Sprintf("notes/%d", row.ID),
+		Id:           row.ID,
+		Uuid:         row.Uuid.String(),
+		Title:        row.Title,
+		CollectionId: row.CollectionID,
+		Etag:         utils.ComputeHashedETag(row.Version),
+	}
+
+	// Handle nullable timestamp fields
+	if row.CreatedAt.Valid {
+		note.CreateTime = timestamppb.New(row.CreatedAt.Time)
+	}
+	if row.UpdatedAt.Valid {
+		note.UpdateTime = timestamppb.New(row.UpdatedAt.Time)
+	}
+
+	// Optional fields
+	if row.Body.Valid {
+		note.Body = &row.Body.String
+	}
+	if row.Description.Valid {
+		note.Description = &row.Description.String
+	}
+	if row.NoteTypeID.Valid {
+		note.NoteTypeId = &row.NoteTypeID.Int64
+	}
+	if row.IsTemplate.Valid {
+		note.IsTemplate = &row.IsTemplate.Bool
+	}
+
+	// Collection path (populated from LEFT JOIN in FindNotes query)
+	if row.CollectionPath.Valid {
+		note.CollectionPath = &row.CollectionPath.String
+	}
+
+	return note
 }

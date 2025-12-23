@@ -165,6 +165,7 @@ end
 ---@field get fun(req: mind.v3.GetNoteRequest, cb: fun(res: ApiResponse)) Get a note
 ---@field create fun(req: mind.v3.CreateNoteRequest, cb: fun(res: ApiResponse)) Create a note
 ---@field new fun(req: mind.v3.NewNoteRequest, cb: fun(res: ApiResponse)) Create a new note with auto-generated title
+---@field find fun(req: mind.v3.FindNotesRequest, cb: fun(res: ApiResponse)) Find notes by title and filters
 ---@field update fun(req: mind.v3.ReplaceNoteRequest, etag: string?, cb: fun(res: ApiResponse)) Update a note
 ---@field delete fun(req: mind.v3.DeleteNoteRequest, cb: fun(res: ApiResponse)) Delete a note
 
@@ -206,6 +207,16 @@ M.notes = {
   -- Response: mind.v3.Note
   new = function(req, cb)
     request("POST", "/mind.v3.NotesService/NewNote", {
+      body = vim.json.encode(req or {}),
+      headers = { ["Content-Type"] = "application/json" },
+    }, cb)
+  end,
+
+  -- POST /mind.v3.NotesService/FindNotes
+  -- Request: mind.v3.FindNotesRequest
+  -- Response: mind.v3.FindNotesResponse
+  find = function(req, cb)
+    request("POST", "/mind.v3.NotesService/FindNotes", {
       body = vim.json.encode(req or {}),
       headers = { ["Content-Type"] = "application/json" },
     }, cb)
