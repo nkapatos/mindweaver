@@ -225,7 +225,6 @@ local function resolve_hunk(bufnr, strategy)
         -- Local version is already in buffer
         -- No additional buffer edits required
       elseif strategy == "both" then
-
         -- Keep both versions with markers
         -- Note: Format may be refined based on user feedback - See issue #49
         local both_lines = {}

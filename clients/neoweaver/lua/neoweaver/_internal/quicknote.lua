@@ -111,41 +111,42 @@ local function save_if_needed(bufnr)
   vim.b[bufnr].neoweaver_quicknote_saved = true
 
   local cfg = get_config()
-  
+
   -- Check if this is an amend operation (existing note with id)
   local note_id = vim.b[bufnr].neoweaver_quicknote_id
   local note_etag = vim.b[bufnr].neoweaver_quicknote_etag
-  
+
   if note_id and note_etag then
     -- Update existing quicknote
     ---@type mind.v3.ReplaceNoteRequest
     local payload = {
       id = note_id,
-      title = state.recent_quicknote and state.recent_quicknote.title or vim.fn.strftime(cfg.title_template or "%Y%m%d%H%M"),
+      title = state.recent_quicknote and state.recent_quicknote.title
+        or vim.fn.strftime(cfg.title_template or "%Y%m%d%H%M"),
       body = body,
       collectionId = cfg.collection_id,
       noteTypeId = cfg.note_type_id,
     }
-    
+
     api.notes.update(payload, note_etag, function(res)
       if res and res.error then
         vim.notify("Quicknote update failed: " .. (res.error.message or vim.inspect(res.error)), vim.log.levels.ERROR)
         return
       end
-      
+
       -- Store the entire updated note in local state for next amend
       state.recent_quicknote = res.data
-      
+
       if state.popup and state.popup.border then
         state.popup.border:set_text("bottom", "Updated", "center")
       end
-      
+
       vim.notify("Quicknote updated", vim.log.levels.INFO)
     end)
   else
     -- Create new quicknote
     local title = vim.fn.strftime(cfg.title_template or "%Y%m%d%H%M")
-    
+
     ---@type mind.v3.CreateNoteRequest
     local payload = {
       title = title,
@@ -153,20 +154,20 @@ local function save_if_needed(bufnr)
       collectionId = cfg.collection_id,
       noteTypeId = cfg.note_type_id,
     }
-    
+
     api.notes.create(payload, function(res)
       if res and res.error then
         vim.notify("Quicknote save failed: " .. (res.error.message or vim.inspect(res.error)), vim.log.levels.ERROR)
         return
       end
-      
+
       -- Store the entire saved note in local state for amend functionality
       state.recent_quicknote = res.data
-      
+
       if state.popup and state.popup.border then
         state.popup.border:set_text("bottom", "Saved as " .. title, "center")
       end
-      
+
       vim.notify(string.format("Quicknote saved as %s", title), vim.log.levels.INFO)
     end)
   end
@@ -226,12 +227,12 @@ function M.open()
 
   vim.api.nvim_buf_set_name(popup.bufnr, "Quicknote")
   vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, {})
-  
+
   -- Clear buffer-local state for new quicknote
   vim.b[popup.bufnr].neoweaver_quicknote_saved = nil
   vim.b[popup.bufnr].neoweaver_quicknote_id = nil
   vim.b[popup.bufnr].neoweaver_quicknote_etag = nil
-  
+
   popup.border:set_text("bottom", "", "center")
 
   state.popup = popup
@@ -246,35 +247,35 @@ function M.amend()
     vim.notify("No recent quicknote to amend. Creating a new one.", vim.log.levels.INFO)
     return M.open()
   end
-  
+
   -- Close existing popup if open
   if state.popup then
     close_popup(state.popup)
   end
-  
+
   -- Use locally stored note content (no server fetch needed!)
   local note = state.recent_quicknote
-  
+
   local popup = create_popup()
   popup:mount()
-  
+
   -- Update title to show we're amending
   popup.border:set_text("top", " " .. note.title .. " (amend) ", "center")
-  
+
   -- Load note content from local state
   local lines = vim.split(note.body or "", "\n")
   vim.api.nvim_buf_set_name(popup.bufnr, "Quicknote (amend)")
   vim.api.nvim_buf_set_lines(popup.bufnr, 0, -1, false, lines)
-  
+
   -- Set buffer-local state for amend operation
   vim.b[popup.bufnr].neoweaver_quicknote_saved = nil
   vim.b[popup.bufnr].neoweaver_quicknote_id = note.id
   vim.b[popup.bufnr].neoweaver_quicknote_etag = note.etag
-  
+
   popup.border:set_text("bottom", "", "center")
-  
+
   state.popup = popup
-  
+
   -- Enter insert mode at end of buffer
   vim.cmd("startinsert")
 end

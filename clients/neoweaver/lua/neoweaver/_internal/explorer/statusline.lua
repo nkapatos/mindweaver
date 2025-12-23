@@ -47,11 +47,7 @@ function M.get_status()
     return "✗ Error: " .. (status.error_msg or "Unknown error")
   else
     -- idle state
-    return string.format(
-      "📁 Collections: %d | 📄 Notes: %d",
-      status.stats.collections,
-      status.stats.notes
-    )
+    return string.format("📁 Collections: %d | 📄 Notes: %d", status.stats.collections, status.stats.notes)
   end
 end
 

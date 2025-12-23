@@ -16,23 +16,23 @@ function M.get_status(bufnr)
   if not entity then
     return "Neoweaver"
   end
-  
+
   -- Get server info
   local server_name = api.config.current_server or "No Server"
   local server_url = ""
   if api.config.current_server and api.config.servers[api.config.current_server] then
     server_url = api.config.servers[api.config.current_server].url
   end
-  
+
   -- Build status line
   local parts = {}
-  
+
   -- Server context
   table.insert(parts, string.format("󰒋 %s", server_name))
   if server_url ~= "" then
     table.insert(parts, string.format("(%s)", server_url))
   end
-  
+
   -- Entity info
   table.insert(parts, "|")
   if entity.type == "note" then
@@ -40,7 +40,7 @@ function M.get_status(bufnr)
   else
     table.insert(parts, string.format("%s #%s", entity.type, tostring(entity.id)))
   end
-  
+
   return table.concat(parts, " ")
 end
 
@@ -49,10 +49,8 @@ end
 ---@param winid integer Window ID
 function M.setup(bufnr, winid)
   -- Use window-local statusline with Lua callback
-  vim.wo[winid].statusline = string.format(
-    "%%{%%v:lua.require'neoweaver._internal.buffer.statusline'.get_status(%d)%%}",
-    bufnr
-  )
+  vim.wo[winid].statusline =
+    string.format("%%{%%v:lua.require'neoweaver._internal.buffer.statusline'.get_status(%d)%%}", bufnr)
 end
 
 return M

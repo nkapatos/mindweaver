@@ -29,15 +29,15 @@ local state = {
 ---@return NuiTree.Node[]
 local function build_nui_nodes(generic_nodes)
   local nodes = {}
-  
+
   for _, gnode in ipairs(generic_nodes) do
     local children = {}
-    
+
     -- Recursively build children
     if gnode.children and #gnode.children > 0 then
       children = build_nui_nodes(gnode.children)
     end
-    
+
     -- Create NuiTree.Node with all properties from generic node
     local nui_node = NuiTree.Node({
       id = gnode.id,
@@ -54,10 +54,10 @@ local function build_nui_nodes(generic_nodes)
       server_name = gnode.server_name,
       server_url = gnode.server_url,
     }, children)
-    
+
     table.insert(nodes, nui_node)
   end
-  
+
   return nodes
 end
 
@@ -86,10 +86,10 @@ local function prepare_node(node)
   if node.icon then
     line:append(node.icon .. " ", node.highlight or "Normal")
   end
-  
+
   -- Name with highlight
   line:append(node.name, node.highlight or "Normal")
-  
+
   -- Special suffix for default items
   if node.is_default then
     line:append(" ", "Comment")
@@ -103,11 +103,11 @@ end
 ---@return string[] Array of node IDs that are expanded
 function M.get_expanded_nodes()
   local node_ids = {}
-  
+
   if not state.tree then
     return node_ids
   end
-  
+
   local function collect_expanded(node)
     if node:is_expanded() then
       table.insert(node_ids, node:get_id())
@@ -118,12 +118,12 @@ function M.get_expanded_nodes()
       end
     end
   end
-  
+
   -- Walk all root nodes
   for _, node in ipairs(state.tree:get_nodes()) do
     collect_expanded(node)
   end
-  
+
   return node_ids
 end
 
@@ -133,7 +133,7 @@ function M.set_expanded_nodes(node_ids)
   if not state.tree then
     return
   end
-  
+
   for _, id in ipairs(node_ids) do
     local node = state.tree:get_node(id)
     if node then
@@ -148,13 +148,13 @@ function M.get_cursor_node_id()
   if not state.tree then
     return nil
   end
-  
+
   -- Check if the tree's window is still valid before trying to get cursor position
   local winid = vim.fn.win_findbuf(state.tree.bufnr)[1]
   if not winid or not vim.api.nvim_win_is_valid(winid) then
     return nil
   end
-  
+
   local node = state.tree:get_node()
   return node and node:get_id() or nil
 end
@@ -165,7 +165,7 @@ function M.set_cursor_to_node(node_id)
   if not state.tree or not node_id then
     return
   end
-  
+
   local node, start_lnum, end_lnum = state.tree:get_node(node_id)
   if node and start_lnum then
     -- Get the window containing the tree buffer
@@ -182,13 +182,13 @@ end
 function M.build_and_render(bufnr, generic_nodes)
   -- Convert generic nodes to NuiTree nodes
   local nui_nodes = build_nui_nodes(generic_nodes)
-  
+
   -- Check if we need to create a new tree instance
   -- Create new tree if:
   --   1. No tree exists yet (first time)
   --   2. Buffer changed (after close/reopen - buffer was destroyed)
   local needs_new_tree = not state.tree or (state.tree.bufnr ~= bufnr)
-  
+
   if needs_new_tree then
     -- Create new NuiTree instance
     -- NuiTree will manage modifiable/readonly during render
@@ -202,7 +202,7 @@ function M.build_and_render(bufnr, generic_nodes)
     -- This preserves tree's internal state (prev_linenr for ghost prevention)
     state.tree:set_nodes(nui_nodes)
   end
-  
+
   -- Render the tree
   state.tree:render()
 end
@@ -214,23 +214,21 @@ function M.build_and_render_with_state(bufnr, generic_nodes)
   -- Capture current state before rebuilding
   local expanded = M.get_expanded_nodes()
   local cursor_node_id = M.get_cursor_node_id()
-  
+
   -- Rebuild tree (this replaces the old tree completely)
   M.build_and_render(bufnr, generic_nodes)
-  
+
   -- Restore expanded state
   M.set_expanded_nodes(expanded)
-  
+
   -- Restore cursor position (gracefully handles if node no longer exists)
   if cursor_node_id then
     M.set_cursor_to_node(cursor_node_id)
   end
-  
+
   -- Re-render to reflect restored state
   M.render()
 end
-
-
 
 --- Get current tree instance
 ---@return NuiTree|nil
