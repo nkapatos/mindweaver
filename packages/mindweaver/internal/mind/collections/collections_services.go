@@ -237,7 +237,7 @@ func (s *CollectionsService) GenerateCollectionPath(ctx context.Context, name st
 // This is called after updating a collection's path to keep the tree consistent.
 func (s *CollectionsService) UpdateDescendantPaths(ctx context.Context, collectionID int64, newPath string) error {
 	// Get all direct children
-	children, err := s.store.GetCollectionChildren(ctx, sql.NullInt64{Int64: collectionID, Valid: true})
+	children, err := s.store.GetCollectionChildren(ctx, utils.NullInt64(collectionID))
 	if err != nil {
 		s.logger.Error("failed to get children for path update", "collection_id", collectionID, "err", err, "request_id", middleware.GetRequestID(ctx))
 		return err

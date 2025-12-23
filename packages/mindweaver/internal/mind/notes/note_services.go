@@ -7,10 +7,10 @@ import (
 	"log/slog"
 
 	"github.com/google/uuid"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/links"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/meta"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/scheduler"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/tags"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/dberrors"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/markdown"
@@ -169,7 +169,7 @@ func (s *NotesService) NewNoteCreation(ctx context.Context, collectionID int64, 
 	params := store.CreateNoteParams{
 		Uuid:         uuid.New(),
 		Title:        title,
-		Body:         sql.NullString{String: body, Valid: body != ""},
+		Body:         utils.NullStringFrom(body, true),
 		CollectionID: collectionID,
 	}
 

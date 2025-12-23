@@ -11,6 +11,7 @@ import (
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/dberrors"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -194,7 +195,7 @@ func (h *CollectionsHandlerV3) ListCollections(
 	var err error
 
 	if req.Msg.ParentId != nil {
-		parentID := sql.NullInt64{Int64: *req.Msg.ParentId, Valid: true}
+		parentID := utils.NullInt64(*req.Msg.ParentId)
 		collections, err = h.service.ListCollectionsByParentPaginated(ctx, parentID, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
 			totalCount, _ = h.service.CountCollectionsByParent(ctx, parentID)
@@ -236,7 +237,7 @@ func (h *CollectionsHandlerV3) ListCollectionChildren(
 	pageReq := pagination.ParseRequest(req.Msg.PageSize, req.Msg.PageToken)
 	params := pageReq.ToParams()
 
-	parentID := sql.NullInt64{Int64: req.Msg.ParentId, Valid: true}
+	parentID := utils.NullInt64(req.Msg.ParentId)
 	collections, err := h.service.ListCollectionsByParentPaginated(ctx, parentID, params.Limit, params.Offset)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)

@@ -1,7 +1,6 @@
 package notes
 
 import (
-	"database/sql"
 	"fmt"
 	"strings"
 
@@ -62,7 +61,7 @@ func ProtoCreateNoteToStore(req *mindv3.CreateNoteRequest) store.CreateNoteParam
 	return store.CreateNoteParams{
 		Uuid:         uuid.New(),
 		Title:        req.Title,
-		Body:         sql.NullString{String: req.GetBody(), Valid: req.Body != nil && *req.Body != ""},
+		Body:         utils.NullStringFrom(req.GetBody(), true),
 		Description:  utils.ToNullString(req.Description),
 		NoteTypeID:   utils.ToNullInt64(req.NoteTypeId),
 		IsTemplate:   utils.ToNullBool(req.IsTemplate),
@@ -83,7 +82,7 @@ func ProtoReplaceNoteToStore(req *mindv3.ReplaceNoteRequest, current store.Note)
 		ID:           req.Id,
 		Uuid:         current.Uuid,
 		Title:        req.Title,
-		Body:         sql.NullString{String: req.GetBody(), Valid: req.Body != nil && *req.Body != ""},
+		Body:         utils.NullStringFrom(req.GetBody(), true),
 		Description:  utils.ToNullString(req.Description),
 		NoteTypeID:   utils.ToNullInt64(req.NoteTypeId),
 		IsTemplate:   utils.ToNullBool(req.IsTemplate),
