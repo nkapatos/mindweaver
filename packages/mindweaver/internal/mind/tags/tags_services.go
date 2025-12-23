@@ -5,7 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/dberrors"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/middleware"
 )
 
@@ -57,7 +57,7 @@ func (s *TagsService) CountTags(ctx context.Context) (int64, error) {
 func (s *TagsService) GetTagByID(ctx context.Context, id int64) (store.Tag, error) {
 	tag, err := s.store.GetTagByID(ctx, id)
 	if err != nil {
-		if dberrors.IsNotFoundError(err) {
+		if errors.IsNotFoundError(err) {
 			return store.Tag{}, ErrTagNotFound
 		}
 		s.logger.Error("failed to get tag by id", "id", id, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -70,7 +70,7 @@ func (s *TagsService) GetTagByID(ctx context.Context, id int64) (store.Tag, erro
 func (s *TagsService) CreateTag(ctx context.Context, name string) (int64, error) {
 	id, err := s.store.CreateTag(ctx, name)
 	if err != nil {
-		if dberrors.IsUniqueConstraintError(err) {
+		if errors.IsUniqueConstraintError(err) {
 			return 0, ErrTagAlreadyExists
 		}
 		s.logger.Error("failed to create tag", "name", name, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -85,10 +85,10 @@ func (s *TagsService) UpdateTag(ctx context.Context, id int64, name string) erro
 	params := store.UpdateTagByIDParams{ID: id, Name: name}
 	err := s.store.UpdateTagByID(ctx, params)
 	if err != nil {
-		if dberrors.IsNotFoundError(err) {
+		if errors.IsNotFoundError(err) {
 			return ErrTagNotFound
 		}
-		if dberrors.IsUniqueConstraintError(err) {
+		if errors.IsUniqueConstraintError(err) {
 			return ErrTagAlreadyExists
 		}
 		s.logger.Error("failed to update tag", "id", id, "name", name, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -102,7 +102,7 @@ func (s *TagsService) UpdateTag(ctx context.Context, id int64, name string) erro
 func (s *TagsService) DeleteTag(ctx context.Context, id int64) error {
 	err := s.store.DeleteTagByID(ctx, id)
 	if err != nil {
-		if dberrors.IsNotFoundError(err) {
+		if errors.IsNotFoundError(err) {
 			return ErrTagNotFound
 		}
 		s.logger.Error("failed to delete tag", "id", id, "err", err, "request_id", middleware.GetRequestID(ctx))

@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"connectrpc.com/connect"
+	apierrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3/mindv3connect"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
@@ -30,14 +31,14 @@ func (h *NoteTypesHandler) CreateNoteType(
 	noteTypeID, err := h.service.CreateNoteType(ctx, params)
 	if err != nil {
 		if errors.Is(err, ErrNoteTypeAlreadyExists) {
-			return nil, newAlreadyExistsError("note_types", "type", req.Msg.Type)
+			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "note_types", "type", req.Msg.Type)
 		}
-		return nil, newInternalError("failed to create note type", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to create note type", err)
 	}
 
 	noteType, err := h.service.GetNoteTypeByID(ctx, noteTypeID)
 	if err != nil {
-		return nil, newInternalError("failed to retrieve created note type", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to retrieve created note type", err)
 	}
 
 	return connect.NewResponse(StoreNoteTypeToProto(noteType)), nil
@@ -53,7 +54,7 @@ func (h *NoteTypesHandler) ListNoteTypes(
 
 	noteTypes, err := h.service.ListNoteTypesPaginated(ctx, params.Limit, params.Offset)
 	if err != nil {
-		return nil, newInternalError("failed to list note types", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to list note types", err)
 	}
 
 	var totalCount int64
@@ -86,9 +87,9 @@ func (h *NoteTypesHandler) GetNoteType(
 	noteType, err := h.service.GetNoteTypeByID(ctx, req.Msg.GetId())
 	if err != nil {
 		if errors.Is(err, ErrNoteTypeNotFound) {
-			return nil, newNotFoundError("note_types", strconv.FormatInt(req.Msg.GetId(), 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note_types", strconv.FormatInt(req.Msg.GetId(), 10))
 		}
-		return nil, newInternalError("failed to get note type", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note type", err)
 	}
 
 	return connect.NewResponse(StoreNoteTypeToProto(noteType)), nil
@@ -103,20 +104,20 @@ func (h *NoteTypesHandler) UpdateNoteType(
 	err := h.service.UpdateNoteType(ctx, params)
 	if err != nil {
 		if errors.Is(err, ErrNoteTypeNotFound) {
-			return nil, newNotFoundError("note_types", strconv.FormatInt(req.Msg.GetId(), 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note_types", strconv.FormatInt(req.Msg.GetId(), 10))
 		}
 		if errors.Is(err, ErrNoteTypeAlreadyExists) {
-			return nil, newAlreadyExistsError("note_types", "type", req.Msg.Type)
+			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "note_types", "type", req.Msg.Type)
 		}
 		if errors.Is(err, ErrNoteTypeIsSystem) {
-			return nil, newPermissionDeniedError("cannot update system note type")
+			return nil, apierrors.NewPermissionDeniedError(apierrors.MindDomain, "cannot update system note type")
 		}
-		return nil, newInternalError("failed to update note type", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to update note type", err)
 	}
 
 	noteType, err := h.service.GetNoteTypeByID(ctx, req.Msg.GetId())
 	if err != nil {
-		return nil, newInternalError("failed to retrieve updated note type", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to retrieve updated note type", err)
 	}
 
 	return connect.NewResponse(StoreNoteTypeToProto(noteType)), nil
@@ -129,12 +130,12 @@ func (h *NoteTypesHandler) DeleteNoteType(
 	err := h.service.DeleteNoteType(ctx, req.Msg.GetId())
 	if err != nil {
 		if errors.Is(err, ErrNoteTypeNotFound) {
-			return nil, newNotFoundError("note_types", strconv.FormatInt(req.Msg.GetId(), 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note_types", strconv.FormatInt(req.Msg.GetId(), 10))
 		}
 		if errors.Is(err, ErrNoteTypeIsSystem) {
-			return nil, newPermissionDeniedError("cannot delete system note type")
+			return nil, apierrors.NewPermissionDeniedError(apierrors.MindDomain, "cannot delete system note type")
 		}
-		return nil, newInternalError("failed to delete note type", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to delete note type", err)
 	}
 
 	return connect.NewResponse(&emptypb.Empty{}), nil

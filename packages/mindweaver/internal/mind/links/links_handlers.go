@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
+	apierrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3/mindv3connect"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
@@ -30,7 +31,7 @@ func (h *LinksHandler) ListLinks(
 	// For now, just get all links (pagination not yet implemented in service)
 	links, err := h.service.ListLinks(ctx)
 	if err != nil {
-		return nil, newInternalError("failed to list links", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to list links", err)
 	}
 
 	// Apply pagination to results

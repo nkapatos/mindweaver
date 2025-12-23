@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"connectrpc.com/connect"
+	apierrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3/mindv3connect"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
@@ -30,14 +31,14 @@ func (h *TemplatesHandler) CreateTemplate(
 	templateID, err := h.service.CreateTemplate(ctx, params)
 	if err != nil {
 		if errors.Is(err, ErrTemplateAlreadyExists) {
-			return nil, newAlreadyExistsError("templates", "display_name", req.Msg.DisplayName)
+			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "templates", "display_name", req.Msg.DisplayName)
 		}
-		return nil, newInternalError("failed to create template", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to create template", err)
 	}
 
 	template, err := h.service.GetTemplateByID(ctx, templateID)
 	if err != nil {
-		return nil, newInternalError("failed to retrieve created template", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to retrieve created template", err)
 	}
 
 	return connect.NewResponse(StoreTemplateToProto(template)), nil
@@ -53,7 +54,7 @@ func (h *TemplatesHandler) ListTemplates(
 
 	templates, err := h.service.ListTemplatesPaginated(ctx, params.Limit, params.Offset)
 	if err != nil {
-		return nil, newInternalError("failed to list templates", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to list templates", err)
 	}
 
 	var totalCount int64
@@ -86,9 +87,9 @@ func (h *TemplatesHandler) GetTemplate(
 	template, err := h.service.GetTemplateByID(ctx, req.Msg.GetId())
 	if err != nil {
 		if errors.Is(err, ErrTemplateNotFound) {
-			return nil, newNotFoundError("templates", strconv.FormatInt(req.Msg.GetId(), 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "templates", strconv.FormatInt(req.Msg.GetId(), 10))
 		}
-		return nil, newInternalError("failed to get template", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get template", err)
 	}
 
 	return connect.NewResponse(StoreTemplateToProto(template)), nil
@@ -103,17 +104,17 @@ func (h *TemplatesHandler) UpdateTemplate(
 	err := h.service.UpdateTemplate(ctx, params)
 	if err != nil {
 		if errors.Is(err, ErrTemplateNotFound) {
-			return nil, newNotFoundError("templates", strconv.FormatInt(req.Msg.GetId(), 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "templates", strconv.FormatInt(req.Msg.GetId(), 10))
 		}
 		if errors.Is(err, ErrTemplateAlreadyExists) {
-			return nil, newAlreadyExistsError("templates", "display_name", req.Msg.DisplayName)
+			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "templates", "display_name", req.Msg.DisplayName)
 		}
-		return nil, newInternalError("failed to update template", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to update template", err)
 	}
 
 	template, err := h.service.GetTemplateByID(ctx, req.Msg.GetId())
 	if err != nil {
-		return nil, newInternalError("failed to retrieve updated template", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to retrieve updated template", err)
 	}
 
 	return connect.NewResponse(StoreTemplateToProto(template)), nil
@@ -126,9 +127,9 @@ func (h *TemplatesHandler) DeleteTemplate(
 	err := h.service.DeleteTemplate(ctx, req.Msg.GetId())
 	if err != nil {
 		if errors.Is(err, ErrTemplateNotFound) {
-			return nil, newNotFoundError("templates", strconv.FormatInt(req.Msg.GetId(), 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "templates", strconv.FormatInt(req.Msg.GetId(), 10))
 		}
-		return nil, newInternalError("failed to delete template", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to delete template", err)
 	}
 
 	return connect.NewResponse(&emptypb.Empty{}), nil

@@ -12,7 +12,7 @@ import (
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/meta"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/scheduler"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/tags"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/dberrors"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/markdown"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/middleware"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
@@ -98,7 +98,7 @@ func (s *NotesService) CreateNote(ctx context.Context, params store.CreateNotePa
 
 	id, err := txStore.CreateNote(ctx, params)
 	if err != nil {
-		if dberrors.IsUniqueConstraintError(err) {
+		if errors.IsUniqueConstraintError(err) {
 			return 0, ErrNoteAlreadyExists
 		}
 		s.logger.Error("failed to create note", "params", params, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -213,7 +213,7 @@ func (s *NotesService) UpdateNote(ctx context.Context, params store.UpdateNoteBy
 
 	err = txStore.UpdateNoteByID(ctx, params)
 	if err != nil {
-		if dberrors.IsUniqueConstraintError(err) {
+		if errors.IsUniqueConstraintError(err) {
 			return ErrNoteAlreadyExists
 		}
 		s.logger.Error("failed to update note", "params", params, "err", err, "request_id", middleware.GetRequestID(ctx))

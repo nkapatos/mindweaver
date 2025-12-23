@@ -9,10 +9,9 @@ import (
 	"connectrpc.com/connect"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/dberrors"
+	apierrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
-	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -57,10 +56,10 @@ func (h *CollectionsHandler) CreateCollection(
 
 	collection, err := h.service.CreateCollection(ctx, params)
 	if err != nil {
-		if dberrors.IsUniqueConstraintError(err) {
-			return nil, newAlreadyExistsError("collection", "path", path)
+		if apierrors.IsUniqueConstraintError(err) {
+			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "collection", "path", path)
 		}
-		if dberrors.IsForeignKeyConstraintError(err) {
+		if apierrors.IsForeignKeyConstraintError(err) {
 			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrInvalidParentCollection)
 		}
 		return nil, connect.NewError(connect.CodeInternal, err)
@@ -76,7 +75,7 @@ func (h *CollectionsHandler) GetCollection(
 	collection, err := h.service.GetCollectionByID(ctx, req.Msg.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, newNotFoundError("collection", strconv.FormatInt(req.Msg.Id, 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "collection", strconv.FormatInt(req.Msg.Id, 10))
 		}
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
@@ -91,7 +90,7 @@ func (h *CollectionsHandler) UpdateCollection(
 	current, err := h.service.GetCollectionByID(ctx, req.Msg.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, newNotFoundError("collection", strconv.FormatInt(req.Msg.Id, 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "collection", strconv.FormatInt(req.Msg.Id, 10))
 		}
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
@@ -118,10 +117,10 @@ func (h *CollectionsHandler) UpdateCollection(
 
 	err = h.service.UpdateCollection(ctx, params)
 	if err != nil {
-		if dberrors.IsUniqueConstraintError(err) {
-			return nil, newAlreadyExistsError("collection", "path", path)
+		if apierrors.IsUniqueConstraintError(err) {
+			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "collection", "path", path)
 		}
-		if dberrors.IsForeignKeyConstraintError(err) {
+		if apierrors.IsForeignKeyConstraintError(err) {
 			return nil, connect.NewError(connect.CodeFailedPrecondition, ErrInvalidParentCollection)
 		}
 		return nil, connect.NewError(connect.CodeInternal, err)
@@ -150,7 +149,7 @@ func (h *CollectionsHandler) DeleteCollection(
 	collection, err := h.service.GetCollectionByID(ctx, req.Msg.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, newNotFoundError("collection", strconv.FormatInt(req.Msg.Id, 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "collection", strconv.FormatInt(req.Msg.Id, 10))
 		}
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
@@ -162,19 +161,11 @@ func (h *CollectionsHandler) DeleteCollection(
 	err = h.service.DeleteCollection(ctx, req.Msg.Id)
 	if err != nil {
 		// Check for foreign key violation (collection has notes)
-		if dberrors.IsForeignKeyConstraintError(err) {
-			errInfo := &errdetails.ErrorInfo{
-				Reason: "COLLECTION_HAS_NOTES",
-				Domain: "mind.v3",
-				Metadata: map[string]string{
-					"collection_id": strconv.FormatInt(req.Msg.Id, 10),
-				},
+		if apierrors.IsForeignKeyConstraintError(err) {
+			metadata := map[string]string{
+				"collection_id": strconv.FormatInt(req.Msg.Id, 10),
 			}
-			connErr := connect.NewError(connect.CodeFailedPrecondition, errors.New("cannot delete collection with notes"))
-			if detail, err := connect.NewErrorDetail(errInfo); err == nil {
-				connErr.AddDetail(detail)
-			}
-			return nil, connErr
+			return nil, apierrors.NewFailedPreconditionError(apierrors.MindDomain, "COLLECTION_HAS_NOTES", metadata)
 		}
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
@@ -273,7 +264,7 @@ func (h *CollectionsHandler) GetCollectionTree(
 	root, err := h.service.GetCollectionByID(ctx, req.Msg.RootId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, newNotFoundError("collection", strconv.FormatInt(req.Msg.RootId, 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "collection", strconv.FormatInt(req.Msg.RootId, 10))
 		}
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}

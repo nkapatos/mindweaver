@@ -13,7 +13,7 @@ import (
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/links"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/meta"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/tags"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/dberrors"
+	apierrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
 	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -48,17 +48,17 @@ func (h *NotesHandler) CreateNote(
 	noteID, err := h.service.CreateNote(ctx, params)
 	if err != nil {
 		if errors.Is(err, ErrNoteAlreadyExists) {
-			return nil, newAlreadyExistsError("notes", "title", req.Msg.Title)
+			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "notes", "title", req.Msg.Title)
 		}
-		if dberrors.IsForeignKeyConstraintError(err) {
-			return nil, newInvalidArgumentError("collection_id or note_type_id", "referenced resource does not exist")
+		if apierrors.IsForeignKeyConstraintError(err) {
+			return nil, apierrors.NewInvalidArgumentError("collection_id or note_type_id", "referenced resource does not exist")
 		}
-		return nil, newInternalError("failed to create note", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to create note", err)
 	}
 
 	note, err := h.service.GetNoteByID(ctx, noteID)
 	if err != nil {
-		return nil, newInternalError("failed to retrieve created note", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to retrieve created note", err)
 	}
 
 	return connect.NewResponse(StoreNoteToProto(note)), nil
@@ -71,9 +71,9 @@ func (h *NotesHandler) GetNote(
 	note, err := h.service.GetNoteByID(ctx, req.Msg.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.Id, 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note", strconv.FormatInt(req.Msg.Id, 10))
 		}
-		return nil, newInternalError("failed to get note", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note", err)
 	}
 
 	return connect.NewResponse(StoreNoteToProto(note)), nil
@@ -86,16 +86,21 @@ func (h *NotesHandler) ReplaceNote(
 	current, err := h.service.GetNoteByID(ctx, req.Msg.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.Id, 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note", strconv.FormatInt(req.Msg.Id, 10))
 		}
-		return nil, newInternalError("failed to get note", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note", err)
 	}
 
 	// Optimistic locking via ETag
 	if req.Header().Get("If-Match") != "" {
 		currentETag := utils.ComputeHashedETag(current.Version)
 		if req.Header().Get("If-Match") != currentETag {
-			return nil, newETagMismatchError(req.Header().Get("If-Match"), currentETag)
+			metadata := map[string]string{
+				"provided_etag": req.Header().Get("If-Match"),
+				"current_etag":  currentETag,
+				"header":        "If-Match",
+			}
+			return nil, apierrors.NewFailedPreconditionError(apierrors.MindDomain, "ETAG_MISMATCH", metadata)
 		}
 	}
 
@@ -104,17 +109,17 @@ func (h *NotesHandler) ReplaceNote(
 	err = h.service.UpdateNote(ctx, params)
 	if err != nil {
 		if errors.Is(err, ErrNoteAlreadyExists) {
-			return nil, newAlreadyExistsError("notes", "title", req.Msg.Title)
+			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "notes", "title", req.Msg.Title)
 		}
-		if dberrors.IsForeignKeyConstraintError(err) {
-			return nil, newInvalidArgumentError("collection_id or note_type_id", "referenced resource does not exist")
+		if apierrors.IsForeignKeyConstraintError(err) {
+			return nil, apierrors.NewInvalidArgumentError("collection_id or note_type_id", "referenced resource does not exist")
 		}
-		return nil, newInternalError("failed to replace note", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to replace note", err)
 	}
 
 	updated, err := h.service.GetNoteByID(ctx, req.Msg.Id)
 	if err != nil {
-		return nil, newInternalError("failed to retrieve replaced note", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to retrieve replaced note", err)
 	}
 
 	return connect.NewResponse(StoreNoteToProto(updated)), nil
@@ -127,14 +132,14 @@ func (h *NotesHandler) DeleteNote(
 	_, err := h.service.GetNoteByID(ctx, req.Msg.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.Id, 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note", strconv.FormatInt(req.Msg.Id, 10))
 		}
-		return nil, newInternalError("failed to get note", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note", err)
 	}
 
 	err = h.service.DeleteNote(ctx, req.Msg.Id)
 	if err != nil {
-		return nil, newInternalError("failed to delete note", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to delete note", err)
 	}
 
 	return connect.NewResponse(&emptypb.Empty{}), nil
@@ -179,7 +184,7 @@ func (h *NotesHandler) ListNotes(
 	}
 
 	if err != nil {
-		return nil, newInternalError("failed to list notes", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to list notes", err)
 	}
 
 	// Build pagination response
@@ -215,9 +220,9 @@ func (h *NotesHandler) GetNoteMeta(
 	metadata, err := h.service.GetNoteMeta(ctx, req.Msg.NoteId, h.metaService)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.NoteId, 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note", strconv.FormatInt(req.Msg.NoteId, 10))
 		}
-		return nil, newInternalError("failed to get note metadata", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note metadata", err)
 	}
 
 	resp := &mindv3.GetNoteMetaResponse{
@@ -234,9 +239,9 @@ func (h *NotesHandler) GetNoteRelationships(
 	outgoingLinks, incomingLinks, tagIDs, err := h.service.GetNoteRelationships(ctx, req.Msg.NoteId, h.linksService, h.tagsSvc)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, newNotFoundError("note", strconv.FormatInt(req.Msg.NoteId, 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note", strconv.FormatInt(req.Msg.NoteId, 10))
 		}
-		return nil, newInternalError("failed to get note relationships", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note relationships", err)
 	}
 
 	resp := &mindv3.GetNoteRelationshipsResponse{
@@ -256,19 +261,19 @@ func (h *NotesHandler) NewNote(
 	noteID, err := h.service.NewNoteCreation(ctx, collectionID, templateID)
 	if err != nil {
 		if errors.Is(err, ErrNoteAlreadyExists) {
-			return nil, newAlreadyExistsError("notes", "title", "auto-generated title")
+			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "notes", "title", "auto-generated title")
 		}
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, newNotFoundError("template", strconv.FormatInt(templateID, 10))
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "template", strconv.FormatInt(templateID, 10))
 		}
-		if dberrors.IsForeignKeyConstraintError(err) {
-			return nil, newInvalidArgumentError("collection_id or template_id", "referenced resource does not exist")
+		if apierrors.IsForeignKeyConstraintError(err) {
+			return nil, apierrors.NewInvalidArgumentError("collection_id or template_id", "referenced resource does not exist")
 		}
-		return nil, newInternalError("failed to create new note", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to create new note", err)
 	}
 	note, err := h.service.GetNoteByID(ctx, noteID)
 	if err != nil {
-		return nil, newInternalError("failed to retrieve created note", err)
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to retrieve created note", err)
 	}
 	return connect.NewResponse(StoreNoteToProto(note)), nil
 }
