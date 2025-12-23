@@ -12,16 +12,16 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type NoteTypesHandlerV3 struct {
+type NoteTypesHandler struct {
 	mindv3connect.UnimplementedNoteTypesServiceHandler
 	service *NoteTypesService
 }
 
-func NewNoteTypesHandlerV3(service *NoteTypesService) *NoteTypesHandlerV3 {
-	return &NoteTypesHandlerV3{service: service}
+func NewNoteTypesHandler(service *NoteTypesService) *NoteTypesHandler {
+	return &NoteTypesHandler{service: service}
 }
 
-func (h *NoteTypesHandlerV3) CreateNoteType(
+func (h *NoteTypesHandler) CreateNoteType(
 	ctx context.Context,
 	req *connect.Request[mindv3.CreateNoteTypeRequest],
 ) (*connect.Response[mindv3.NoteType], error) {
@@ -43,7 +43,7 @@ func (h *NoteTypesHandlerV3) CreateNoteType(
 	return connect.NewResponse(StoreNoteTypeToProto(noteType)), nil
 }
 
-func (h *NoteTypesHandlerV3) ListNoteTypes(
+func (h *NoteTypesHandler) ListNoteTypes(
 	ctx context.Context,
 	req *connect.Request[mindv3.ListNoteTypesRequest],
 ) (*connect.Response[mindv3.ListNoteTypesResponse], error) {
@@ -79,7 +79,7 @@ func (h *NoteTypesHandlerV3) ListNoteTypes(
 	return connect.NewResponse(resp), nil
 }
 
-func (h *NoteTypesHandlerV3) GetNoteType(
+func (h *NoteTypesHandler) GetNoteType(
 	ctx context.Context,
 	req *connect.Request[mindv3.GetNoteTypeRequest],
 ) (*connect.Response[mindv3.NoteType], error) {
@@ -94,7 +94,7 @@ func (h *NoteTypesHandlerV3) GetNoteType(
 	return connect.NewResponse(StoreNoteTypeToProto(noteType)), nil
 }
 
-func (h *NoteTypesHandlerV3) UpdateNoteType(
+func (h *NoteTypesHandler) UpdateNoteType(
 	ctx context.Context,
 	req *connect.Request[mindv3.UpdateNoteTypeRequest],
 ) (*connect.Response[mindv3.NoteType], error) {
@@ -122,7 +122,7 @@ func (h *NoteTypesHandlerV3) UpdateNoteType(
 	return connect.NewResponse(StoreNoteTypeToProto(noteType)), nil
 }
 
-func (h *NoteTypesHandlerV3) DeleteNoteType(
+func (h *NoteTypesHandler) DeleteNoteType(
 	ctx context.Context,
 	req *connect.Request[mindv3.DeleteNoteTypeRequest],
 ) (*connect.Response[emptypb.Empty], error) {

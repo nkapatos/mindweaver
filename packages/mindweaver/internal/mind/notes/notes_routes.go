@@ -1,4 +1,5 @@
-package collections
+// Notes V3 Route Registration (Connect-RPC)
+package notes
 
 import (
 	"context"
@@ -13,8 +14,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// RegisterCollectionsV3Routes registers V3 collections routes (Connect-RPC with both gRPC and HTTP/JSON support)
-func RegisterCollectionsV3Routes(e *echo.Echo, handler *CollectionsHandlerV3, logger *slog.Logger) error {
+// RegisterNotesRoutes registers V3 notes routes (Connect-RPC with both gRPC and HTTP/JSON support)
+func RegisterNotesRoutes(e *echo.Echo, handler *NotesHandler, logger *slog.Logger) error {
 	// Connect-RPC automatically supports:
 	// - gRPC (binary protobuf over HTTP/2)
 	// - gRPC-Web (for browsers)
@@ -40,7 +41,7 @@ func RegisterCollectionsV3Routes(e *echo.Echo, handler *CollectionsHandlerV3, lo
 	})
 
 	// Create handler with validation interceptor
-	path, connectHandler := mindv3connect.NewCollectionsServiceHandler(
+	path, connectHandler := mindv3connect.NewNotesServiceHandler(
 		handler,
 		connect.WithInterceptors(validationInterceptor),
 	)
@@ -53,6 +54,6 @@ func RegisterCollectionsV3Routes(e *echo.Echo, handler *CollectionsHandlerV3, lo
 	// Use Match to catch all methods and let Connect handle routing
 	e.Match([]string{"GET", "POST", "PUT", "DELETE", "PATCH"}, path+"*", echo.WrapHandler(h2cHandler))
 
-	logger.Info("Registered V3 Collections routes with automatic validation", "path", path)
+	logger.Info("Registered V3 Notes routes with automatic validation", "path", path)
 	return nil
 }

@@ -1,5 +1,6 @@
-// Notes V3 Route Registration (Connect-RPC)
-package notes
+package tags
+
+// Tags V3 Route Registration (Connect-RPC)
 
 import (
 	"context"
@@ -14,8 +15,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// RegisterNotesV3Routes registers V3 notes routes (Connect-RPC with both gRPC and HTTP/JSON support)
-func RegisterNotesV3Routes(e *echo.Echo, handler *NotesHandlerV3, logger *slog.Logger) error {
+// RegisterTagsRoutes registers V3 tags routes (Connect-RPC with both gRPC and HTTP/JSON support)
+func RegisterTagsRoutes(e *echo.Echo, handler *TagsHandler, logger *slog.Logger) error {
 	// Connect-RPC automatically supports:
 	// - gRPC (binary protobuf over HTTP/2)
 	// - gRPC-Web (for browsers)
@@ -41,7 +42,7 @@ func RegisterNotesV3Routes(e *echo.Echo, handler *NotesHandlerV3, logger *slog.L
 	})
 
 	// Create handler with validation interceptor
-	path, connectHandler := mindv3connect.NewNotesServiceHandler(
+	path, connectHandler := mindv3connect.NewTagsServiceHandler(
 		handler,
 		connect.WithInterceptors(validationInterceptor),
 	)
@@ -54,6 +55,11 @@ func RegisterNotesV3Routes(e *echo.Echo, handler *NotesHandlerV3, logger *slog.L
 	// Use Match to catch all methods and let Connect handle routing
 	e.Match([]string{"GET", "POST", "PUT", "DELETE", "PATCH"}, path+"*", echo.WrapHandler(h2cHandler))
 
-	logger.Info("Registered V3 Notes routes with automatic validation", "path", path)
+	// NOTE: Connect-RPC error format is close to AIP-193 but not exact:
+	// - Connect: {code: "invalid_argument", message: "..."}
+	// - AIP-193: {error: {code: 400, message: "...", status: "INVALID_ARGUMENT", details: [...]}}
+	// For full AIP-193, would need custom error interceptor (deferred post-PoC)
+
+	logger.Info("Registered V3 Tags routes with automatic validation", "path", path)
 	return nil
 }

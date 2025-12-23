@@ -101,12 +101,12 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 	searchService := search.NewSearchService(db, querier, logger)
 
 	// Initialize handlers
-	tagsHandlerV3 := tags.NewTagsHandlerV3(tagService)
-	templatesHandlerV3 := templates.NewTemplatesHandlerV3(templateService)
-	noteTypesHandlerV3 := notetypes.NewNoteTypesHandlerV3(noteTypesService)
-	collectionsHandlerV3 := collections.NewCollectionsHandlerV3(collectionsService)
-	notesHandlerV3 := notes.NewNotesHandlerV3(notesService, noteMetaService, linksService, tagService)
-	noteMetaHandlerV3 := meta.NewNoteMetaHandlerV3(noteMetaService)
+	tagsHandler := tags.NewTagsHandler(tagService)
+	templatesHandler := templates.NewTemplatesHandler(templateService)
+	noteTypesHandler := notetypes.NewNoteTypesHandler(noteTypesService)
+	collectionsHandler := collections.NewCollectionsHandler(collectionsService)
+	notesHandler := notes.NewNotesHandler(notesService, noteMetaService, linksService, tagService)
+	noteMetaHandler := meta.NewNoteMetaHandler(noteMetaService)
 	searchHandlerV3 := search.NewSearchHandlerV3(searchService)
 
 	// Create /mind subgroup under the provided API group
@@ -115,32 +115,32 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 
 	// Register V3 routes (Connect-RPC with protobuf) - supports gRPC + HTTP/JSON
 	// Note: Connect-RPC requires registration at Echo root level (not in a group)
-	if err := tags.RegisterTagsV3Routes(e, tagsHandlerV3, logger); err != nil {
+	if err := tags.RegisterTagsRoutes(e, tagsHandler, logger); err != nil {
 		db.Close()
 		return nil, nil, fmt.Errorf("failed to register tags V3 routes: %w", err)
 	}
 
-	if err := templates.RegisterTemplatesV3Routes(e, templatesHandlerV3, logger); err != nil {
+	if err := templates.RegisterTemplatesRoutes(e, templatesHandler, logger); err != nil {
 		db.Close()
 		return nil, nil, fmt.Errorf("failed to register templates V3 routes: %w", err)
 	}
 
-	if err := notetypes.RegisterNoteTypesV3Routes(e, noteTypesHandlerV3, logger); err != nil {
+	if err := notetypes.RegisterNoteTypesRoutes(e, noteTypesHandler, logger); err != nil {
 		db.Close()
 		return nil, nil, fmt.Errorf("failed to register note types V3 routes: %w", err)
 	}
 
-	if err := collections.RegisterCollectionsV3Routes(e, collectionsHandlerV3, logger); err != nil {
+	if err := collections.RegisterCollectionsRoutes(e, collectionsHandler, logger); err != nil {
 		db.Close()
 		return nil, nil, fmt.Errorf("failed to register collections V3 routes: %w", err)
 	}
 
-	if err := notes.RegisterNotesV3Routes(e, notesHandlerV3, logger); err != nil {
+	if err := notes.RegisterNotesRoutes(e, notesHandler, logger); err != nil {
 		db.Close()
 		return nil, nil, fmt.Errorf("failed to register notes V3 routes: %w", err)
 	}
 
-	if err := meta.RegisterNoteMetaV3Routes(e, noteMetaHandlerV3, logger); err != nil {
+	if err := meta.RegisterNoteMetaRoutes(e, noteMetaHandler, logger); err != nil {
 		db.Close()
 		return nil, nil, fmt.Errorf("failed to register note meta V3 routes: %w", err)
 	}

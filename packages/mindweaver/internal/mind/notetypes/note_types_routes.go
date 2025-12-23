@@ -1,5 +1,5 @@
-// Templates V3 Route Registration (Connect-RPC)
-package templates
+// NoteTypes V3 Route Registration (Connect-RPC)
+package notetypes
 
 import (
 	"context"
@@ -14,8 +14,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// RegisterTemplatesV3Routes registers V3 templates routes (Connect-RPC with both gRPC and HTTP/JSON support)
-func RegisterTemplatesV3Routes(e *echo.Echo, handler *TemplatesHandlerV3, logger *slog.Logger) error {
+// RegisterNoteTypesRoutes registers V3 note types routes (Connect-RPC with both gRPC and HTTP/JSON support)
+func RegisterNoteTypesRoutes(e *echo.Echo, handler *NoteTypesHandler, logger *slog.Logger) error {
 	// Connect-RPC automatically supports:
 	// - gRPC (binary protobuf over HTTP/2)
 	// - gRPC-Web (for browsers)
@@ -41,7 +41,7 @@ func RegisterTemplatesV3Routes(e *echo.Echo, handler *TemplatesHandlerV3, logger
 	})
 
 	// Create handler with validation interceptor
-	path, connectHandler := mindv3connect.NewTemplatesServiceHandler(
+	path, connectHandler := mindv3connect.NewNoteTypesServiceHandler(
 		handler,
 		connect.WithInterceptors(validationInterceptor),
 	)
@@ -54,11 +54,6 @@ func RegisterTemplatesV3Routes(e *echo.Echo, handler *TemplatesHandlerV3, logger
 	// Use Match to catch all methods and let Connect handle routing
 	e.Match([]string{"GET", "POST", "PUT", "DELETE", "PATCH"}, path+"*", echo.WrapHandler(h2cHandler))
 
-	// NOTE: Connect-RPC error format is close to AIP-193 but not exact:
-	// - Connect: {code: "invalid_argument", message: "..."}
-	// - AIP-193: {error: {code: 400, message: "...", status: "INVALID_ARGUMENT", details: [...]}}
-	// For full AIP-193, would need custom error interceptor (deferred post-PoC)
-
-	logger.Info("Registered V3 Templates routes with automatic validation", "path", path)
+	logger.Info("Registered V3 NoteTypes routes with automatic validation", "path", path)
 	return nil
 }
