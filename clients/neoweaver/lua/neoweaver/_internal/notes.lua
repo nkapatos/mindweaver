@@ -7,6 +7,8 @@
 local api = require("neoweaver._internal.api")
 local buffer_manager = require("neoweaver._internal.buffer.manager")
 local diff = require("neoweaver._internal.diff")
+local picker = require("neoweaver._internal.ui.picker")
+local config_module = require("neoweaver._internal.config")
 
 -- Debounce state for create_note
 local last_create_time = 0
@@ -111,7 +113,7 @@ handle_conflict = function(bufnr, note_id)
   end)
 end
 
---- List all notes using vim.ui.select
+--- List all notes using nui picker
 function M.list_notes()
   ---@type mind.v3.ListNotesRequest
   local req = {
@@ -134,20 +136,20 @@ function M.list_notes()
       return
     end
 
-    local items = {}
-    for _, note in ipairs(notes) do
-      table.insert(items, string.format("[%d] %s", note.id, note.title))
-    end
+    local cfg = config_module.get().picker or {}
 
-    vim.ui.select(items, {
-      prompt = "Select a note:",
-    }, function(choice, idx)
-      if not choice then
-        return
-      end
-      local selected_note = notes[idx]
-      M.open_note(tonumber(selected_note.id))
-    end)
+    picker.pick(notes, {
+      prompt = "Select a note",
+      format_item = function(note, _idx)
+        return string.format("[%d] %s", note.id, note.title)
+      end,
+      on_submit = function(note, _idx)
+        M.open_note(tonumber(note.id))
+      end,
+      size = cfg.size,
+      position = cfg.position,
+      border = cfg.border,
+    })
   end)
 end
 
@@ -370,6 +372,62 @@ function M.delete_note(note_id)
       vim.notify("Note deleted successfully", vim.log.levels.INFO)
     end)
   end)
+end
+
+--- Find notes by title using interactive search picker
+function M.find_notes()
+  local search_picker = require("neoweaver._internal.ui.search_picker")
+
+  -- Mock data for testing (will be replaced with real API call later)
+  local mock_notes = {
+    { id = 1, title = "Meeting Notes", collection_path = "work/projects" },
+    { id = 2, title = "Daily Meeting", collection_path = "work/daily" },
+    { id = 3, title = "Meeting Agenda", collection_path = "personal" },
+    { id = 4, title = "Project Planning", collection_path = "work/projects" },
+    { id = 5, title = "Ideas", collection_path = "personal" },
+  }
+
+  --- Mock search function - filters notes by title
+  ---@param query string Search query
+  ---@param page_token string|nil Pagination token (unused in mock)
+  ---@param callback function Callback(items, error, has_more, next_token)
+  local function mock_search(query, page_token, callback)
+    -- Simulate async behavior
+    vim.defer_fn(function()
+      local query_lower = query:lower()
+      local filtered = {}
+
+      for _, note in ipairs(mock_notes) do
+        if note.title:lower():find(query_lower, 1, true) then
+          table.insert(filtered, note)
+        end
+      end
+
+      -- Mock callback: (items, error, has_more, next_token)
+      callback(filtered, nil, false, nil)
+    end, 100) -- 100ms simulated latency
+  end
+
+  -- Show search picker
+  search_picker.show({
+    prompt = "Find notes:",
+    min_query_length = 3,
+    debounce_ms = 300,
+    empty_message = "No notes found",
+    search_fn = mock_search,
+    format_item = function(note, _idx)
+      -- Format: "Note Title          collection-path"
+      local title = note.title
+      local path = note.collection_path
+      return string.format("%-40s %s", title, path)
+    end,
+    on_select = function(note, _idx)
+      M.open_note(note.id)
+    end,
+    on_close = function()
+      -- Optional: handle picker close
+    end,
+  })
 end
 
 function M.setup(opts)

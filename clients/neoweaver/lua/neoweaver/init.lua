@@ -124,6 +124,10 @@ function M.setup_keymaps()
     vim.keymap.set("n", km_notes.list, notes.list_notes, { desc = "List notes" })
   end
 
+  if km_notes.find then
+    vim.keymap.set("n", km_notes.find, notes.find_notes, { desc = "Find notes by title" })
+  end
+
   if km_notes.open then
     vim.keymap.set("n", km_notes.open, function()
       prompt_note_id("Note ID:", notes.open_note)
