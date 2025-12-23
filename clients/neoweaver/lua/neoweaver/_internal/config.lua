@@ -34,12 +34,24 @@ M.defaults = {
     },
   },
 
+  picker = {
+    size = {
+      width = 60,
+      height = 20,
+    },
+    position = "50%",
+    border = {
+      style = "rounded",
+    },
+  },
+
   keymaps = {
 
     enabled = false, -- Keymaps are opt-in
     notes = {
       -- Standard notes (using <leader>n* for "notes")
       list = "<leader>nl",
+      find = "<leader>nf", -- Find notes by title (search picker)
       open = "<leader>no",
       edit = "<leader>ne", -- Alias for open
       new = "<leader>nn",
@@ -84,6 +96,11 @@ function M.apply(opts)
   -- Merge metadata configuration
   if opts.metadata ~= nil then
     M.current.metadata = vim.tbl_extend("force", M.current.metadata, opts.metadata)
+  end
+
+  -- Merge picker configuration
+  if opts.picker ~= nil then
+    M.current.picker = vim.tbl_deep_extend("force", M.current.picker, opts.picker)
   end
 
   -- Merge keymap configuration
