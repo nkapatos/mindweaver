@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.1.2](https://github.com/nkapatos/mindweaver/compare/mindweaver/v0.1.1...mindweaver/v0.1.2) (2025-12-23)
+
+
+### Features
+
+* **mindweaver:** add error details for etagMissmatch for connet error response ([1439c1c](https://github.com/nkapatos/mindweaver/commit/1439c1ca0d52dadd8b0a6c13642cc690e5d6809a))
+* **mindweaver:** implement field masking in ListNotes handler ([666e079](https://github.com/nkapatos/mindweaver/commit/666e079f9a0af5b856d299e53200ed53d7d6ec85))
+
+
+### Maintenance
+
+* **mindweaver:** remove v1 api types from note types pkg ([24aa562](https://github.com/nkapatos/mindweaver/commit/24aa562aeb173fd8aac7f8a74015327d78c9dd42))
+* **mindweaver:** setup GitHub workflow and clean TODO comments ([b2d88ed](https://github.com/nkapatos/mindweaver/commit/b2d88ed28c2fd6044fc003d8ace202e28c1e8d5b))
+* tooling in mise and ignore gen, tmp dirs from git ([fe994c4](https://github.com/nkapatos/mindweaver/commit/fe994c4ff92ab6a39ff5c2625f4d63fc13a67c87))
+
+
+### Refactoring
+
+* **errors:** remove IsNotFoundError helper, use sql.ErrNoRows directly ([049e3fa](https://github.com/nkapatos/mindweaver/commit/049e3fa5d6f6766f2749d62bf82c5e24526a9cc4))
+* **mind:** remove _v3 suffix from all packages except search ([93c6540](https://github.com/nkapatos/mindweaver/commit/93c6540d97afabfcbed0a80c1ba189e598cefd5e))
+* **mind:** remove obsolete shared/routes package ([fdb3dbe](https://github.com/nkapatos/mindweaver/commit/fdb3dbe7f046a1ecae4676e7634b6049223dd2d6))
+* **mind:** standardize error handling across all handlers ([f803674](https://github.com/nkapatos/mindweaver/commit/f803674692c01f58c765ac483ee2af1c14625300))
+* **mindweaver:** consolidate error handling in shared/errors package ([97da7a8](https://github.com/nkapatos/mindweaver/commit/97da7a8ad331067a37acdac5f82d7d92614d74dc))
+* **mindweaver:** replace manual sql.Null* constructions with centralized utils helpers ([48018ed](https://github.com/nkapatos/mindweaver/commit/48018ed00ae7a0b83563bfcb9951fcc7b040e891))
+
+
+### Tests
+
+* **mindweaver:** add Bruno test for field masking in ListNotes ([bc71f25](https://github.com/nkapatos/mindweaver/commit/bc71f25dd8512575fdca4026ff51a7b2c1f9b55a))
+
+
+### CI/CD
+
+* component-scoped filters, Go cache; neoweaver release sync ([#20](https://github.com/nkapatos/mindweaver/issues/20)) ([90cfa9e](https://github.com/nkapatos/mindweaver/commit/90cfa9edbd70bf78ab8227a84baf2a2eb9b71d96))
+
 ## [0.1.1](https://github.com/nkapatos/mindweaver/compare/mindweaver/v0.1.0...mindweaver/v0.1.1) (2025-12-16)
 
 
