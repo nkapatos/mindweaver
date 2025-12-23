@@ -1,8 +1,11 @@
 // Package errors provides utilities for detecting and handling errors across the application.
 //
 // This package consolidates error handling logic that is shared across services:
-// - Database error detection (SQLC/SQLite errors)
+// - Database error detection (SQLC/SQLite constraint errors)
 // - Connect-RPC error builders (AIP-193 compliant)
+//
+// Note: For sql.ErrNoRows, use errors.Is(err, sql.ErrNoRows) directly rather than
+// wrapping it in a helper. This is the idiomatic Go pattern and is more reliable.
 package errors
 
 import (
@@ -33,23 +36,6 @@ func IsUniqueConstraintError(err error) bool {
 	}
 
 	return false
-}
-
-// IsNotFoundError checks if an error indicates a record was not found.
-// SQLC returns "sql: no rows in result set" for sql.ErrNoRows.
-//
-// Example usage in service layer:
-//
-//	if errors.IsNotFoundError(err) {
-//		return store.Tag{}, ErrTagNotFound
-//	}
-func IsNotFoundError(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	// SQLC returns this exact string for sql.ErrNoRows
-	return err.Error() == "sql: no rows in result set"
 }
 
 // IsForeignKeyConstraintError checks if an error is a SQLite FOREIGN KEY constraint violation.
