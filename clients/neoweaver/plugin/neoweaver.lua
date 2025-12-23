@@ -48,7 +48,7 @@ end, { nargs = 1, desc = "Delete note by ID" })
 vim.api.nvim_create_user_command("NeoweaverNotesMeta", function(opts)
   local id = opts.args ~= "" and tonumber(opts.args) or nil
   require("neoweaver._internal.notes").edit_metadata(id)
-end, { nargs = "?", desc = "Edit note metadata (TODO: not implemented)" })
+end, { nargs = "?", desc = "Edit note metadata - See issue #44" })
 
 vim.api.nvim_create_user_command("NeoweaverNotesQuick", function()
   require("neoweaver._internal.quicknote").open()
@@ -56,11 +56,11 @@ end, { desc = "Capture a quicknote" })
 
 vim.api.nvim_create_user_command("NeoweaverNotesQuickList", function()
   require("neoweaver._internal.quicknote").list()
-end, { desc = "List quicknotes (TODO)" })
+end, { desc = "List quicknotes - See issue #45" })
 
 vim.api.nvim_create_user_command("NeoweaverNotesQuickAmend", function()
   require("neoweaver._internal.quicknote").amend()
-end, { desc = "Amend quicknote (TODO)" })
+end, { desc = "Amend quicknote - See issue #45" })
 
 -- API/Server commands
 vim.api.nvim_create_user_command("NeoweaverServerUse", function(opts)

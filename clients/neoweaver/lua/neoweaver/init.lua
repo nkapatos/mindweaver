@@ -151,7 +151,7 @@ function M.setup_keymaps()
   end
 
   if km_notes.meta then
-    vim.keymap.set("n", km_notes.meta, notes.edit_metadata, { desc = "Edit note metadata (TODO: not implemented)" })
+    vim.keymap.set("n", km_notes.meta, notes.edit_metadata, { desc = "Edit note metadata - See issue #44" })
   end
 
   -- Quicknotes keymaps
@@ -160,11 +160,11 @@ function M.setup_keymaps()
   end
 
   if km_quick.list then
-    vim.keymap.set("n", km_quick.list, quicknote.list, { desc = "List quicknotes (TODO)" })
+    vim.keymap.set("n", km_quick.list, quicknote.list, { desc = "List quicknotes - See issue #45" })
   end
 
   if km_quick.amend then
-    vim.keymap.set("n", km_quick.amend, quicknote.amend, { desc = "Amend quicknote (TODO)" })
+    vim.keymap.set("n", km_quick.amend, quicknote.amend, { desc = "Amend quicknote - See issue #45" })
   end
 
   -- Fast access quicknotes keymaps
@@ -173,11 +173,11 @@ function M.setup_keymaps()
   end
 
   if km_quick.amend_fast then
-    vim.keymap.set("n", km_quick.amend_fast, quicknote.amend, { desc = "Amend quicknote (fast) (TODO)" })
+    vim.keymap.set("n", km_quick.amend_fast, quicknote.amend, { desc = "Amend quicknote (fast) - See issue #45" })
   end
 
   if km_quick.list_fast then
-    vim.keymap.set("n", km_quick.list_fast, quicknote.list, { desc = "List quicknotes (fast) (TODO)" })
+    vim.keymap.set("n", km_quick.list_fast, quicknote.list, { desc = "List quicknotes (fast) - See issue #45" })
   end
 end
 

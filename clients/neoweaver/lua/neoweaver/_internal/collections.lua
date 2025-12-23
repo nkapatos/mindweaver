@@ -30,14 +30,9 @@ function M.list_collections(opts, cb)
     local list_res = res.data
     local collections = list_res.collections or {}
 
-    -- TODO: Implement automatic pagination
-    -- If nextPageToken is present, recursively fetch remaining pages in background
-    -- API response includes: nextPageToken, totalSize
-    -- Pagination is per-level (root collections only, not nested children)
-    -- When all pages fetched, notify explorer to update tree
-    -- Note: nextPageToken is empty string when no more pages available
-    -- local next_token = list_res.nextPageToken
-    -- local total = list_res.totalSize
+    -- Note: Automatic pagination not implemented - See issue #52
+    -- API includes: nextPageToken, totalSize
+    -- Could recursively fetch remaining pages in background
 
     cb(collections, nil)
   end)

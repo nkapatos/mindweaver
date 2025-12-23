@@ -37,7 +37,7 @@ local cache = {
 }
 
 -- Default configuration
--- TODO: Make configurable via setup() - needs design for config schema
+-- Note: Configuration via setup() not implemented - See issue #47
 M.config = {
   -- List of root markers to look for (order matters — first match wins for root detection)
   -- Type is auto-detected from file extension/name - no need to specify
@@ -65,13 +65,13 @@ M.config = {
     { name = "go.mod", fields = { "module" } },
   },
 
-  -- TODO: Custom extractors - needs design for how users register these
-  -- Allow users to register completely custom extractors
-  -- custom_extractors = {}, -- [marker_name] = function(root_dir, full_path, requested_fields) -> table
+  -- Note: Custom extractors not implemented - See issue #47
+  -- Would allow users to register custom extraction functions
+  -- custom_extractors = {}, -- [marker_name] = function(root_dir, full_path, fields) -> table
 }
 
--- TODO: Setup function - needs design for configuration interface
--- Allow user to override config (e.g. from setup{})
+-- Note: Setup function not implemented - See issue #47
+-- Would allow user to override config from setup()
 -- function M.setup(user_config)
 --   M.config = vim.tbl_deep_extend("force", M.config, user_config or {})
 --   -- Invalidate cache when config changes
@@ -246,18 +246,8 @@ local function find_project_root(start_dir)
     return check(parent)
   end
 
-  -- TODO: LSP workspace integration - needs discussion on priority
-  -- Original code preferred LSP workspace folders over file-based detection
-  -- Commenting out for now until we decide if this is needed
-  --
-  -- local lsp_root = nil
-  -- if vim.lsp and vim.lsp.buf_is_attached and #vim.lsp.get_clients() > 0 then
-  --   local roots = vim.lsp.buf.list_workspace_folders()
-  --   if roots and #roots > 0 then
-  --     lsp_root = roots[1]
-  --   end
-  -- end
-  -- return lsp_root or check(start_dir) or start_dir
+  -- Note: LSP workspace integration not implemented - See issue #50
+  -- File-based detection preferred for simplicity
 
   return check(start_dir) or start_dir
 end
@@ -314,8 +304,8 @@ function M.extract_metadata(root_dir)
   end
 
   -- Extract fresh metadata
-  -- TODO: git integration - needs discussion on usefulness
-  -- Original code extracted git commit hash, kept for compatibility
+  -- Note: Git integration evaluation needed - See issue #51
+  -- Currently extracts commit hash, usefulness unclear
   local meta = {
     project = vim.g.quicknote_project or vim.fn.fnamemodify(vim.fn.getcwd(), ":t"),
     cwd = vim.fn.getcwd(),
@@ -338,13 +328,8 @@ function M.extract_metadata(root_dir)
     local extracted
     local marker_type = get_marker_type(marker.name)
 
-    -- TODO: Custom extractors - needs design for how users register these
-    -- if M.config.custom_extractors and M.config.custom_extractors[marker.name] then
-    --   -- Custom extractor takes precedence
-    --   local custom = M.config.custom_extractors[marker.name]
-    --   local ok, res = pcall(custom, root_dir, full_path, marker.fields)
-    --   extracted = ok and res or nil
-    -- els
+    -- Note: Custom extractors not implemented - See issue #47
+    -- Would allow user-registered parsing functions
     if marker_type == "gomod" then
       extracted = extract_gomod(full_path)
     elseif marker_type then
@@ -357,9 +342,8 @@ function M.extract_metadata(root_dir)
       for k, v in pairs(extracted) do
         meta[k] = v
       end
-      -- TODO: Merge strategy - should we stop after first successful marker?
-      -- Original code had this commented out with option to break
-      -- Currently merges all markers - may need configuration option
+      -- Note: Merge strategy needs discussion - See issue #48
+      -- Currently merges all markers, could stop at first match
       -- break
     end
 

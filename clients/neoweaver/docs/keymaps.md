@@ -12,11 +12,11 @@ When keymaps are enabled (`keymaps = { enabled = true }`), the following default
 | `<leader>nt`   | `:NeoweaverNotesTitle`       | Edit current note title         |
 | `<leader>nd`   | `:NeoweaverNotesDelete`      | Delete note (prompts for ID)    |
 | `<leader>qn`   | `:NeoweaverNotesQuick`       | Capture quicknote               |
-| `<leader>ql`   | `:NeoweaverNotesQuickList`   | List quicknotes (TODO)          |
-| `<leader>qa`   | `:NeoweaverNotesQuickAmend`  | Reopen last quicknote (TODO)    |
+| `<leader>ql`   | `:NeoweaverNotesQuickList`   | List quicknotes (see issue #45) |
+| `<leader>qa`   | `:NeoweaverNotesQuickAmend`  | Reopen last quicknote (see #45) |
 | `<leader>.n`   | `:NeoweaverNotesQuick`       | Capture quicknote (fast)        |
-| `<leader>.l`   | `:NeoweaverNotesQuickList`   | List quicknotes (TODO)          |
-| `<leader>.a`   | `:NeoweaverNotesQuickAmend`  | Reopen last quicknote (TODO)    |
+| `<leader>.l`   | `:NeoweaverNotesQuickList`   | List quicknotes (see issue #45) |
+| `<leader>.a`   | `:NeoweaverNotesQuickAmend`  | Reopen last quicknote (see #45) |
 
 ## Customizing Keymaps
 

@@ -124,7 +124,7 @@ Notes:
 
 - `title_template` is passed to `strftime()` when a quicknote saves. Use any valid strftime pattern.
 - `collection_id` and `note_type_id` are currently hard-coded defaults while user preferences sync is designed.
-- Metadata enrichment is not yet configurable (TODO).
+- Metadata enrichment is not yet configurable (see issue #47).
 
 ## Complete Setup Example
 
@@ -156,7 +156,7 @@ Notes:
 
 - `title_template` is passed to `strftime()` when a quicknote saves. Use any valid strftime pattern.
 - `collection_id` and `note_type_id` are currently hard-coded defaults while user preferences sync is designed.
-- Metadata enrichment is not yet configurable (TODO).
+- Metadata enrichment is not yet configurable (see issue #47).
 
 ## Complete Setup Example
 
