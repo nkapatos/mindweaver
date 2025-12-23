@@ -320,6 +320,65 @@ function M.show(opts)
     end
   end, { noremap = true })
 
+  -- Normal mode keymaps for input: j/k navigate results menu
+  input_popup:map("n", "j", function()
+    -- Navigate down in results from input normal mode
+    if results_menu and results_menu.menu_props then
+      results_menu.menu_props.on_focus_next()
+    end
+  end, { noremap = true })
+
+  input_popup:map("n", "k", function()
+    -- Navigate up in results from input normal mode
+    if results_menu and results_menu.menu_props then
+      results_menu.menu_props.on_focus_prev()
+    end
+  end, { noremap = true })
+
+  input_popup:map("n", "i", function()
+    -- Return to insert mode at current cursor position
+    vim.cmd("startinsert")
+  end, { noremap = true })
+
+  input_popup:map("n", "a", function()
+    -- Append mode: move cursor right then enter insert
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local line_length = vim.api.nvim_buf_line_count(input_popup.bufnr)
+    if line_length > 0 then
+      local line = vim.api.nvim_buf_get_lines(input_popup.bufnr, 0, 1, false)[1] or ""
+      -- Only move right if not at end of line
+      if cursor[2] < #line then
+        vim.api.nvim_win_set_cursor(0, { cursor[1], cursor[2] + 1 })
+      end
+    end
+    vim.cmd("startinsert")
+  end, { noremap = true })
+
+  input_popup:map("n", "A", function()
+    -- Append at end of line
+    vim.cmd("startinsert!")
+  end, { noremap = true })
+
+  input_popup:map("n", "<CR>", function()
+    -- Enter in normal mode: select first result if available
+    if #current_results > 0 then
+      local first_result = current_results[1]
+      opts.on_select(first_result, 1)
+      if layout and layout._.mounted then
+        layout:unmount()
+      end
+    end
+  end, { noremap = true })
+
+  input_popup:map("n", "<Esc>", function()
+    if layout and layout._.mounted then
+      layout:unmount()
+    end
+    if opts.on_close then
+      opts.on_close()
+    end
+  end, { noremap = true })
+
   -- Mount layout
   layout:mount()
 
