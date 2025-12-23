@@ -7,6 +7,7 @@ import (
 	"log/slog"
 
 	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
+	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
 )
 
 // DefaultNoteType defines a system note type that must exist for the app to function.
@@ -49,9 +50,9 @@ func EnsureDefaultNoteTypes(ctx context.Context, q *store.Queries, logger *slog.
 		_, err = q.CreateNoteType(ctx, store.CreateNoteTypeParams{
 			Type:        dt.Type,
 			Name:        dt.Name,
-			Description: sql.NullString{String: dt.Description, Valid: true},
-			Icon:        sql.NullString{},
-			Color:       sql.NullString{},
+			Description: utils.NullString(dt.Description),
+			Icon:        utils.NullStringEmpty(),
+			Color:       utils.NullStringEmpty(),
 			IsSystem:    true,
 		})
 		if err != nil {

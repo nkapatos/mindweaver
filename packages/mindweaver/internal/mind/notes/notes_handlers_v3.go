@@ -160,13 +160,13 @@ func (h *NotesHandlerV3) ListNotes(
 			totalCount, _ = h.service.CountNotesByCollectionID(ctx, *req.Msg.CollectionId)
 		}
 	} else if req.Msg.NoteTypeId != nil {
-		noteTypeID := sql.NullInt64{Int64: *req.Msg.NoteTypeId, Valid: true}
+		noteTypeID := utils.NullInt64(*req.Msg.NoteTypeId)
 		notes, err = h.service.ListNotesByNoteTypeIDPaginated(ctx, noteTypeID, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
 			totalCount, _ = h.service.CountNotesByNoteTypeID(ctx, noteTypeID)
 		}
 	} else if req.Msg.IsTemplate != nil {
-		isTemplate := sql.NullBool{Bool: *req.Msg.IsTemplate, Valid: true}
+		isTemplate := utils.NullBool(*req.Msg.IsTemplate)
 		notes, err = h.service.ListNotesByIsTemplatePaginated(ctx, isTemplate, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
 			totalCount, _ = h.service.CountNotesByIsTemplate(ctx, isTemplate)
