@@ -56,6 +56,7 @@ function M.show(opts)
   local is_loading = false
   local has_more_pages = false
   local next_page_token = nil
+  local is_mounted = true -- Track if picker is still mounted
 
   -- Forward declarations
   local input_popup
@@ -63,6 +64,15 @@ function M.show(opts)
   local layout
   local perform_search
   local update_menu_items
+  local close_picker
+
+  -- Helper to safely close the picker
+  close_picker = function()
+    is_mounted = false
+    if layout and layout._.mounted then
+      layout:unmount()
+    end
+  end
 
   -- Create input field
   input_popup = Input({
@@ -87,9 +97,7 @@ function M.show(opts)
     default_value = "",
     on_close = function()
       -- Input closed, close entire picker
-      if layout and layout._.mounted then
-        layout:unmount()
-      end
+      close_picker()
       if opts.on_close then
         opts.on_close()
       end
@@ -99,9 +107,7 @@ function M.show(opts)
       if #current_results > 0 then
         local first_result = current_results[1]
         opts.on_select(first_result, 1)
-        if layout and layout._.mounted then
-          layout:unmount()
-        end
+        close_picker()
       end
     end,
     on_change = function(value)
@@ -166,12 +172,11 @@ function M.show(opts)
       -- Item contains the original data via item.item
       if item.item then
         opts.on_select(item.item, item.index)
+        close_picker()
       end
     end,
     on_close = function()
-      if layout and layout._.mounted then
-        layout:unmount()
-      end
+      close_picker()
       if opts.on_close then
         opts.on_close()
       end
@@ -193,7 +198,7 @@ function M.show(opts)
 
   --- Update menu items based on current state
   update_menu_items = function()
-    if not results_menu or not results_menu.tree then
+    if not is_mounted or not results_menu or not results_menu.tree then
       return
     end
 
@@ -227,7 +232,7 @@ function M.show(opts)
     -- Update tree and render - schedule to avoid textlock during on_change callback
     results_menu.tree:set_nodes(menu_items)
     vim.schedule(function()
-      if results_menu and results_menu.tree then
+      if is_mounted and results_menu and results_menu.tree then
         results_menu.tree:render()
       end
     end)
@@ -314,9 +319,7 @@ function M.show(opts)
   end, { noremap = true })
 
   input_popup:map("i", "<Esc>", function()
-    if layout and layout._.mounted then
-      layout:unmount()
-    end
+    close_picker()
     if opts.on_close then
       opts.on_close()
     end
@@ -366,16 +369,12 @@ function M.show(opts)
     if #current_results > 0 then
       local first_result = current_results[1]
       opts.on_select(first_result, 1)
-      if layout and layout._.mounted then
-        layout:unmount()
-      end
+      close_picker()
     end
   end, { noremap = true })
 
   input_popup:map("n", "<Esc>", function()
-    if layout and layout._.mounted then
-      layout:unmount()
-    end
+    close_picker()
     if opts.on_close then
       opts.on_close()
     end
