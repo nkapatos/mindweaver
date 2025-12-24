@@ -224,9 +224,13 @@ function M.show(opts)
       end
     end
 
-    -- Update tree and render (direct, no schedule)
+    -- Update tree and render - schedule to avoid textlock during on_change callback
     results_menu.tree:set_nodes(menu_items)
-    results_menu.tree:render()
+    vim.schedule(function()
+      if results_menu and results_menu.tree then
+        results_menu.tree:render()
+      end
+    end)
   end
 
   --- Perform search via callback
