@@ -11,3 +11,4 @@ includes:
   mw: ./tasks/tasks.mw.yml
   brain: ./tasks/tasks.brain.yml
   mind: ./tasks/tasks.mind.yml
+  ci: ./tasks/tasks.ci.yml
