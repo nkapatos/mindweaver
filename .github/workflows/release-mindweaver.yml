@@ -35,9 +35,14 @@ jobs:
       - name: Setup Buf
         uses: bufbuild/buf-setup-action@v1
       
+      - name: Setup sqlc
+        uses: sqlc-dev/setup-sqlc@v4
+        with:
+          sqlc-version: '1.27.0'
+      
       - name: Setup Go workspace
-        run: task workspace:setup
-        working-directory: packages/mindweaver
+        run: task setup
+        working-directory: packages
       
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
