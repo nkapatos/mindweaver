@@ -15,7 +15,7 @@ before:
 # Build configuration
 builds:
   - id: mindweaver
-    main: ./cmd/mindweaver
+    main: .
     binary: mindweaver
     
     # Supported platforms
@@ -55,13 +55,9 @@ archives:
     
     # Files to include in archive
     files:
-      - src: ../../README.md
-        dst: README.md
-      - src: ../../LICENSE*
-      - src: ../../docs/DEVELOPMENT.md
-        dst: docs/DEVELOPMENT.md
-      - src: ../../.env.example
-        dst: .env.example
+      - README.md
+      - LICENSE
+      - .env.example
 
 # Checksums for verification
 checksum:
