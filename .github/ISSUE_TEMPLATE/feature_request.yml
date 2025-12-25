@@ -14,10 +14,9 @@ body:
       label: Component
       description: Which part of the system would this affect?
       options:
-        - mindweaver (server/backend)
         - mind (Notes/PKM service)
         - brain (AI/Assistant service)
-        - neoweaver (Neovim client)
+        - api (Connect RPC endpoints)
         - proto (API design)
         - shared (Shared packages)
         - documentation

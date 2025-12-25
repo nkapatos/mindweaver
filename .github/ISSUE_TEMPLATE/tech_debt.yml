@@ -14,10 +14,9 @@ body:
       label: Component
       description: Which part of the codebase needs cleanup?
       options:
-        - mindweaver (server/backend)
         - mind (Notes/PKM service)
         - brain (AI/Assistant service)
-        - neoweaver (Neovim client)
+        - api (Connect RPC endpoints)
         - proto (Protocol buffers)
         - shared (Shared packages)
         - ci/cd (GitHub Actions)
