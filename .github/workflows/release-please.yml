@@ -47,6 +47,7 @@ jobs:
         with:
           go-version: '1.25.5'
           cache: true
+          cache-dependency-path: packages/mindweaver/go.sum
 
       - name: Setup Task
         uses: go-task/setup-task@v1
