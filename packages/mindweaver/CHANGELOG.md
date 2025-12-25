@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/nkapatos/mindweaver/compare/mindweaver/v0.1.3...mindweaver/v0.1.4) (2025-12-25)
+
+
+### CI/CD
+
+* disable CGO and add code generation step before GoReleaser ([1db03a8](https://github.com/nkapatos/mindweaver/commit/1db03a8226a0353bf8a147d8bf0bde6ec0a43373))
+
 ## [0.1.3](https://github.com/nkapatos/mindweaver/compare/mindweaver/v0.1.2...mindweaver/v0.1.3) (2025-12-25)
 
 
