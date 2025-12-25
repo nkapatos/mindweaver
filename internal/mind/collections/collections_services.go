@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/middleware"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/sqlcext"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
+	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
+	"github.com/nkapatos/mindweaver/shared/middleware"
+	"github.com/nkapatos/mindweaver/shared/sqlcext"
+	"github.com/nkapatos/mindweaver/shared/utils"
 )
 
 type CollectionsService struct {

@@ -6,9 +6,9 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	sharedErrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/middleware"
+	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
+	sharedErrors "github.com/nkapatos/mindweaver/shared/errors"
+	"github.com/nkapatos/mindweaver/shared/middleware"
 )
 
 // TagsService provides business logic for tags (CRUD + search only).

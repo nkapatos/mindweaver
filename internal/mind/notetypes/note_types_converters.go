@@ -3,9 +3,9 @@ package notetypes
 import (
 	"fmt"
 
-	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
+	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
+	"github.com/nkapatos/mindweaver/shared/utils"
 )
 
 func StoreNoteTypeToProto(nt store.NoteType) *mindv3.NoteType {

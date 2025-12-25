@@ -6,8 +6,8 @@ import (
 	"database/sql"
 	"log/slog"
 
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
+	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
+	"github.com/nkapatos/mindweaver/shared/utils"
 )
 
 // DefaultNoteType defines a system note type that must exist for the app to function.

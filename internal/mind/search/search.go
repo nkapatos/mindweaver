@@ -10,9 +10,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/middleware"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/sqlcext"
+	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
+	"github.com/nkapatos/mindweaver/shared/middleware"
+	"github.com/nkapatos/mindweaver/shared/sqlcext"
 )
 
 // SearchService provides full-text search functionality for Mind notes.

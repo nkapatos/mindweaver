@@ -7,11 +7,11 @@ import (
 	"strconv"
 
 	"connectrpc.com/connect"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	apierrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
+	"github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
+	apierrors "github.com/nkapatos/mindweaver/shared/errors"
+	"github.com/nkapatos/mindweaver/shared/pagination"
+	"github.com/nkapatos/mindweaver/shared/utils"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

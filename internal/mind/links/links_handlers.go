@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	apierrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
-	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3/mindv3connect"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
+	apierrors "github.com/nkapatos/mindweaver/shared/errors"
+	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/gen/proto/mind/v3/mindv3connect"
+	"github.com/nkapatos/mindweaver/shared/pagination"
 )
 
 type LinksHandler struct {

@@ -7,10 +7,10 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	sharedErrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/middleware"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
+	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
+	sharedErrors "github.com/nkapatos/mindweaver/shared/errors"
+	"github.com/nkapatos/mindweaver/shared/middleware"
+	"github.com/nkapatos/mindweaver/shared/utils"
 )
 
 // NoteTypesService provides business logic for note_types (CRUD only).

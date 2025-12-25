@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/types"
+	"github.com/nkapatos/mindweaver/shared/types"
 )
 
 // HTTPTransportConfig configures the HTTP transport

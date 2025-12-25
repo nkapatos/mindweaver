@@ -7,15 +7,15 @@ import (
 	"log/slog"
 
 	"github.com/google/uuid"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/links"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/meta"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/scheduler"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/tags"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/markdown"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/middleware"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
+	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
+	"github.com/nkapatos/mindweaver/internal/mind/links"
+	"github.com/nkapatos/mindweaver/internal/mind/meta"
+	"github.com/nkapatos/mindweaver/internal/mind/scheduler"
+	"github.com/nkapatos/mindweaver/internal/mind/tags"
+	"github.com/nkapatos/mindweaver/shared/errors"
+	"github.com/nkapatos/mindweaver/shared/markdown"
+	"github.com/nkapatos/mindweaver/shared/middleware"
+	"github.com/nkapatos/mindweaver/shared/utils"
 )
 
 // NotesService provides business logic for notes CRUD operations.

@@ -8,10 +8,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	mindmigrations "github.com/nkapatos/mindweaver/packages/mindweaver/migrations/mind"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/testdb"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
+	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
+	mindmigrations "github.com/nkapatos/mindweaver/migrations/mind"
+	"github.com/nkapatos/mindweaver/shared/testdb"
+	"github.com/nkapatos/mindweaver/shared/utils"
 )
 
 // setupTestService creates a LinksService with in-memory database for testing.

@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3/mindv3connect"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	apierrors "github.com/nkapatos/mindweaver/packages/mindweaver/shared/errors"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/pagination"
+	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/gen/proto/mind/v3/mindv3connect"
+	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
+	apierrors "github.com/nkapatos/mindweaver/shared/errors"
+	"github.com/nkapatos/mindweaver/shared/pagination"
 )
 
 // Note: Missing V3 endpoints - See issue #39

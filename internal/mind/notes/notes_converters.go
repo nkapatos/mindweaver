@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	mindv3 "github.com/nkapatos/mindweaver/packages/mindweaver/gen/proto/mind/v3"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/internal/mind/gen/store"
-	"github.com/nkapatos/mindweaver/packages/mindweaver/shared/utils"
+	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
+	"github.com/nkapatos/mindweaver/shared/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
