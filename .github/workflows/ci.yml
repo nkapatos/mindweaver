@@ -104,6 +104,7 @@ jobs:
         with:
           name: mindweaver-generated
           path: |
+            packages/mindweaver/gen/
             packages/mindweaver/internal/mind/gen/
           retention-days: 1
 
@@ -125,7 +126,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: mindweaver-generated
-          path: packages/mindweaver/internal/mind/gen/
+          path: packages/mindweaver/
 
       - name: Set up Go
         uses: actions/setup-go@v5
