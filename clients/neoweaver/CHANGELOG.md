@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.1.7](https://github.com/nkapatos/mindweaver/compare/neoweaver/v0.1.6...neoweaver/v0.1.7) (2025-12-25)
+
+
+### Features
+
+* **mindweaver:** implement notes:find endpoint for global search ([ebf635b](https://github.com/nkapatos/mindweaver/commit/ebf635b410c385fa4f456a2056bbbec2b3500f61))
+* **neoweaver:** add experimental .weaverc.json metadata extractor ([ecee9ab](https://github.com/nkapatos/mindweaver/commit/ecee9abadd5f81094705b016c0633add2d2b0159))
+* **neoweaver:** add interactive search picker for finding notes by title ([31c1cfe](https://github.com/nkapatos/mindweaver/commit/31c1cfe95e43ffef3dc7f684ee23ff09011d9eae))
+* **neoweaver:** add j/k navigation in search picker normal mode ([5a9b52f](https://github.com/nkapatos/mindweaver/commit/5a9b52fe957e3e80a20e5a2f2127f50fa2d56ada))
+* **neoweaver:** add quicknote capture with floating window ([3c49489](https://github.com/nkapatos/mindweaver/commit/3c49489da1418ec7fe51d500b5854458e39f719a))
+* **neoweaver:** implement quicknote amend with local state management ([118736d](https://github.com/nkapatos/mindweaver/commit/118736d373d26a9b243685f3ef167a826d997543))
+* **neoweaver:** integrate notes:find API for search picker ([ebf635b](https://github.com/nkapatos/mindweaver/commit/ebf635b410c385fa4f456a2056bbbec2b3500f61))
+* **neoweaver:** migrate metadata extractor from mw client ([51162cb](https://github.com/nkapatos/mindweaver/commit/51162cbb6b3b329709d65c37bdc501267de92dc1))
+
+
+### Bug Fixes
+
+* **neoweaver:** follow nui.nvim pattern for menu rendering ([6e0716f](https://github.com/nkapatos/mindweaver/commit/6e0716ff85087b802adbe1a464952962d9494c9e))
+* **neoweaver:** prevent scheduled render after picker unmount ([f0f7c72](https://github.com/nkapatos/mindweaver/commit/f0f7c72328d0c7b87e5be57d0ed8e1702b76d610))
+* **neoweaver:** repair malformed handle_conflict function and enhance quicknote UX ([53a1032](https://github.com/nkapatos/mindweaver/commit/53a1032d0d519c8563989da1980c7e8fb8f32b93))
+* **neoweaver:** wrap tree render in vim.schedule to avoid textlock errors ([919d68f](https://github.com/nkapatos/mindweaver/commit/919d68f805984352f271c4d42752bec4f53de88d))
+
+
+### Maintenance
+
+* **neoweaver:** setup issue tracking and clean TODO comments ([e82f346](https://github.com/nkapatos/mindweaver/commit/e82f3463f48667b9a3a837bc6b62eee94ddb1f6d))
+
+
+### Refactoring
+
+* **neoweaver:** store full note content in quicknote state to avoid server fetch ([493e866](https://github.com/nkapatos/mindweaver/commit/493e866a908549fb1b448fdaf1fc008e43d89661))
+
 ## [0.1.6](https://github.com/nkapatos/mindweaver/compare/neoweaver/v0.1.5...neoweaver/v0.1.6) (2025-12-21)
 
 
