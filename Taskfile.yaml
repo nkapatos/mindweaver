@@ -1,9 +1,14 @@
 version: '3'
 
-tasks:
-  setup:
-    desc: Setup Go workspace (required once after cloning)
-    cmds:
-      - go work init ./mindweaver
-    status:
-      - test -f go.work
+# Load configuration in layers:
+# 1. .env.example provides defaults (committed, works out-of-box)
+# 2. .env.local overrides for individual developer needs (gitignored, optional)
+dotenv:
+  - .env.example
+  - .env.local
+
+includes:
+  mw: ./tasks/tasks.mw.yml
+  mind: ./tasks/tasks.mind.yml
+  brain: ./tasks/tasks.brain.yml
+  ci: ./tasks/tasks.ci.yml
