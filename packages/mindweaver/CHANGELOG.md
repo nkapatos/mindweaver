@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.3](https://github.com/nkapatos/mindweaver/compare/mindweaver/v0.1.2...mindweaver/v0.1.3) (2025-12-25)
+
+
+### Features
+
+* **mindweaver:** implement notes:find endpoint for global search ([ebf635b](https://github.com/nkapatos/mindweaver/commit/ebf635b410c385fa4f456a2056bbbec2b3500f61))
+* **neoweaver:** integrate notes:find API for search picker ([ebf635b](https://github.com/nkapatos/mindweaver/commit/ebf635b410c385fa4f456a2056bbbec2b3500f61))
+
+
+### CI/CD
+
+* **mindweaver:** optimize CI workflow to reduce buf rate limits ([ea0d16b](https://github.com/nkapatos/mindweaver/commit/ea0d16b8bd79c88c0590638b7ed6aaae6a0af0bd))
+
 ## [0.1.2](https://github.com/nkapatos/mindweaver/compare/mindweaver/v0.1.1...mindweaver/v0.1.2) (2025-12-23)
 
 
