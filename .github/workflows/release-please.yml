@@ -14,10 +14,8 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     outputs:
-      mindweaver-released: ${{ steps.release.outputs['packages/mindweaver--release_created'] }}
-      mindweaver-tag: ${{ steps.release.outputs['packages/mindweaver--tag_name'] }}
-      neoweaver-released: ${{ steps.release.outputs['clients/neoweaver--release_created'] }}
-      neoweaver-tag: ${{ steps.release.outputs['clients/neoweaver--tag_name'] }}
+      released: ${{ steps.release.outputs.release_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
     steps:
       - id: release
         uses: googleapis/release-please-action@v4
@@ -25,16 +23,11 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-  # Build and publish mindweaver binaries when a release is created
-  release-mindweaver:
-    name: Release Mindweaver
+  release:
+    name: Release
     needs: release-please
-    if: needs.release-please.outputs.mindweaver-released == 'true'
+    if: needs.release-please.outputs.released == 'true'
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: packages/mindweaver
 
     steps:
       - name: Checkout code
@@ -47,7 +40,7 @@ jobs:
         with:
           go-version: '1.25.5'
           cache: true
-          cache-dependency-path: packages/mindweaver/go.sum
+          cache-dependency-path: go.sum
 
       - name: Setup Task
         uses: go-task/setup-task@v1
@@ -60,13 +53,8 @@ jobs:
         with:
           sqlc-version: '1.27.0'
 
-      - name: Setup Go workspace
-        run: task setup
-        working-directory: packages
-
       - name: Generate code (proto + sqlc)
         run: task ci:prepare
-        working-directory: packages/mindweaver
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
@@ -74,31 +62,5 @@ jobs:
           distribution: goreleaser
           version: '~> v2'
           args: release --clean
-          workdir: packages/mindweaver
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Sync neoweaver to dedicated mirror repo for plugin managers
-  sync-neoweaver:
-    name: Sync Neoweaver to Mirror
-    needs: release-please
-    if: needs.release-please.outputs.neoweaver-released == 'true'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout source repo
-        uses: actions/checkout@v4
-
-      - name: Sync to mirror repo
-        uses: BetaHuhn/repo-file-sync-action@v1
-        with:
-          GH_PAT: ${{ secrets.NEOWEAVER_SYNC_TOKEN }}
-          CONFIG_PATH: .github/neoweaver-sync.yml
-          COMMIT_PREFIX: '[Sync] Neoweaver '
-          PR_LABELS: automated-sync,neoweaver
-          BRANCH_PREFIX: sync
-          PR_BODY: |
-            Automated sync of Neoweaver plugin files from monorepo release tag ${{ needs.release-please.outputs.neoweaver-tag }}.
-
-            This keeps the standalone repo up-to-date for direct use by Neovim plugin managers.
-          OVERWRITE_EXISTING_PR: true
