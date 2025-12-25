@@ -30,16 +30,9 @@ jobs:
             build
             revert
           scopes: |
-            mindweaver
-            neoweaver
             mind
             brain
-            imex
-            lsp
-            web
-            desktop
             api
-            pkg
             deps
             ci
             proto

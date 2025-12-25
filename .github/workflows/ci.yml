@@ -9,65 +9,12 @@ permissions:
   contents: read
   pull-requests: write
 
-# =============================================================================
-# CI Pipeline Architecture
-# =============================================================================
-# This workflow uses dorny/paths-filter to detect which components changed,
-# then runs a prepare job (code generation) followed by tests.
-#
-# Structure:
-#   changes → prepare (buf + sqlc generation) → test-mindweaver
-#
-# This ensures buf generate runs only ONCE per workflow, avoiding rate limits.
-#
-# Path detection strategy:
-#   - mindweaver: ALL files in packages/mindweaver/
-#   - neoweaver: ALL files in clients/neoweaver/
-#   - root-config: Root-level build configuration and proto changes
-# =============================================================================
-
 jobs:
   # ---------------------------------------------------------------------------
-  # Detect which areas of the codebase changed
+  # Prepare: Generate protobuf and sqlc code
   # ---------------------------------------------------------------------------
-  changes:
-    name: Detect Changes
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: read
-    outputs:
-      mindweaver: ${{ steps.filter.outputs.mindweaver }}
-      neoweaver: ${{ steps.filter.outputs.neoweaver }}
-      root-config: ${{ steps.filter.outputs.root-config }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check paths
-        uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            mindweaver:
-              - 'packages/mindweaver/**'
-            neoweaver:
-              - 'clients/neoweaver/**'
-            root-config:
-              - 'packages/Taskfile.yaml'
-              - '.mise.toml'
-              - 'proto/**'
-
-  # ---------------------------------------------------------------------------
-  # Prepare: Generate protobuf and sqlc code (runs buf ONCE)
-  # ---------------------------------------------------------------------------
-  prepare-mindweaver:
-    name: Prepare (mindweaver)
-    needs: changes
-    if: |
-      needs.changes.outputs.mindweaver == 'true' ||
-      needs.changes.outputs.root-config == 'true'
+  prepare:
+    name: Prepare
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -78,7 +25,7 @@ jobs:
         with:
           go-version: '1.25.5'
           cache: true
-          cache-dependency-path: packages/mindweaver/go.sum
+          cache-dependency-path: go.sum
 
       - name: Setup Task
         uses: go-task/setup-task@v1
@@ -91,32 +38,22 @@ jobs:
         with:
           sqlc-version: '1.27.0'
 
-      - name: Setup Go workspace
-        run: task setup
-        working-directory: packages
-
       - name: Generate code (proto + sqlc)
         run: task ci:prepare
-        working-directory: packages/mindweaver
 
       - name: Upload generated code
         uses: actions/upload-artifact@v4
         with:
-          name: mindweaver-generated
-          path: |
-            packages/mindweaver/gen/
-            packages/mindweaver/internal/mind/gen/
+          name: generated
+          path: gen/
           retention-days: 1
 
   # ---------------------------------------------------------------------------
-  # Test mindweaver package
+  # Test
   # ---------------------------------------------------------------------------
-  test-mindweaver:
-    name: Test (mindweaver)
-    needs: [changes, prepare-mindweaver]
-    if: |
-      needs.changes.outputs.mindweaver == 'true' ||
-      needs.changes.outputs.root-config == 'true'
+  test:
+    name: Test
+    needs: prepare
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -125,30 +62,24 @@ jobs:
       - name: Download generated code
         uses: actions/download-artifact@v4
         with:
-          name: mindweaver-generated
-          path: packages/mindweaver/
+          name: generated
+          path: gen/
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.25.5'
           cache: true
-          cache-dependency-path: packages/mindweaver/go.sum
-
-      - name: Setup Go workspace
-        run: go work init ./mindweaver
-        working-directory: packages
+          cache-dependency-path: go.sum
 
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
-        working-directory: packages/mindweaver
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         if: github.event_name == 'pull_request'
         with:
-          files: ./packages/mindweaver/coverage.out
-          flags: mindweaver
+          files: ./coverage.out
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

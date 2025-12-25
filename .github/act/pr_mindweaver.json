@@ -1,12 +1,12 @@
 {
   "pull_request": {
     "base": { "ref": "main" },
-    "head": { "ref": "test/mindweaver-ci" }
+    "head": { "ref": "test/ci" }
   },
   "repository": { "full_name": "nkapatos/mindweaver" },
   "commits": [
     {
-      "added": ["packages/mindweaver/shared/utils/slug.go"],
+      "added": ["shared/utils/slug.go"],
       "modified": [],
       "removed": []
     }
