@@ -1,8 +1,0 @@
-/gen/
-/tmp/
-/deps/
-
-# Plugin packaging artifacts
-dist/
-*.zip
-*.tar.gz

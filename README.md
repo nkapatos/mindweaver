@@ -1,80 +1,97 @@
-# Mindweaver
+# Mindweaver Server
 
-[![CI](https://github.com/nkapatos/mindweaver/actions/workflows/ci.yml/badge.svg)](https://github.com/nkapatos/mindweaver/actions/workflows/ci.yml)
-[![Release](https://github.com/nkapatos/mindweaver/actions/workflows/release-mindweaver.yml/badge.svg)](https://github.com/nkapatos/mindweaver/actions/workflows/release-mindweaver.yml)
-[![Latest Release](https://img.shields.io/github/v/release/nkapatos/mindweaver?include_prereleases)](https://github.com/nkapatos/mindweaver/releases)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Go Version](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](https://go.dev/)
 
-> *Where your thoughts find structure, and AI brings clarity.*
+The mindweaver server provides the Mind and Brain services for personal knowledge management with AI capabilities.
 
-**Mindweaver** is a personal knowledge management system that helps you **do something** with your knowledge—not just collect it. Stop endlessly organizing your vault and start having conversations with your notes, finding unexpected connections, and turning scattered thoughts into actionable insights.
+## Prerequisites
 
-## Why Mindweaver?
+- **Go 1.25.5** - See root `.mise.toml` or install manually
+- **[sqlc](https://docs.sqlc.dev/en/latest/overview/install.html)** - SQL code generator
+- **[goose](https://github.com/pressly/goose)** - Database migration tool
+- **[air](https://github.com/air-verse/air)** (optional) - Hot reload for development
 
-You collect notes, articles, and ideas. You organize folders and tags. But when you need that insight, it's buried somewhere you can't remember.
+Task definitions include precondition checks with installation instructions.
 
-Mindweaver changes this:
+## Quick Start
 
-- **Talk to your knowledge** - Ask questions in natural language, get answers from across all your notes
-- **Discover connections** - AI finds relationships between ideas you never explicitly linked
-- **Stop organizing, start creating** - Let AI handle structure while you focus on thinking
-- **Privacy-first** - Your notes live in local databases you control
-- **Works offline** - Full-text search, collections, and AI assistance without internet
+```bash
+# Show available tasks
+task --list
 
-## Core Features
+# Build (auto-generates protos)
+task mw:build
 
-- **Intelligent search** - Full-text search with AI-powered semantic understanding
-- **Wikilinks & backlinks** - Obsidian-style linking with automatic resolution
-- **Collections & tags** - Flexible organization without rigid hierarchies
-- **Conversation with notes** - Ask questions, get answers from your knowledge base
-- **Background analysis** - AI indexes and understands your notes as you write
-- **Templates** - Consistent note structure without manual formatting
-- **Local LLMs** - Privacy-first AI using your choice of local models
+# Run in dev mode with hot reload
+task mw:dev
+```
+
+## Development
+
+### Code Generation
+
+Generated code is not committed. Run generation tasks when:
+- Protocol buffer definitions change (`../../proto/mind/v3/*.proto`)
+- SQL queries change (`store/*/sql/*.sql`)
+
+Use `task --list` to see available generation tasks for each service.
+
+### Database Migrations
+
+Each service (Mind and Brain) has its own SQLite database and migration tasks:
+
+```bash
+# Migrate both databases
+task mw:db:migrations:up
+
+# Reset migrations
+task mw:db:migrations:reset
+
+# Full reset (migrations + regenerate store code)
+task mw:db:reset
+```
+
+### Testing
+
+```bash
+# Run all tests
+go test ./...
+
+# Run specific package tests
+go test ./internal/mind/notes
+go test ./internal/brain/store
+```
+
+## Configuration
+
+The server uses environment variables with sensible defaults. See `.env.example` for all available options.
+
+```bash
+# Copy example configuration
+cp .env.example .env.local
+
+# Edit with your preferences
+# .env.local is gitignored
+```
+
+Key configuration:
+- `MODE` - Runtime mode: `combined` (default), `mind`, or `brain`
+- `PORT` - Server port (default: 9421)
+- `MIND_DB_PATH` - Mind database path
+- `BRAIN_DB_PATH` - Brain database path
+- `LLM_ENDPOINT` - OpenAI-compatible API endpoint for Brain service
 
 ## Architecture
 
-Mindweaver consists of two independent services:
+The server is a single Go binary containing:
+- **Mind Service** - Markdown notes, wikilinks, collections, tags, FTS5 search
+- **Brain Service** - AI assistant with context retrieval and conversational memory
+- **Connect RPC API** - gRPC/HTTP API for clients
 
-**Mind Service** - Your personal knowledge layer: markdown notes, wikilinks, collections, tags, and fast SQLite-based full-text search.
+See [docs/architecture.md](docs/architecture.md) for detailed architecture patterns.
 
-**Brain Service** - Your intelligent companion: autonomous context retrieval, tiered reasoning (fast SQL queries → small model routing → full LLM analysis), and conversational memory.
+## See Also
 
-The services communicate seamlessly—Brain queries Mind when it needs knowledge, Mind notifies Brain when notes change. All local, all under your control.
-
-## Current Status
-
-Mindweaver is in active development. Here's what exists today and what's coming:
-
-### Available Now
-
-- **Mind Service** - Full PKM backend with notes, collections, tags, templates, wikilinks, and FTS5 search
-- **Brain Service** - SQL schemas and store layer (AI integration in progress)
-- **Connect RPC API** - Type-safe gRPC/HTTP API for building clients
-
-### Coming Next
-
-- Neovim plugin for terminal-native note-taking
-- Desktop application (macOS, Windows, Linux)
-- Web interface (self-hosted)
-- Import/export tools for existing markdown vaults
-
-## Getting Started
-
-**Prerequisites:**
-
-- **[mise](https://mise.jdx.dev/)** - A polyglot tool version manager that replaces tools like asdf, nvm, pyenv, and rbenv. Manages the toolchain versions specified in `.mise.toml`. → [Installation & docs](https://mise.jdx.dev/getting-started.html)
-
-- **[Task](https://taskfile.dev/)** - A fast, cross-platform task runner and build tool. A modern alternative to Make with support for dependencies, variables, and platform-specific commands. → [Installation & docs](https://taskfile.dev/installation/)
-
-- **[Buf](https://buf.build/)** - Your one-stop shop for local Protobuf development. Handles compilation, linting, breaking change detection, and code generation for protocol buffers. → [Installation & docs](https://buf.build/docs/installation)
-
-- **OpenAI-compatible API** (optional) - Required for Brain service AI features. Any OpenAI API-compatible server (local or remote) works. → Examples: [Ollama](https://ollama.com/), [LM Studio](https://lmstudio.ai/), [vLLM](https://docs.vllm.ai/), or OpenAI directly
-
-**Documentation:**
-- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) - Developer guide and setup
-- [docs/WORKFLOW.md](docs/WORKFLOW.md) - Contribution workflow and PR guidelines
-- Component-specific docs in each package directory
-
-## Author
-
-Nick Kapatos (@nkapatos)
+- [Root README](../../README.md) - Project overview
+- [docs/WORKFLOW.md](../../docs/WORKFLOW.md) - Contribution guidelines
+- [docs/api.md](docs/api.md) - API design patterns
