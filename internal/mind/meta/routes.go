@@ -3,44 +3,23 @@
 package meta
 
 import (
-	"context"
 	"log/slog"
 
-	"buf.build/go/protovalidate"
 	"connectrpc.com/connect"
 	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/gen/proto/mind/v3/mindv3connect"
+	"github.com/nkapatos/mindweaver/shared/interceptors"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // RegisterNoteMetaRoutes registers Connect-RPC routes for NoteMeta V3
 // Routes: GET /v3/notes/{note_id}/meta
 func RegisterNoteMetaRoutes(e *echo.Echo, handler *NoteMetaHandler, logger *slog.Logger) error {
-	// Initialize protovalidate validator
-	validator, err := protovalidate.New()
-	if err != nil {
-		return err
-	}
-
-	// Create validation interceptor
-	validationInterceptor := connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
-		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
-			// Validate request message
-			if msg, ok := req.Any().(interface{ ProtoReflect() protoreflect.Message }); ok {
-				if err := validator.Validate(msg); err != nil {
-					return nil, connect.NewError(connect.CodeInvalidArgument, err)
-				}
-			}
-			return next(ctx, req)
-		}
-	})
-
 	// Create Connect-RPC handler with validation
 	path, connectHandler := mindv3connect.NewNoteMetaServiceHandler(
 		handler,
-		connect.WithInterceptors(validationInterceptor),
+		connect.WithInterceptors(interceptors.ValidationInterceptor),
 	)
 
 	// Wrap in h2c handler (HTTP/2 without TLS)
