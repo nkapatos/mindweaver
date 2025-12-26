@@ -3,16 +3,14 @@ package tags
 // Tags V3 Route Registration (Connect-RPC)
 
 import (
-	"context"
 	"log/slog"
 
-	"buf.build/go/protovalidate"
 	"connectrpc.com/connect"
 	"github.com/labstack/echo/v4"
 	"github.com/nkapatos/mindweaver/gen/proto/mind/v3/mindv3connect"
+	"github.com/nkapatos/mindweaver/shared/interceptors"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // RegisterTagsRoutes registers V3 tags routes (Connect-RPC with both gRPC and HTTP/JSON support)
@@ -22,29 +20,10 @@ func RegisterTagsRoutes(e *echo.Echo, handler *TagsHandler, logger *slog.Logger)
 	// - gRPC-Web (for browsers)
 	// - Connect protocol (JSON or binary over HTTP/1.1 or HTTP/2)
 
-	// Initialize protovalidate validator
-	validator, err := protovalidate.New()
-	if err != nil {
-		return err
-	}
-
-	// Create validation interceptor
-	validationInterceptor := connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
-		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
-			// Validate request message (cast to proto.Message)
-			if msg, ok := req.Any().(interface{ ProtoReflect() protoreflect.Message }); ok {
-				if err := validator.Validate(msg); err != nil {
-					return nil, connect.NewError(connect.CodeInvalidArgument, err)
-				}
-			}
-			return next(ctx, req)
-		}
-	})
-
 	// Create handler with validation interceptor
 	path, connectHandler := mindv3connect.NewTagsServiceHandler(
 		handler,
-		connect.WithInterceptors(validationInterceptor),
+		connect.WithInterceptors(interceptors.ValidationInterceptor),
 	)
 
 	// Wrap Connect handler for Echo
