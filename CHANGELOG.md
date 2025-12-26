@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.1.5](https://github.com/nkapatos/mindweaver/compare/v0.1.4...v0.1.5) (2025-12-26)
+
+
+### Bug Fixes
+
+* configure release-please for standalone repo tags ([7b45b54](https://github.com/nkapatos/mindweaver/commit/7b45b54e842b99d44ef20b70de119e9cae0e180c))
+
+
+### Maintenance
+
+* clean up buf.gen.yaml for standalone repo ([b996025](https://github.com/nkapatos/mindweaver/commit/b996025d9e8dd045d0f50bdfb33f1e2089c62cf1))
+* clean up config for standalone repo ([465ef46](https://github.com/nkapatos/mindweaver/commit/465ef466fae20e0759a5322bde1512f2e9c777d2))
+* comments cleanup ([361bfda](https://github.com/nkapatos/mindweaver/commit/361bfdafd568f3aa5a2a4cfeef3c7bc48fae856d))
+* remove neoweaver sync workflow ([fc2d74d](https://github.com/nkapatos/mindweaver/commit/fc2d74d8026e57fde90b6209a5a067d847a204f1))
+* update issue templates for standalone server repo ([4fe0954](https://github.com/nkapatos/mindweaver/commit/4fe095463daf61b30a0b9e9733f7b9afc6f2a895))
+* update task paths for standalone repo ([90a5bff](https://github.com/nkapatos/mindweaver/commit/90a5bfffb35cc710101835b1f54737107a328b8d))
+
+
+### Refactoring
+
+* update import paths for standalone repo ([924d746](https://github.com/nkapatos/mindweaver/commit/924d746536c869a7eb73766d1153c02446e45a48))
+
+
+### CI/CD
+
+* clean up workflows for standalone repo ([d37ce1f](https://github.com/nkapatos/mindweaver/commit/d37ce1f37ca8827f264a87dbc164036c894824eb))
+* simplify release-please workflow for standalone repo ([711ae81](https://github.com/nkapatos/mindweaver/commit/711ae818f04818c74a387acc83117f3b5d22d6df))
+
 ## [0.1.4](https://github.com/nkapatos/mindweaver/compare/mindweaver/v0.1.3...mindweaver/v0.1.4) (2025-12-25)
 
 
