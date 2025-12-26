@@ -41,6 +41,11 @@ jobs:
       - name: Generate code (proto + sqlc)
         run: task ci:prepare
 
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+
       - name: Upload generated code
         uses: actions/upload-artifact@v4
         with:
@@ -51,11 +56,46 @@ jobs:
           retention-days: 1
 
   # ---------------------------------------------------------------------------
-  # Test
+  # Build: Compile the server binary
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download generated code
+        uses: actions/download-artifact@v4
+        with:
+          name: generated
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.5'
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Build server binary
+        run: |
+          mkdir -p bin
+          go build -v -o bin/mindweaver .
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mindweaver-binary
+          path: bin/mindweaver
+          retention-days: 1
+
+  # ---------------------------------------------------------------------------
+  # Test: Run tests after build succeeds
   # ---------------------------------------------------------------------------
   test:
     name: Test
-    needs: prepare
+    needs: [prepare, build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
