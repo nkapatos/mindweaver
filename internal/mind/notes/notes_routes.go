@@ -16,11 +16,6 @@ import (
 
 // RegisterNotesRoutes registers V3 notes routes (Connect-RPC with both gRPC and HTTP/JSON support)
 func RegisterNotesRoutes(e *echo.Echo, handler *NotesHandler, logger *slog.Logger) error {
-	// Connect-RPC automatically supports:
-	// - gRPC (binary protobuf over HTTP/2)
-	// - gRPC-Web (for browsers)
-	// - Connect protocol (JSON or binary over HTTP/1.1 or HTTP/2)
-
 	// Initialize protovalidate validator
 	validator, err := protovalidate.New()
 	if err != nil {
