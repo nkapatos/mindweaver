@@ -58,8 +58,11 @@ func (h *NoteTypesHandler) ListNoteTypes(
 	}
 
 	var totalCount int64
+	var countErr error
 	if pageReq.IsFirstPage() {
-		totalCount, _ = h.service.CountNoteTypes(ctx)
+		totalCount, countErr = h.service.CountNoteTypes(ctx)
+		// Count errors are logged in service but don't fail the request
+		_ = countErr
 	}
 
 	// Build pagination response

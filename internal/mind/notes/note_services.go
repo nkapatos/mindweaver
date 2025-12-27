@@ -79,9 +79,13 @@ func (s *NotesService) CountNotes(ctx context.Context) (int64, error) {
 func (s *NotesService) GetNoteByID(ctx context.Context, id int64) (store.Note, error) {
 	note, err := s.store.GetNoteByID(ctx, id)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return store.Note{}, ErrNoteNotFound
+		}
 		s.logger.Error("failed to get note by id", "id", id, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return store.Note{}, err
 	}
-	return note, err
+	return note, nil
 }
 
 // CreateNote creates a new note with derived data (links, tags) atomically.

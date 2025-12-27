@@ -3,10 +3,12 @@ package collections
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
+	sharederrors "github.com/nkapatos/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/shared/middleware"
 	"github.com/nkapatos/mindweaver/shared/sqlcext"
 	"github.com/nkapatos/mindweaver/shared/utils"
@@ -60,23 +62,37 @@ func (s *CollectionsService) CountCollections(ctx context.Context) (int64, error
 func (s *CollectionsService) GetCollectionByID(ctx context.Context, id int64) (store.Collection, error) {
 	collection, err := s.store.GetCollectionByID(ctx, id)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return store.Collection{}, ErrCollectionNotFound
+		}
 		s.logger.Error("failed to get collection by id", "id", id, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return store.Collection{}, err
 	}
-	return collection, err
+	return collection, nil
 }
 
 // GetCollectionByPath returns a collection by its path.
 func (s *CollectionsService) GetCollectionByPath(ctx context.Context, path string) (store.Collection, error) {
 	collection, err := s.store.GetCollectionByPath(ctx, path)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return store.Collection{}, ErrCollectionNotFound
+		}
 		s.logger.Error("failed to get collection by path", "path", path, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return store.Collection{}, err
 	}
-	return collection, err
+	return collection, nil
 }
 
 func (s *CollectionsService) CreateCollection(ctx context.Context, params store.CreateCollectionParams) (store.Collection, error) {
 	id, err := s.store.CreateCollection(ctx, params)
 	if err != nil {
+		if sharederrors.IsUniqueConstraintError(err) {
+			return store.Collection{}, ErrCollectionAlreadyExists
+		}
+		if sharederrors.IsForeignKeyConstraintError(err) {
+			return store.Collection{}, ErrInvalidParentCollection
+		}
 		s.logger.Error("failed to create collection", "params", params, "err", err, "request_id", middleware.GetRequestID(ctx))
 		return store.Collection{}, err
 	}
@@ -95,6 +111,12 @@ func (s *CollectionsService) CreateCollection(ctx context.Context, params store.
 func (s *CollectionsService) UpdateCollection(ctx context.Context, params store.UpdateCollectionParams) error {
 	err := s.store.UpdateCollection(ctx, params)
 	if err != nil {
+		if sharederrors.IsUniqueConstraintError(err) {
+			return ErrCollectionAlreadyExists
+		}
+		if sharederrors.IsForeignKeyConstraintError(err) {
+			return ErrInvalidParentCollection
+		}
 		s.logger.Error("failed to update collection", "id", params.ID, "err", err, "request_id", middleware.GetRequestID(ctx))
 		return err
 	}
@@ -225,6 +247,9 @@ func (s *CollectionsService) GenerateCollectionPath(ctx context.Context, name st
 	}
 
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", ErrInvalidParentCollection
+		}
 		s.logger.Error("failed to get parent collection", "parent_id", parentID, "err", err, "request_id", middleware.GetRequestID(ctx))
 		return "", err
 	}
