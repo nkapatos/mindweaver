@@ -30,6 +30,10 @@ linters:
         - (*database/sql.Tx).Rollback
         # db.Close errors are rarely actionable at shutdown/cleanup
         - (*database/sql.DB).Close
+        # rows.Close() is idempotent and errors are recovered by connection pool
+        - (*database/sql.Rows).Close
+        # NewErrorDetail only fails if proto can't marshal - impossible with well-known types
+        - (connectrpc.com/connect).NewErrorDetail
     misspell:
       locale: US
 
