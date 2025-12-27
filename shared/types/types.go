@@ -57,7 +57,8 @@ type ListResult[T any] struct {
 }
 
 // SingleResult wraps a single resource with metadata.
-// DEPRECATED: This wrapper is unnecessary. Add kind, name fields directly to your resource type.
+//
+// Deprecated: This wrapper is unnecessary. Add kind, name fields directly to your resource type.
 //
 // Instead of:
 //
@@ -110,7 +111,8 @@ type ErrorDetail struct {
 // This type is kept for legacy compatibility or cases where full resource return is impractical.
 
 // OperationResult is a minimal response for operations where returning the full resource is impractical.
-// DEPRECATED: Prefer returning the full resource per AIP-133/134/135.
+//
+// Deprecated: Prefer returning the full resource per AIP-133/134/135.
 //
 // For DELETE: Use c.NoContent(204) instead of returning this.
 // For CREATE/UPDATE: Return Response[YourResource] with the full resource.

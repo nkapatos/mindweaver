@@ -91,12 +91,13 @@ func main() {
 
 	// Health check endpoint
 	e.GET("/health", func(c echo.Context) error {
-		services := ""
-		if enableMind && enableBrain {
+		var services string
+		switch {
+		case enableMind && enableBrain:
 			services = "mind+brain"
-		} else if enableMind {
+		case enableMind:
 			services = "mind"
-		} else if enableBrain {
+		case enableBrain:
 			services = "brain"
 		}
 		return c.JSON(200, map[string]string{
@@ -237,6 +238,6 @@ func main() {
 		"mode", *mode)
 
 	if err := e.Start(addr); !errors.Is(err, http.ErrServerClosed) {
-		log.Fatal(err)
+		logger.Error("server error", "error", err)
 	}
 }
