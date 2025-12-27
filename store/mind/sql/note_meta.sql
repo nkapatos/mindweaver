@@ -1,10 +1,5 @@
--- note_meta.sql
--- Pass 4: CRUD + advanced queries for note_meta (SQLite, sqlc compatible)
--- sqlc annotations added for code generation
--- Timestamps managed by DB. Optimized with composite index (note_id, key).
--- Included: insert, select by id, select all, update by id, delete by id, advanced queries
--- UPSERT support added for bulk meta operations
-
+-- Note Meta: CRUD and advanced queries (SQLite/sqlc)
+-- Composite index (note_id, key); UPSERT supported
 -- name: ListNoteMetaByKey :many
 SELECT * FROM note_meta WHERE key = :key;
 

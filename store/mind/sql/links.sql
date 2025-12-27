@@ -31,16 +31,14 @@ DELETE FROM links WHERE src_id = :src_id;
 -- ========================================
 
 -- name: ListUnresolvedLinks :many
--- Gets both pending (0) and broken (-1) links for resolution
--- Broken links can become resolved if the target note is created later
+-- Include pending (0) and broken (-1) links
 SELECT * FROM links
 WHERE resolved IN (0, -1)
 ORDER BY id
 LIMIT :limit;
 
 -- name: FindUnresolvedLinksByDestTitle :many
--- Finds unresolved links that point to a specific note title
--- Used when creating a note to resolve pending links
+-- Unresolved links by destination title (for resolution)
 SELECT * FROM links
 WHERE
     resolved = 0
@@ -51,8 +49,7 @@ WHERE
 SELECT COUNT(*) FROM links WHERE resolved = 0;
 
 -- name: ResolveLink :exec
--- Resolves a pending link by setting dest_id and clearing dest_title
--- dest_title is only kept for unresolved (0) and broken (-1) links
+-- Set destination and mark resolved
 UPDATE links
 SET dest_id = :dest_id,
     dest_title = NULL,
@@ -73,8 +70,7 @@ SELECT * FROM links WHERE resolved = -1 ORDER BY id;
 SELECT COUNT(*) FROM links WHERE resolved = -1;
 
 -- name: ListOrphanedLinks :many
--- Returns links where destination note no longer exists (dest_id IS NULL)
--- Used for "broken links" UI view (BR-03: Knowledge Preservation)
+-- Destination note missing (dest_id IS NULL)
 SELECT * FROM links
 WHERE dest_id IS NULL
 ORDER BY src_id, dest_title ;

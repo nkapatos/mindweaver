@@ -1,8 +1,4 @@
--- note_types.sql
--- Pass 4: CRUD + filter queries for note_types (SQLite, sqlc compatible)
--- sqlc annotations added for code generation
--- Included: insert, select by id, select all, update by id, delete by id, filter by type(s)
--- Next: Add composite queries with notes count per type
+-- Note Types: CRUD and filters (SQLite/sqlc)
 
 -- name: CreateNoteType :execlastid
 INSERT INTO note_types (type, name, description, icon, color, is_system, created_at, updated_at)

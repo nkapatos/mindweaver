@@ -1,6 +1,5 @@
--- notes_search.sql
--- Search and related queries for notes
--- NOTE: FTS5 queries are in internal/mind/store/fts_queries.go (SQLC can't handle FTS5 virtual tables)
+-- Notes search and related queries
+-- NOTE: FTS5 queries are in internal/mind/store/fts_queries.go (sqlc can't handle virtual tables)
 
 -- name: GetNoteByIDForRAG :one
 -- Get a single note with minimal fields for RAG context
@@ -14,7 +13,7 @@ FROM notes
 WHERE id = :id;
 
 -- name: GetRelatedNotesByForwardLinks :many
--- Find notes linked from this note (forward links)
+-- Notes linked from this note (forward)
 SELECT DISTINCT
     n.id,
     n.title,
@@ -27,7 +26,7 @@ WHERE nl.src_id = :note_id
 LIMIT :limit_count;
 
 -- name: GetRelatedNotesByBackwardLinks :many
--- Find notes linking to this note (backward links)
+-- Notes linking to this note (backward)
 SELECT DISTINCT
     n.id,
     n.title,
@@ -40,7 +39,7 @@ WHERE nl.dest_id = :note_id
 LIMIT :limit_count;
 
 -- name: GetRelatedNotesByTags :many
--- Find notes with shared tags
+-- Notes sharing tags with the given note
 SELECT DISTINCT
     n.id,
     n.title,

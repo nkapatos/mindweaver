@@ -1,6 +1,4 @@
--- collections.sql
--- CRUD operations for collections (hierarchical folders/paths for notes)
-
+-- Collections: CRUD and hierarchy utilities
 -- name: CreateCollection :execlastid
 INSERT INTO collections (name, parent_id, path, description, position, is_system)
 VALUES (:name, :parent_id, :path, :description, :position, :is_system);
@@ -44,16 +42,14 @@ WHERE parent_id = :parent_id
 ORDER BY position, name;
 
 -- name: GetCollectionAncestors :many
--- Get all ancestors of a collection by walking up the parent_id chain
+-- Ancestors via WITH RECURSIVE on parent_id
 WITH RECURSIVE ancestors AS (
-  -- Start with the collection itself
   SELECT c.id, c.name, c.parent_id, c.path, 0 as depth
   FROM collections c
   WHERE c.id = :collection_id
   
   UNION ALL
   
-  -- Recursively get parent
   SELECT c.id, c.name, c.parent_id, c.path, a.depth + 1
   FROM collections c
   JOIN ancestors a ON c.id = a.parent_id
@@ -61,16 +57,14 @@ WITH RECURSIVE ancestors AS (
 SELECT id, name, parent_id, path, depth FROM ancestors WHERE depth > 0 ORDER BY depth DESC;
 
 -- name: GetCollectionDescendants :many
--- Get all descendants of a collection by walking down the parent_id chain
+-- Descendants via WITH RECURSIVE on parent_id
 WITH RECURSIVE descendants AS (
-  -- Start with the collection itself
   SELECT c.id, c.name, c.parent_id, c.path, 0 as depth
   FROM collections c
   WHERE c.id = :collection_id
   
   UNION ALL
   
-  -- Recursively get children
   SELECT c.id, c.name, c.parent_id, c.path, d.depth + 1
   FROM collections c
   JOIN descendants d ON c.parent_id = d.id
@@ -83,8 +77,7 @@ FROM notes
 WHERE collection_id = :collection_id;
 
 -- name: FindOrCreateCollectionByPath :one
--- This is a helper query to find existing collection by path
--- or return NULL if not found (actual creation happens in Go code)
+-- Helper: find existing collection by path (creation in Go)
 SELECT * FROM collections WHERE path = :path LIMIT 1;
 
 -- ========================================
