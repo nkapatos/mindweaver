@@ -60,7 +60,10 @@ func (h *TemplatesHandler) ListTemplates(
 
 	var totalCount int64
 	if pageReq.IsFirstPage() {
-		totalCount, _ = h.service.CountTemplates(ctx)
+		// Count errors are logged in service but don't fail the list request
+		var countErr error
+		totalCount, countErr = h.service.CountTemplates(ctx)
+		_ = countErr
 	}
 
 	// Build pagination response
