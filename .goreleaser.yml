@@ -154,3 +154,39 @@ release:
     ---
     
     **Full Changelog**: https://github.com/nkapatos/mindweaver/compare/{{.PreviousTag}}...{{.Tag}}
+
+# Docker images
+dockers:
+  - id: mindweaver-amd64
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - "codefupandas/mindweaver:{{ .Version }}-amd64"
+      - "codefupandas/mindweaver:latest-amd64"
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+
+  - id: mindweaver-arm64
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - "codefupandas/mindweaver:{{ .Version }}-arm64"
+      - "codefupandas/mindweaver:latest-arm64"
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+
+# Multi-arch manifests
+docker_manifests:
+  - name_template: "codefupandas/mindweaver:{{ .Version }}"
+    image_templates:
+      - "codefupandas/mindweaver:{{ .Version }}-amd64"
+      - "codefupandas/mindweaver:{{ .Version }}-arm64"
+
+  - name_template: "codefupandas/mindweaver:latest"
+    image_templates:
+      - "codefupandas/mindweaver:latest-amd64"
+      - "codefupandas/mindweaver:latest-arm64"
