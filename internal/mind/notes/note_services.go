@@ -201,19 +201,19 @@ func (s *NotesService) UpdateNote(ctx context.Context, params store.UpdateNoteBy
 	txStore := store.New(tx)
 
 	// Clear existing derived data before re-extracting from updated body
-	if err := txStore.DeleteLinksBySrcID(ctx, params.ID); err != nil {
-		s.logger.Error("failed to delete existing links", "note_id", params.ID, "err", err, "request_id", middleware.GetRequestID(ctx))
-		return err
+	if delErr := txStore.DeleteLinksBySrcID(ctx, params.ID); delErr != nil {
+		s.logger.Error("failed to delete existing links", "note_id", params.ID, "err", delErr, "request_id", middleware.GetRequestID(ctx))
+		return delErr
 	}
 
-	if err := txStore.DeleteNoteTagsByNoteID(ctx, params.ID); err != nil {
-		s.logger.Error("failed to delete existing tags", "note_id", params.ID, "err", err, "request_id", middleware.GetRequestID(ctx))
-		return err
+	if delErr := txStore.DeleteNoteTagsByNoteID(ctx, params.ID); delErr != nil {
+		s.logger.Error("failed to delete existing tags", "note_id", params.ID, "err", delErr, "request_id", middleware.GetRequestID(ctx))
+		return delErr
 	}
 
-	if err := txStore.DeleteNoteMetaByNoteID(ctx, params.ID); err != nil {
-		s.logger.Error("failed to delete existing metadata", "note_id", params.ID, "err", err, "request_id", middleware.GetRequestID(ctx))
-		return err
+	if delErr := txStore.DeleteNoteMetaByNoteID(ctx, params.ID); delErr != nil {
+		s.logger.Error("failed to delete existing metadata", "note_id", params.ID, "err", delErr, "request_id", middleware.GetRequestID(ctx))
+		return delErr
 	}
 
 	err = txStore.UpdateNoteByID(ctx, params)
@@ -477,26 +477,26 @@ func (s *NotesService) insertTagsWithStore(ctx context.Context, querier store.Qu
 
 	// TODO: optimize by using the helper bulk insert methods in the sqlcext package
 	for _, tagName := range tags {
-		tag, err := querier.GetTagByName(ctx, tagName)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				tagID, err := querier.CreateTag(ctx, tagName)
-				if err != nil {
-					return err
+		tag, getErr := querier.GetTagByName(ctx, tagName)
+		if getErr != nil {
+			if errors.Is(getErr, sql.ErrNoRows) {
+				tagID, createErr := querier.CreateTag(ctx, tagName)
+				if createErr != nil {
+					return createErr
 				}
 				tag.ID = tagID
 				s.logger.Debug("created new tag", "name", tagName, "tag_id", tagID)
 			} else {
-				return err
+				return getErr
 			}
 		}
 
-		err = querier.CreateNoteTag(ctx, store.CreateNoteTagParams{
+		noteTagErr := querier.CreateNoteTag(ctx, store.CreateNoteTagParams{
 			NoteID: noteID,
 			TagID:  tag.ID,
 		})
-		if err != nil {
-			return err
+		if noteTagErr != nil {
+			return noteTagErr
 		}
 	}
 

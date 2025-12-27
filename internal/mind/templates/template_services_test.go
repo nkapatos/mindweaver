@@ -165,8 +165,8 @@ func TestTemplatesService_CountTemplates(t *testing.T) {
 			StarterNoteID: noteID,
 			NoteTypeID:    sql.NullInt64{Valid: false},
 		}
-		_, err := svc.CreateTemplate(context.Background(), params)
-		require.NoError(t, err)
+		_, createErr := svc.CreateTemplate(context.Background(), params)
+		require.NoError(t, createErr)
 	}
 
 	// Count should be 5

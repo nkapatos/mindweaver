@@ -159,24 +159,25 @@ func (h *NotesHandler) ListNotes(
 
 	// Determine which query to use based on filters
 	// Priority: collection_id > note_type_id > is_template > all
-	if req.Msg.CollectionId != nil {
+	switch {
+	case req.Msg.CollectionId != nil:
 		notes, err = h.service.ListNotesByCollectionIDPaginated(ctx, *req.Msg.CollectionId, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
 			totalCount, countErr = h.service.CountNotesByCollectionID(ctx, *req.Msg.CollectionId)
 		}
-	} else if req.Msg.NoteTypeId != nil {
+	case req.Msg.NoteTypeId != nil:
 		noteTypeID := utils.NullInt64(*req.Msg.NoteTypeId)
 		notes, err = h.service.ListNotesByNoteTypeIDPaginated(ctx, noteTypeID, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
 			totalCount, countErr = h.service.CountNotesByNoteTypeID(ctx, noteTypeID)
 		}
-	} else if req.Msg.IsTemplate != nil {
+	case req.Msg.IsTemplate != nil:
 		isTemplate := utils.NullBool(*req.Msg.IsTemplate)
 		notes, err = h.service.ListNotesByIsTemplatePaginated(ctx, isTemplate, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
 			totalCount, countErr = h.service.CountNotesByIsTemplate(ctx, isTemplate)
 		}
-	} else {
+	default:
 		notes, err = h.service.ListNotesPaginated(ctx, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
 			totalCount, countErr = h.service.CountNotes(ctx)

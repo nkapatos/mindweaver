@@ -15,7 +15,6 @@ func ErrorHandlerMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		err := next(c)
 		if err != nil {
 			code := http.StatusInternalServerError
-			msg := http.StatusText(code)
 			var errorResp *types.ErrorResponse
 
 			he := &echo.HTTPError{}
@@ -29,18 +28,16 @@ func ErrorHandlerMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 					errorResp = &errResp
 				} else if m, ok := he.Message.(string); ok {
 					// Simple string message
-					msg = m
 					errorResp = &types.ErrorResponse{
 						Code:    code,
-						Message: msg,
+						Message: m,
 						Status:  httpStatusToAIPStatus(code),
 					}
 				} else {
 					// Fallback
-					msg = http.StatusText(code)
 					errorResp = &types.ErrorResponse{
 						Code:    code,
-						Message: msg,
+						Message: http.StatusText(code),
 						Status:  httpStatusToAIPStatus(code),
 					}
 				}

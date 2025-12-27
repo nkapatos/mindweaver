@@ -43,7 +43,7 @@ func (h *SearchHandler) SearchNotesHandler(c echo.Context) error {
 	}
 
 	// Convert to API response
-	apiResp := ToAPIResponse(resp, int(serviceQuery.Limit), int(serviceQuery.Offset))
+	apiResp := ToAPIResponse(resp, serviceQuery.Limit, serviceQuery.Offset)
 
 	return c.JSON(http.StatusOK, apiResp)
 }

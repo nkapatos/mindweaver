@@ -148,7 +148,7 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 // registerConnectService registers a Connect-RPC service handler with Echo.
 // Connect-RPC supports gRPC (binary protobuf over HTTP/2), gRPC-Web (for browsers),
 // and Connect protocol (JSON or binary over HTTP/1.1 or HTTP/2).
-func registerConnectService(e *echo.Echo, logger *slog.Logger, serviceName string, path string, handler http.Handler) {
+func registerConnectService(e *echo.Echo, logger *slog.Logger, serviceName, path string, handler http.Handler) {
 	// Wrap in h2c handler for HTTP/2 without TLS (needed for gRPC)
 	h2cHandler := h2c.NewHandler(handler, &http2.Server{})
 
