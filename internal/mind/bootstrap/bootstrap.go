@@ -7,7 +7,15 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"net/http"
 
+	"connectrpc.com/connect"
+	"github.com/labstack/echo/v4"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
+	_ "modernc.org/sqlite"
+
+	"github.com/nkapatos/mindweaver/gen/proto/mind/v3/mindv3connect"
 	"github.com/nkapatos/mindweaver/internal/mind/collections"
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
 	"github.com/nkapatos/mindweaver/internal/mind/links"
@@ -18,9 +26,7 @@ import (
 	"github.com/nkapatos/mindweaver/internal/mind/tags"
 	"github.com/nkapatos/mindweaver/internal/mind/templates"
 	mindmigrations "github.com/nkapatos/mindweaver/migrations/mind"
-
-	"github.com/labstack/echo/v4"
-	_ "modernc.org/sqlite"
+	"github.com/nkapatos/mindweaver/shared/interceptors"
 )
 
 // Initialize sets up the Mind service on the given API group.
@@ -100,43 +106,36 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 	noteMetaHandler := meta.NewNoteMetaHandler(noteMetaService)
 	searchHandlerV3 := search.NewSearchHandlerV3(searchService)
 
-	// Note: V3 uses Connect-RPC which registers at Echo root level, not in groups
-
 	// Register V3 routes (Connect-RPC with protobuf) - supports gRPC + HTTP/JSON
-	// Note: Connect-RPC requires registration at Echo root level (not in a group)
-	if err := tags.RegisterTagsRoutes(e, tagsHandler, logger); err != nil {
-		db.Close()
-		return nil, nil, fmt.Errorf("failed to register tags V3 routes: %w", err)
+	// Connect-RPC requires registration at Echo root level (not in a group)
+	validationOpt := connect.WithInterceptors(interceptors.ValidationInterceptor)
+
+	type serviceReg struct {
+		name    string
+		path    string
+		handler http.Handler
 	}
 
-	if err := templates.RegisterTemplatesRoutes(e, templatesHandler, logger); err != nil {
-		db.Close()
-		return nil, nil, fmt.Errorf("failed to register templates V3 routes: %w", err)
+	tagsPath, tagsConnHandler := mindv3connect.NewTagsServiceHandler(tagsHandler, validationOpt)
+	templatesPath, templatesConnHandler := mindv3connect.NewTemplatesServiceHandler(templatesHandler, validationOpt)
+	noteTypesPath, noteTypesConnHandler := mindv3connect.NewNoteTypesServiceHandler(noteTypesHandler, validationOpt)
+	collectionsPath, collectionsConnHandler := mindv3connect.NewCollectionsServiceHandler(collectionsHandler, validationOpt)
+	notesPath, notesConnHandler := mindv3connect.NewNotesServiceHandler(notesHandler, validationOpt)
+	noteMetaPath, noteMetaConnHandler := mindv3connect.NewNoteMetaServiceHandler(noteMetaHandler, validationOpt)
+	searchPath, searchConnHandler := mindv3connect.NewSearchServiceHandler(searchHandlerV3, validationOpt)
+
+	services := []serviceReg{
+		{"Tags", tagsPath, tagsConnHandler},
+		{"Templates", templatesPath, templatesConnHandler},
+		{"NoteTypes", noteTypesPath, noteTypesConnHandler},
+		{"Collections", collectionsPath, collectionsConnHandler},
+		{"Notes", notesPath, notesConnHandler},
+		{"NoteMeta", noteMetaPath, noteMetaConnHandler},
+		{"Search", searchPath, searchConnHandler},
 	}
 
-	if err := notetypes.RegisterNoteTypesRoutes(e, noteTypesHandler, logger); err != nil {
-		db.Close()
-		return nil, nil, fmt.Errorf("failed to register note types V3 routes: %w", err)
-	}
-
-	if err := collections.RegisterCollectionsRoutes(e, collectionsHandler, logger); err != nil {
-		db.Close()
-		return nil, nil, fmt.Errorf("failed to register collections V3 routes: %w", err)
-	}
-
-	if err := notes.RegisterNotesRoutes(e, notesHandler, logger); err != nil {
-		db.Close()
-		return nil, nil, fmt.Errorf("failed to register notes V3 routes: %w", err)
-	}
-
-	if err := meta.RegisterNoteMetaRoutes(e, noteMetaHandler, logger); err != nil {
-		db.Close()
-		return nil, nil, fmt.Errorf("failed to register note meta V3 routes: %w", err)
-	}
-
-	if err := search.RegisterSearchV3Routes(e, searchHandlerV3, logger); err != nil {
-		db.Close()
-		return nil, nil, fmt.Errorf("failed to register search V3 routes: %w", err)
+	for _, svc := range services {
+		registerConnectService(e, logger, svc.name, svc.path, svc.handler)
 	}
 
 	// Note: Import service registration removed - See issue #37 for decision on restoration
@@ -144,4 +143,17 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 	logger.Info("✅ Mind service ready")
 
 	return db, notesService, nil
+}
+
+// registerConnectService registers a Connect-RPC service handler with Echo.
+// Connect-RPC supports gRPC (binary protobuf over HTTP/2), gRPC-Web (for browsers),
+// and Connect protocol (JSON or binary over HTTP/1.1 or HTTP/2).
+func registerConnectService(e *echo.Echo, logger *slog.Logger, serviceName string, path string, handler http.Handler) {
+	// Wrap in h2c handler for HTTP/2 without TLS (needed for gRPC)
+	h2cHandler := h2c.NewHandler(handler, &http2.Server{})
+
+	// Register with Echo - Match all methods and let Connect handle routing
+	e.Match([]string{"GET", "POST", "PUT", "DELETE", "PATCH"}, path+"*", echo.WrapHandler(h2cHandler))
+
+	logger.Info("Registered V3 routes", "service", serviceName, "path", path)
 }
