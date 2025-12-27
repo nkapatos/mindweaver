@@ -46,7 +46,8 @@ builds:
 # Archives configuration
 archives:
   - id: mindweaver
-    format: tar.gz
+    formats:
+      - tar.gz
     name_template: >-
       {{ .ProjectName }}_
       {{- .Version }}_
@@ -66,7 +67,7 @@ checksum:
 
 # Snapshot configuration (for development builds)
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 
 # Changelog configuration
 changelog:
@@ -155,38 +156,10 @@ release:
     
     **Full Changelog**: https://github.com/nkapatos/mindweaver/compare/{{.PreviousTag}}...{{.Tag}}
 
-# Docker images
-dockers:
-  - id: mindweaver-amd64
-    goos: linux
-    goarch: amd64
-    image_templates:
-      - "codefupandas/mindweaver:{{ .Version }}-amd64"
-      - "codefupandas/mindweaver:latest-amd64"
-    dockerfile: Dockerfile
-    use: buildx
-    build_flag_templates:
-      - "--platform=linux/amd64"
-
-  - id: mindweaver-arm64
-    goos: linux
-    goarch: arm64
-    image_templates:
-      - "codefupandas/mindweaver:{{ .Version }}-arm64"
-      - "codefupandas/mindweaver:latest-arm64"
-    dockerfile: Dockerfile
-    use: buildx
-    build_flag_templates:
-      - "--platform=linux/arm64"
-
-# Multi-arch manifests
-docker_manifests:
-  - name_template: "codefupandas/mindweaver:{{ .Version }}"
-    image_templates:
-      - "codefupandas/mindweaver:{{ .Version }}-amd64"
-      - "codefupandas/mindweaver:{{ .Version }}-arm64"
-
-  - name_template: "codefupandas/mindweaver:latest"
-    image_templates:
-      - "codefupandas/mindweaver:latest-amd64"
-      - "codefupandas/mindweaver:latest-arm64"
+# Docker images (v2 format - builds multi-arch manifest in single step)
+dockers_v2:
+  - images:
+      - "codefupandas/mindweaver"
+    tags:
+      - "{{ .Version }}"
+      - "latest"
