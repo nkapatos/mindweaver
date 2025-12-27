@@ -1,6 +1,6 @@
-// Note: Future enhancements tracked in issue #41
 package search
 
+// Note: Future enhancements tracked in issue #41
 import (
 	"net/http"
 

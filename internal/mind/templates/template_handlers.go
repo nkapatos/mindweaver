@@ -1,3 +1,4 @@
+// Package templates implements the TemplatesServiceHandler for managing templates.
 package templates
 
 import (

@@ -7,6 +7,7 @@ package utils
 import (
 	"database/sql"
 	"encoding/json"
+	"log/slog"
 	"strconv"
 
 	"github.com/google/uuid"
@@ -255,7 +256,11 @@ func ParseIDParam(s string) (int64, error) {
 
 // ParseUUID parses a string to uuid.UUID, returns uuid.Nil if invalid.
 func ParseUUID(s string) uuid.UUID {
-	u, _ := uuid.Parse(s)
+	u, err := uuid.Parse(s)
+	if err != nil {
+		slog.Warn("failed to parse UUID", "input", s, "error", err)
+		return uuid.Nil
+	}
 	return u
 }
 
