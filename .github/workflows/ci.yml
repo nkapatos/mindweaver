@@ -4,6 +4,16 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'proto/**'
+      - 'store/**/sql/**'
+      - 'migrations/**'
+      - '.github/workflows/ci.yml'
+      - 'Taskfile.yaml'
+      - 'tasks/*.yml'
 
 permissions:
   contents: read
