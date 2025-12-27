@@ -35,22 +35,26 @@ func (h *TagsHandler) ListTags(
 	var tags []store.Tag
 	var totalCount int64
 	var err error
+	var countErr error
 
 	if req.Msg.NoteId != nil {
 		tags, err = h.service.ListTagsForNotePaginated(ctx, *req.Msg.NoteId, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
-			totalCount, _ = h.service.CountTagsForNote(ctx, *req.Msg.NoteId)
+			totalCount, countErr = h.service.CountTagsForNote(ctx, *req.Msg.NoteId)
 		}
 	} else {
 		tags, err = h.service.ListTagsPaginated(ctx, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
-			totalCount, _ = h.service.CountTags(ctx)
+			totalCount, countErr = h.service.CountTags(ctx)
 		}
 	}
 
 	if err != nil {
 		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to list tags", err)
 	}
+
+	// Count errors are logged in service but don't fail the request
+	_ = countErr
 
 	// Build pagination response
 	pageResp := pageReq.BuildResponse(len(tags), totalCount)

@@ -2,7 +2,6 @@ package notes
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"strconv"
 
@@ -70,7 +69,7 @@ func (h *NotesHandler) GetNote(
 ) (*connect.Response[mindv3.Note], error) {
 	note, err := h.service.GetNoteByID(ctx, req.Msg.Id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, ErrNoteNotFound) {
 			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note", strconv.FormatInt(req.Msg.Id, 10))
 		}
 		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note", err)
@@ -85,7 +84,7 @@ func (h *NotesHandler) ReplaceNote(
 ) (*connect.Response[mindv3.Note], error) {
 	current, err := h.service.GetNoteByID(ctx, req.Msg.Id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, ErrNoteNotFound) {
 			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note", strconv.FormatInt(req.Msg.Id, 10))
 		}
 		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note", err)
@@ -131,7 +130,7 @@ func (h *NotesHandler) DeleteNote(
 ) (*connect.Response[emptypb.Empty], error) {
 	_, err := h.service.GetNoteByID(ctx, req.Msg.Id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, ErrNoteNotFound) {
 			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note", strconv.FormatInt(req.Msg.Id, 10))
 		}
 		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note", err)
@@ -156,36 +155,41 @@ func (h *NotesHandler) ListNotes(
 	var notes []store.Note
 	var totalCount int64
 	var err error
+	var countErr error
 
 	// Determine which query to use based on filters
 	// Priority: collection_id > note_type_id > is_template > all
 	if req.Msg.CollectionId != nil {
 		notes, err = h.service.ListNotesByCollectionIDPaginated(ctx, *req.Msg.CollectionId, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
-			totalCount, _ = h.service.CountNotesByCollectionID(ctx, *req.Msg.CollectionId)
+			totalCount, countErr = h.service.CountNotesByCollectionID(ctx, *req.Msg.CollectionId)
 		}
 	} else if req.Msg.NoteTypeId != nil {
 		noteTypeID := utils.NullInt64(*req.Msg.NoteTypeId)
 		notes, err = h.service.ListNotesByNoteTypeIDPaginated(ctx, noteTypeID, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
-			totalCount, _ = h.service.CountNotesByNoteTypeID(ctx, noteTypeID)
+			totalCount, countErr = h.service.CountNotesByNoteTypeID(ctx, noteTypeID)
 		}
 	} else if req.Msg.IsTemplate != nil {
 		isTemplate := utils.NullBool(*req.Msg.IsTemplate)
 		notes, err = h.service.ListNotesByIsTemplatePaginated(ctx, isTemplate, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
-			totalCount, _ = h.service.CountNotesByIsTemplate(ctx, isTemplate)
+			totalCount, countErr = h.service.CountNotesByIsTemplate(ctx, isTemplate)
 		}
 	} else {
 		notes, err = h.service.ListNotesPaginated(ctx, params.Limit, params.Offset)
 		if err == nil && pageReq.IsFirstPage() {
-			totalCount, _ = h.service.CountNotes(ctx)
+			totalCount, countErr = h.service.CountNotes(ctx)
 		}
 	}
 
 	if err != nil {
 		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to list notes", err)
 	}
+
+	// Count errors are logged in service but don't fail the request
+	// totalCount will be 0 if count failed, which is acceptable for pagination
+	_ = countErr
 
 	// Build pagination response
 	pageResp := pageReq.BuildResponse(len(notes), totalCount)
@@ -219,7 +223,7 @@ func (h *NotesHandler) GetNoteMeta(
 ) (*connect.Response[mindv3.GetNoteMetaResponse], error) {
 	metadata, err := h.service.GetNoteMeta(ctx, req.Msg.NoteId, h.metaService)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, ErrNoteNotFound) {
 			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note", strconv.FormatInt(req.Msg.NoteId, 10))
 		}
 		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note metadata", err)
@@ -238,7 +242,7 @@ func (h *NotesHandler) GetNoteRelationships(
 ) (*connect.Response[mindv3.GetNoteRelationshipsResponse], error) {
 	outgoingLinks, incomingLinks, tagIDs, err := h.service.GetNoteRelationships(ctx, req.Msg.NoteId, h.linksService, h.tagsSvc)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, ErrNoteNotFound) {
 			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note", strconv.FormatInt(req.Msg.NoteId, 10))
 		}
 		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note relationships", err)
@@ -263,7 +267,7 @@ func (h *NotesHandler) NewNote(
 		if errors.Is(err, ErrNoteAlreadyExists) {
 			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "notes", "title", "auto-generated title")
 		}
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, ErrNoteNotFound) {
 			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "template", strconv.FormatInt(templateID, 10))
 		}
 		if apierrors.IsForeignKeyConstraintError(err) {
@@ -316,6 +320,7 @@ func (h *NotesHandler) FindNotes(
 
 	// Get total count (only on first page)
 	var totalCount int64
+	var countErr error
 	if pageReq.IsFirstPage() {
 		countParams := store.CountFindNotesParams{
 			Title:        req.Msg.Title,
@@ -323,7 +328,9 @@ func (h *NotesHandler) FindNotes(
 			NoteTypeID:   req.Msg.NoteTypeId,
 			IsTemplate:   req.Msg.IsTemplate,
 		}
-		totalCount, _ = h.service.CountFindNotes(ctx, countParams)
+		totalCount, countErr = h.service.CountFindNotes(ctx, countParams)
+		// Count errors are logged in service but don't fail the request
+		_ = countErr
 	}
 
 	// Convert rows to proto notes
