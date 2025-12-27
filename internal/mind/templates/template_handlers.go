@@ -6,9 +6,9 @@ import (
 	"strconv"
 
 	"connectrpc.com/connect"
-	apierrors "github.com/nkapatos/mindweaver/shared/errors"
 	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
 	"github.com/nkapatos/mindweaver/gen/proto/mind/v3/mindv3connect"
+	apierrors "github.com/nkapatos/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/shared/pagination"
 	"google.golang.org/protobuf/types/known/emptypb"
 )

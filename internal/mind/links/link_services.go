@@ -3,6 +3,7 @@ package links
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log/slog"
 
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
@@ -57,7 +58,7 @@ func (s *LinksService) CreateUnresolvedLink(ctx context.Context, params store.Cr
 func (s *LinksService) GetLinkByID(ctx context.Context, id int64) (store.Link, error) {
 	link, err := s.store.GetLinkByID(ctx, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			s.logger.Warn("link not found", "id", id, "request_id", middleware.GetRequestID(ctx))
 		} else {
 			s.logger.Error("failed to get link by id", "id", id, "err", err, "request_id", middleware.GetRequestID(ctx))

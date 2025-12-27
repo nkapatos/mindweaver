@@ -1,0 +1,77 @@
+version: "2"
+
+run:
+  modules-download-mode: readonly
+
+linters:
+  default: none
+  enable:
+    # Correctness/bug finders
+    - govet
+    - staticcheck
+    - errcheck
+    - ineffassign
+    - errorlint
+    - unconvert
+    - gocritic
+    - unused
+    # Spelling
+    - misspell
+
+  settings:
+    govet:
+      enable:
+        - shadow
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+      exclude-functions:
+        # Idiomatic Go pattern: defer tx.Rollback() is a no-op after Commit()
+        - (*database/sql.Tx).Rollback
+        # db.Close errors are rarely actionable at shutdown/cleanup
+        - (*database/sql.DB).Close
+    misspell:
+      locale: US
+
+  exclusions:
+    # Use lax mode for generated files (matches v1 default behavior)
+    generated: lax
+    rules:
+      # Relax errcheck in tests - os.Setenv, cleanup functions, etc. are noise
+      - path: _test\.go
+        linters:
+          - errcheck
+      # Keep bug-finders active everywhere, but reduce style noise in generated code
+      - path: /gen/
+        linters:
+          - gocritic
+          - misspell
+      - path: /proto/
+        linters:
+          - gocritic
+          - misspell
+      - path: /mocks?/
+        linters:
+          - gocritic
+          - misspell
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+
+  settings:
+    gofumpt:
+      extra-rules: true
+
+  exclusions:
+    generated: lax
+    paths:
+      - /gen/
+      - /proto/
+      - /mocks?/
+
+issues:
+  # Do not cap issues to ensure CI shows all problems
+  max-issues-per-linter: 0
+  max-same-issues: 0

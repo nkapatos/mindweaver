@@ -4,6 +4,7 @@
 package titleindex
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -80,7 +81,7 @@ func (ti *TitleIndex) Get(title string) (string, error) {
 		})
 	})
 
-	if err == badger.ErrKeyNotFound {
+	if errors.Is(err, badger.ErrKeyNotFound) {
 		return "", nil // Not found is not an error
 	}
 
@@ -119,7 +120,7 @@ func (ti *TitleIndex) Delete(title string) error {
 		return txn.Delete([]byte(normalizedTitle))
 	})
 
-	if err == badger.ErrKeyNotFound {
+	if errors.Is(err, badger.ErrKeyNotFound) {
 		return nil // Already deleted, not an error
 	}
 
@@ -135,7 +136,7 @@ func (ti *TitleIndex) BatchDelete(titles []string) error {
 	err := ti.db.Update(func(txn *badger.Txn) error {
 		for _, title := range titles {
 			normalizedTitle := NormalizeTitle(title)
-			if err := txn.Delete([]byte(normalizedTitle)); err != nil && err != badger.ErrKeyNotFound {
+			if err := txn.Delete([]byte(normalizedTitle)); err != nil && !errors.Is(err, badger.ErrKeyNotFound) {
 				return err
 			}
 		}

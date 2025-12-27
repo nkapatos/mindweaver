@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"connectrpc.com/connect"
-	"github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
 	apierrors "github.com/nkapatos/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/shared/pagination"

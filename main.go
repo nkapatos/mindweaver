@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -235,7 +236,7 @@ func main() {
 		"address", addr,
 		"mode", *mode)
 
-	if err := e.Start(addr); err != http.ErrServerClosed {
+	if err := e.Start(addr); !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
 }

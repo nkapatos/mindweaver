@@ -93,7 +93,7 @@ func ProtoReplaceNoteToStore(req *mindv3.ReplaceNoteRequest, current store.Note)
 
 // ProtoNewNoteToParams extracts collection_id and template_id from NewNoteRequest.
 // Returns defaulted values: collection_id defaults to 1, template_id defaults to 1.
-func ProtoNewNoteToParams(req *mindv3.NewNoteRequest) (collectionID int64, templateID int64) {
+func ProtoNewNoteToParams(req *mindv3.NewNoteRequest) (collectionID, templateID int64) {
 	collectionID = DefaultCollectionID
 	if req.CollectionId != nil {
 		collectionID = *req.CollectionId

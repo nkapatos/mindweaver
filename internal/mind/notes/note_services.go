@@ -3,6 +3,7 @@ package notes
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -12,7 +13,7 @@ import (
 	"github.com/nkapatos/mindweaver/internal/mind/meta"
 	"github.com/nkapatos/mindweaver/internal/mind/scheduler"
 	"github.com/nkapatos/mindweaver/internal/mind/tags"
-	"github.com/nkapatos/mindweaver/shared/errors"
+	sharederrors "github.com/nkapatos/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/shared/markdown"
 	"github.com/nkapatos/mindweaver/shared/middleware"
 	"github.com/nkapatos/mindweaver/shared/utils"
@@ -98,7 +99,7 @@ func (s *NotesService) CreateNote(ctx context.Context, params store.CreateNotePa
 
 	id, err := txStore.CreateNote(ctx, params)
 	if err != nil {
-		if errors.IsUniqueConstraintError(err) {
+		if sharederrors.IsUniqueConstraintError(err) {
 			return 0, ErrNoteAlreadyExists
 		}
 		s.logger.Error("failed to create note", "params", params, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -147,7 +148,7 @@ func (s *NotesService) CreateNote(ctx context.Context, params store.CreateNotePa
 }
 
 // NewNoteCreation creates a new note with auto-generated title and optional template content.
-func (s *NotesService) NewNoteCreation(ctx context.Context, collectionID int64, templateID int64) (int64, error) {
+func (s *NotesService) NewNoteCreation(ctx context.Context, collectionID, templateID int64) (int64, error) {
 	// Generate auto-incremented title
 	untitledCounter++
 	title := fmt.Sprintf("Untitled %d", untitledCounter)
@@ -213,7 +214,7 @@ func (s *NotesService) UpdateNote(ctx context.Context, params store.UpdateNoteBy
 
 	err = txStore.UpdateNoteByID(ctx, params)
 	if err != nil {
-		if errors.IsUniqueConstraintError(err) {
+		if sharederrors.IsUniqueConstraintError(err) {
 			return ErrNoteAlreadyExists
 		}
 		s.logger.Error("failed to update note", "params", params, "err", err, "request_id", middleware.GetRequestID(ctx))
@@ -470,11 +471,11 @@ func (s *NotesService) insertTagsWithStore(ctx context.Context, querier store.Qu
 		return nil
 	}
 
-	// TODO: optimise by using the helper bulk insert methods in the sqlcext package
+	// TODO: optimize by using the helper bulk insert methods in the sqlcext package
 	for _, tagName := range tags {
 		tag, err := querier.GetTagByName(ctx, tagName)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				tagID, err := querier.CreateTag(ctx, tagName)
 				if err != nil {
 					return err

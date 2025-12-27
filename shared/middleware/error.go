@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -17,7 +18,8 @@ func ErrorHandlerMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			msg := http.StatusText(code)
 			var errorResp *types.ErrorResponse
 
-			if he, ok := err.(*echo.HTTPError); ok {
+			he := &echo.HTTPError{}
+			if errors.As(err, &he) {
 				code = he.Code
 
 				// Check if Message is already a types.ErrorResponse (structured error)
