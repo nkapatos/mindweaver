@@ -1,6 +1,6 @@
-// Templates V3 Route Registration (Connect-RPC)
 package templates
 
+// Templates V3 Route Registration (Connect-RPC)
 import (
 	"log/slog"
 

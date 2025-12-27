@@ -173,7 +173,7 @@ func (c *ChangeAccumulator) flush(ctx context.Context) error {
 func (c *ChangeAccumulator) sendToBrain(ctx context.Context, changes []ChangeEvent) error {
 	endpoint := fmt.Sprintf("%s/api/brain/ingest/batch", c.brainURL)
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"changes": changes,
 	}
 
@@ -200,7 +200,7 @@ func (c *ChangeAccumulator) sendToBrain(ctx context.Context, changes []ChangeEve
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
-		return fmt.Errorf("Brain returned non-OK status: %d", resp.StatusCode)
+		return fmt.Errorf("brain returned non-OK status: %d", resp.StatusCode)
 	}
 
 	c.logger.Debug("Brain accepted batch", "status", resp.StatusCode)

@@ -1,6 +1,6 @@
-// Search V3 Route Registration (Connect-RPC)
 package search
 
+// Search V3 Route Registration (Connect-RPC)
 import (
 	"log/slog"
 

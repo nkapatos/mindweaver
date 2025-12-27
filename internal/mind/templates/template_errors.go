@@ -1,6 +1,7 @@
+package templates
+
 // Templates Domain Errors
 // Domain-specific errors for the templates service layer
-package templates
 
 import (
 	"errors"
