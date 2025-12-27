@@ -1,10 +1,5 @@
--- notes.sql
--- Pass 4: CRUD + composite queries for notes (SQLite, sqlc compatible)
--- sqlc annotations added for code generation
--- NOTE: uuid field uses uuidv7. Ordering by uuid. Timestamps managed by DB.
--- Included: insert, select by id, select all, update by id, delete by id, composite queries
--- Next: Add more composite queries for tags and FTS integration
-
+-- Notes: CRUD and composite queries (SQLite/sqlc)
+-- NOTE: uuid uses uuidv7; ordering by uuid
 -- name: CreateNote :execlastid
 INSERT INTO notes (uuid, title, body, description, frontmatter, note_type_id, is_template, collection_id)
 VALUES (:uuid, :title, :body, :description, :frontmatter, :note_type_id, :is_template, :collection_id);
@@ -19,8 +14,7 @@ SELECT * FROM notes WHERE uuid = :uuid;
 SELECT * FROM notes WHERE title = :title AND collection_id = :collection_id LIMIT 1;
 
 -- name: GetNoteByTitleGlobal :one
--- For wikilink resolution: searches by title across all collections
--- Returns first match (undefined order if multiple collections have same title)
+-- Global title lookup across collections
 SELECT * FROM notes WHERE title = :title LIMIT 1;
 
 -- name: ListNotes :many
@@ -143,9 +137,7 @@ WHERE collection_id = :collection_id;
 -- ========================================
 
 -- name: ListNotesByTagIDsAND :many
--- Returns notes that have ALL specified tags (intersection)
--- Example: tag_ids = [1,2,3] returns notes tagged with 1 AND 2 AND 3
--- Implementation: COUNT(DISTINCT tag_id) must equal number of requested tags
+-- Notes having ALL specified tags
 SELECT n.* FROM notes n
 JOIN note_tags nt ON n.id = nt.note_id
 WHERE nt.tag_id IN (sqlc.slice('tag_ids'))
@@ -154,8 +146,7 @@ HAVING COUNT(DISTINCT nt.tag_id) = sqlc.arg('tag_count')
 ORDER BY n.uuid;
 
 -- name: ListNotesByTagIDsOR :many
--- Returns notes that have ANY of the specified tags (union)
--- Example: tag_ids = [1,2,3] returns notes tagged with 1 OR 2 OR 3
+-- Notes having ANY of the specified tags
 SELECT DISTINCT n.* FROM notes n
 JOIN note_tags nt ON n.id = nt.note_id
 WHERE nt.tag_id IN (sqlc.slice('tag_ids'))

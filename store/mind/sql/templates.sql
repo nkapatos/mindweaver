@@ -1,11 +1,5 @@
--- templates.sql
--- Pass 3: CRUD for templates (SQLite, sqlc compatible)
--- sqlc annotations added for code generation
--- Timestamps managed by DB. TODO: Revisit note_type_id FK.
--- Included: insert, select by id, select all, update by id, delete by id
--- Note: Search queries removed - use general search with filters instead
--- Next: Add advanced queries if needed (filter by note_type, etc.)
-
+-- Templates: CRUD (SQLite/sqlc)
+-- TODO: Revisit note_type_id FK; search via general filters
 -- name: CreateTemplate :execlastid
 INSERT INTO templates (name, description, starter_note_id, note_type_id)
 VALUES (:name, :description, :starter_note_id, :note_type_id);
