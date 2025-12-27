@@ -190,7 +190,7 @@ func BoolOrDefault(b *bool, def bool) bool {
 
 // JSONOrDefault returns the JSON value or a default if nil or empty.
 func JSONOrDefault(j json.RawMessage, def json.RawMessage) json.RawMessage {
-	if j == nil || len(j) == 0 {
+	if len(j) == 0 {
 		return def
 	}
 	return j
@@ -261,7 +261,7 @@ func ParseUUID(s string) uuid.UUID {
 
 // FromInterface converts interface{} (from SQLite nullable fields in CTEs) to *int64.
 // SQLite driver returns interface{} for nullable integers in some query results.
-func FromInterface(v interface{}) *int64 {
+func FromInterface(v any) *int64 {
 	if v == nil {
 		return nil
 	}

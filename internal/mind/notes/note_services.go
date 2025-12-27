@@ -412,7 +412,7 @@ func (s *NotesService) extractAndMergeTags(parsed *markdown.ParseResult) []strin
 					for _, tag := range v {
 						tagSet[tag] = true
 					}
-				case []interface{}:
+				case []any:
 					for _, item := range v {
 						if tagStr, ok := item.(string); ok {
 							tagSet[tagStr] = true
@@ -470,6 +470,7 @@ func (s *NotesService) insertTagsWithStore(ctx context.Context, querier store.Qu
 		return nil
 	}
 
+	// TODO: optimise by using the helper bulk insert methods in the sqlcext package
 	for _, tagName := range tags {
 		tag, err := querier.GetTagByName(ctx, tagName)
 		if err != nil {
@@ -479,7 +480,6 @@ func (s *NotesService) insertTagsWithStore(ctx context.Context, querier store.Qu
 					return err
 				}
 				tag.ID = tagID
-				tag.Name = tagName
 				s.logger.Debug("created new tag", "name", tagName, "tag_id", tagID)
 			} else {
 				return err
@@ -504,10 +504,8 @@ func (s *NotesService) insertTagsWithStore(ctx context.Context, querier store.Qu
 func (s *NotesService) insertMetadataWithStore(ctx context.Context, querier store.Querier, noteID int64, parsed *markdown.ParseResult, systemMeta map[string]string) error {
 	mergedMeta := make(map[string]string)
 
-	if systemMeta != nil {
-		for k, v := range systemMeta {
-			mergedMeta[k] = v
-		}
+	for k, v := range systemMeta {
+		mergedMeta[k] = v
 	}
 
 	if parsed.Metadata != nil {
