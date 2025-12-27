@@ -32,8 +32,12 @@ linters:
         - (*database/sql.DB).Close
         # rows.Close() is idempotent and errors are recovered by connection pool
         - (*database/sql.Rows).Close
+        # resp.Body.Close() errors are rarely actionable after reading the response
+        - (io.Closer).Close
         # NewErrorDetail only fails if proto can't marshal - impossible with well-known types
-        - (connectrpc.com/connect).NewErrorDetail
+        - connectrpc.com/connect.NewErrorDetail
+        # ast.Walk from goldmark - our callbacks never return errors
+        - github.com/yuin/goldmark/ast.Walk
     misspell:
       locale: US
 
