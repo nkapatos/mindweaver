@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/mindweaver"
-  cmd = "go build -o ./tmp/mindweaver ./cmd/mindweaver"
+  cmd = "go build -o ./tmp/mindweaver ."
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []
