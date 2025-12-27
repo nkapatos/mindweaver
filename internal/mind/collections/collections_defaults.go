@@ -4,6 +4,7 @@ package collections
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log/slog"
 
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
@@ -43,7 +44,7 @@ func EnsureDefaultCollections(ctx context.Context, q *store.Queries, logger *slo
 			// Already exists, skip
 			continue
 		}
-		if err != sql.ErrNoRows {
+		if !errors.Is(err, sql.ErrNoRows) {
 			// Unexpected error
 			return err
 		}

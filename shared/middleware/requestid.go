@@ -12,7 +12,7 @@ type contextKey string
 
 const (
 	requestIDKey    contextKey = "requestID"
-	RequestIDHeader            = "X-Request-ID"
+	RequestIDHeader string     = "X-Request-ID" // HTTP header name, not a context key
 )
 
 // RequestIDMiddleware injects a request ID into the context and response header.

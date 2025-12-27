@@ -166,7 +166,7 @@ func (b *BulkInserter) insertChunk(ctx context.Context, db DBTX, rows [][]any) e
 //	    {1, "tags", "golang,sqlite"},
 //	}
 //	err := inserter.Upsert(ctx, db, rows, []string{"note_id", "key"}, []string{"value"})
-func (b *BulkInserter) Upsert(ctx context.Context, db DBTX, rows [][]any, conflictColumns []string, updateColumns []string) error {
+func (b *BulkInserter) Upsert(ctx context.Context, db DBTX, rows [][]any, conflictColumns, updateColumns []string) error {
 	if len(rows) == 0 {
 		return nil
 	}
@@ -187,7 +187,7 @@ func (b *BulkInserter) Upsert(ctx context.Context, db DBTX, rows [][]any, confli
 	return nil
 }
 
-func (b *BulkInserter) upsertChunk(ctx context.Context, db DBTX, rows [][]any, conflictColumns []string, updateColumns []string) error {
+func (b *BulkInserter) upsertChunk(ctx context.Context, db DBTX, rows [][]any, conflictColumns, updateColumns []string) error {
 	if len(rows) == 0 {
 		return nil
 	}

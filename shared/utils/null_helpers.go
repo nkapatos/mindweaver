@@ -189,7 +189,7 @@ func BoolOrDefault(b *bool, def bool) bool {
 }
 
 // JSONOrDefault returns the JSON value or a default if nil or empty.
-func JSONOrDefault(j json.RawMessage, def json.RawMessage) json.RawMessage {
+func JSONOrDefault(j, def json.RawMessage) json.RawMessage {
 	if len(j) == 0 {
 		return def
 	}
