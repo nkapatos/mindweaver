@@ -113,12 +113,13 @@ func getEnvInt(key string, defaultValue int) int {
 	return defaultValue
 }
 
-func getEnvBool(key string, defaultValue bool) bool {
-	if value := os.Getenv(key); value != "" {
-		return value == "true" || value == "1" || value == "yes"
-	}
-	return defaultValue
-}
+// NOTE: Currently not used, but can be enabled if boolean configs are needed
+// func getEnvBool(key string, defaultValue bool) bool {
+// 	if value := os.Getenv(key); value != "" {
+// 		return value == "true" || value == "1" || value == "yes"
+// 	}
+// 	return defaultValue
+// }
 
 func generateRandomSalt() string {
 	// Generate random salt for ETag hashing when ETAG_SALT is not set

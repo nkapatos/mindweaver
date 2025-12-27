@@ -418,7 +418,7 @@ func containsMarkTag(s string) bool {
 func containsFTS5SyntaxError(err string) bool {
 	// Common FTS5 error messages
 	errorPatterns := []string{"fts5:", "syntax error", "malformed MATCH"}
-	for _, _ = range errorPatterns {
+	for range errorPatterns {
 		if len(err) > 0 { // Just check it's not empty for this test
 			return true
 		}
@@ -431,7 +431,7 @@ func BenchmarkFTSQuerier_Search(b *testing.B) {
 	defer db.Close()
 
 	// Insert test data
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		insertTestNote(&testing.T{}, db, "Test Document", "This is test content with various keywords like programming, database, search, and technology")
 	}
 
