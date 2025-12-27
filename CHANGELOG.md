@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.1.6](https://github.com/nkapatos/mindweaver/compare/v0.1.5...v0.1.6) (2025-12-27)
+
+
+### Features
+
+* add Docker Hub publishing to release workflow ([8de9e0c](https://github.com/nkapatos/mindweaver/commit/8de9e0cda9e09e235c0be7fa248a64b25630adde))
+
+
+### Bug Fixes
+
+* apply lint fixes for package comments and error formatting ([da4c56b](https://github.com/nkapatos/mindweaver/commit/da4c56b29c25cc2ab33c80dac56a3e62357e27df))
+* correct errcheck exclusion syntax and add remaining exclusions ([174e127](https://github.com/nkapatos/mindweaver/commit/174e1276a84c6f8d2e2db5f2e282bb40c1a75c38))
+* include internal/mind/gen in CI artifacts ([267385d](https://github.com/nkapatos/mindweaver/commit/267385dd55dd9d9b5d168f85132e041b173ab4b8))
+* resolve golangci-lint warnings across codebase ([9c11a7b](https://github.com/nkapatos/mindweaver/commit/9c11a7b81fff84323b1b9b572fac11933deb4989))
+* update air config to build from root instead of cmd/ ([8919c2a](https://github.com/nkapatos/mindweaver/commit/8919c2a12987cd6a2d09ce415327414ab53d6b1d))
+
+
+### Maintenance
+
+* exclude idiomatic error ignores from errcheck ([2d04a19](https://github.com/nkapatos/mindweaver/commit/2d04a19ad73662e94136d9c820fcd83132cef9ae))
+* fix sql file broken from the sql formatter ([c807bf7](https://github.com/nkapatos/mindweaver/commit/c807bf7b30768bb1d072ab4b9f57bb8107a26639))
+* lint fixes ([0c72734](https://github.com/nkapatos/mindweaver/commit/0c72734be7589dcf63d40062e308b416f7145d1f))
+* migrate golangci-lint config to v2 and apply autofixes ([6c47a19](https://github.com/nkapatos/mindweaver/commit/6c47a199b1ea7c4f9691b127b6f5679b5f321cf1))
+* **sql:** trim redundant comments and standardize section headers in mind store SQL files; move future work notes to GH issues ([ea2ff11](https://github.com/nkapatos/mindweaver/commit/ea2ff1194f6da1c8782606bf0808d93a3e2fc505))
+* update mise tooling to add correct version of golancgci-lint for the project ([fe6e01d](https://github.com/nkapatos/mindweaver/commit/fe6e01d99d96b83e7707fcc32855ae05c2e08485))
+
+
+### Refactoring
+
+* consolidate Connect-RPC route registration into bootstrap ([5a82ff4](https://github.com/nkapatos/mindweaver/commit/5a82ff452dded3709d419f7368a6ca66628ef405))
+* extract validation interceptor to shared package ([e9b347b](https://github.com/nkapatos/mindweaver/commit/e9b347bb70fc97b87a6519dbc7b6e3d0351da3be))
+* standardize error handling in handlers and services ([516da2c](https://github.com/nkapatos/mindweaver/commit/516da2c0a2fc272bf75a03b4962e59dc9426bb52))
+
+
+### CI/CD
+
+* optimize workflow structure with build and lint jobs ([a7ab0d1](https://github.com/nkapatos/mindweaver/commit/a7ab0d104eb5d25541a60a9fe238807aa0999b3b))
+* update golangci lint version to match workspace go version reqs ([61248d1](https://github.com/nkapatos/mindweaver/commit/61248d158bc819ad6fcaea20b6f9a7e3463b7285))
+
 ## [0.1.5](https://github.com/nkapatos/mindweaver/compare/v0.1.4...v0.1.5) (2025-12-26)
 
 
