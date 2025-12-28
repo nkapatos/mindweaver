@@ -20,8 +20,8 @@ jobs:
       - id: release
         uses: googleapis/release-please-action@v4
         with:
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
+          config-file: .github/release-please-config.json
+          manifest-file: .github/release-please-manifest.json
 
   release:
     name: Release
@@ -70,6 +70,6 @@ jobs:
         with:
           distribution: goreleaser
           version: '~> v2'
-          args: release --clean
+          args: release --clean --config .github/.goreleaser.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
