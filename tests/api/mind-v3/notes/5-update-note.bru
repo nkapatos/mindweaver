@@ -1,0 +1,62 @@
+meta {
+  name: Update Note (PATCH)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NotesService/UpdateNote
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  If-Match: {{noteEtag}}
+}
+
+body:json {
+  {
+    "id": {{noteId}},
+    "title": "Partially Updated Title"
+  }
+}
+
+script:pre-request {
+  // First get the current note to obtain its ETag
+  const noteId = bru.getEnvVar("noteId");
+  if (!noteId) {
+    console.log("Warning: noteId not set, test may fail");
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.etag) {
+    bru.setEnvVar("noteEtag", res.body.etag);
+    console.log("Updated ETag:", res.body.etag);
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.status).to.equal(200);
+  });
+  
+  test("Response has correct note ID", function() {
+    expect(res.body.id).to.equal(bru.getEnvVar("noteId").toString());
+  });
+  
+  test("Title was updated", function() {
+    expect(res.body.title).to.equal("Partially Updated Title");
+  });
+  
+  test("Body was preserved (not cleared)", function() {
+    expect(res.body).to.have.property("body");
+    expect(res.body.body).to.be.a("string");
+  });
+  
+  test("ETag was updated", function() {
+    expect(res.body.etag).to.be.a("string");
+    expect(res.body.etag).to.match(/^W\//);
+  });
+}

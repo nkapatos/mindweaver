@@ -20,6 +20,13 @@ body:json {
   }
 }
 
+script:post-response {
+  if (res.status === 200 && res.body.etag) {
+    bru.setEnvVar("noteEtag", res.body.etag);
+    console.log("Captured ETag:", res.body.etag);
+  }
+}
+
 tests {
   test("Status is 200", function() {
     expect(res.status).to.equal(200);

@@ -144,6 +144,35 @@ message ReplaceNoteRequest {
   map<string, string> metadata = 8;
 }
 
+// Request message for UpdateNote (AIP-134 PATCH - partial update)
+// Only fields present in the request are modified; others remain unchanged
+// Requires If-Match header with ETag for optimistic locking
+message UpdateNoteRequest {
+  // Note ID (required)
+  int64 id = 1 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional: New title (max 255 chars)
+  optional string title = 2 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 255
+  }];
+  
+  // Optional: New body content
+  optional string body = 3;
+  
+  // Optional: New description (max 600 chars)
+  optional string description = 4 [(buf.validate.field).string.max_len = 600];
+  
+  // Optional: New note type ID
+  optional int64 note_type_id = 5 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional: New collection ID
+  optional int64 collection_id = 6 [(buf.validate.field).int64.gt = 0];
+  
+  // Optional: New template flag
+  optional bool is_template = 7;
+}
+
 // Request message for DeleteNote (AIP-135)
 message DeleteNoteRequest {
   // Note ID (required)
@@ -263,6 +292,16 @@ service NotesService {
   rpc ReplaceNote(ReplaceNoteRequest) returns (Note) {
     option (google.api.http) = {
       put: "/v3/notes/{id}"
+      body: "*"
+    };
+  }
+  
+  // Update a note (AIP-134) - PATCH operation for partial update
+  // Only fields present in the request are modified; others remain unchanged
+  // Requires If-Match header with ETag for optimistic locking
+  rpc UpdateNote(UpdateNoteRequest) returns (Note) {
+    option (google.api.http) = {
+      patch: "/v3/notes/{id}"
       body: "*"
     };
   }

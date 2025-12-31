@@ -1,0 +1,32 @@
+meta {
+  name: Update Note - Missing ETag
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NotesService/UpdateNote
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": {{noteId}},
+    "title": "Should Fail Without ETag"
+  }
+}
+
+tests {
+  test("Status is 400 (FAILED_PRECONDITION)", function() {
+    expect(res.status).to.equal(400);
+  });
+  
+  test("Error code indicates ETag required", function() {
+    expect(res.body.code).to.equal("failed_precondition");
+  });
+}
