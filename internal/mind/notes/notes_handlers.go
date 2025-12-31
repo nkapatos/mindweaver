@@ -124,6 +124,60 @@ func (h *NotesHandler) ReplaceNote(
 	return connect.NewResponse(StoreNoteToProto(updated)), nil
 }
 
+func (h *NotesHandler) UpdateNote(
+	ctx context.Context,
+	req *connect.Request[mindv3.UpdateNoteRequest],
+) (*connect.Response[mindv3.Note], error) {
+	// Fetch current note (validates existence)
+	current, err := h.service.GetNoteByID(ctx, req.Msg.Id)
+	if err != nil {
+		if errors.Is(err, ErrNoteNotFound) {
+			return nil, apierrors.NewNotFoundError(apierrors.MindDomain, "note", strconv.FormatInt(req.Msg.Id, 10))
+		}
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note", err)
+	}
+
+	// Require If-Match header for optimistic locking
+	ifMatch := req.Header().Get("If-Match")
+	if ifMatch == "" {
+		return nil, apierrors.NewFailedPreconditionError(apierrors.MindDomain, "ETAG_REQUIRED", map[string]string{
+			"header": "If-Match",
+			"reason": "If-Match header with ETag is required for PATCH operations",
+		})
+	}
+
+	currentETag := utils.ComputeHashedETag(current.Version)
+	if ifMatch != currentETag {
+		metadata := map[string]string{
+			"provided_etag": ifMatch,
+			"current_etag":  currentETag,
+			"header":        "If-Match",
+		}
+		return nil, apierrors.NewFailedPreconditionError(apierrors.MindDomain, "ETAG_MISMATCH", metadata)
+	}
+
+	// Merge request fields with current note (PATCH semantics)
+	params := ProtoUpdateNoteToStore(req.Msg, current)
+
+	err = h.service.UpdateNote(ctx, params)
+	if err != nil {
+		if errors.Is(err, ErrNoteAlreadyExists) {
+			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "notes", "title", *req.Msg.Title)
+		}
+		if apierrors.IsForeignKeyConstraintError(err) {
+			return nil, apierrors.NewInvalidArgumentError("collection_id or note_type_id", "referenced resource does not exist")
+		}
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to update note", err)
+	}
+
+	updated, err := h.service.GetNoteByID(ctx, req.Msg.Id)
+	if err != nil {
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to retrieve updated note", err)
+	}
+
+	return connect.NewResponse(StoreNoteToProto(updated)), nil
+}
+
 func (h *NotesHandler) DeleteNote(
 	ctx context.Context,
 	req *connect.Request[mindv3.DeleteNoteRequest],

@@ -91,6 +91,51 @@ func ProtoReplaceNoteToStore(req *mindv3.ReplaceNoteRequest, current store.Note)
 	}
 }
 
+// ProtoUpdateNoteToStore merges UpdateNoteRequest fields with current note.
+// Only fields present in the request (non-nil) are updated; others keep current values.
+// This implements PATCH semantics per AIP-134.
+func ProtoUpdateNoteToStore(req *mindv3.UpdateNoteRequest, current store.Note) store.UpdateNoteByIDParams {
+	params := store.UpdateNoteByIDParams{
+		ID:           req.Id,
+		Uuid:         current.Uuid,
+		Version:      current.Version,
+		Title:        current.Title,
+		Body:         current.Body,
+		Description:  current.Description,
+		Frontmatter:  current.Frontmatter,
+		NoteTypeID:   current.NoteTypeID,
+		IsTemplate:   current.IsTemplate,
+		CollectionID: current.CollectionID,
+	}
+
+	// Merge each field: use request value if set, otherwise keep current
+	if req.Title != nil {
+		params.Title = *req.Title
+	}
+
+	if req.Body != nil {
+		params.Body = utils.NullStringFrom(*req.Body, true)
+	}
+
+	if req.Description != nil {
+		params.Description = utils.NullStringFrom(*req.Description, true)
+	}
+
+	if req.NoteTypeId != nil {
+		params.NoteTypeID = utils.NullInt64(*req.NoteTypeId)
+	}
+
+	if req.CollectionId != nil {
+		params.CollectionID = *req.CollectionId
+	}
+
+	if req.IsTemplate != nil {
+		params.IsTemplate = utils.NullBool(*req.IsTemplate)
+	}
+
+	return params
+}
+
 // ProtoNewNoteToParams extracts collection_id and template_id from NewNoteRequest.
 // Returns defaulted values: collection_id defaults to 1, template_id defaults to 1.
 func ProtoNewNoteToParams(req *mindv3.NewNoteRequest) (collectionID, templateID int64) {
