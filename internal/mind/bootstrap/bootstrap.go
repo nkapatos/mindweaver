@@ -90,8 +90,13 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 
 	// Note: titleindex initialization removed - See issue #37 and #43
 
+	// Initialize event hub for real-time notifications
+	eventHub := events.NewHub(logger)
+
 	noteMetaService := meta.NewNoteMetaService(querier, db, logger, "Notes Meta Service")
 	notesService := notes.NewNotesService(db, querier, logger, "Notes Service")
+	notesService.SetEventHub(eventHub) // Wire event hub for SSE notifications
+
 	tagService := tags.NewTagsService(querier, logger, "Tags Service")
 	templateService := templates.NewTemplatesService(querier, logger, "Templates Service")
 	linksService := links.NewLinksService(querier, logger, "Links Service")
@@ -140,8 +145,7 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 		registerConnectService(e, logger, svc.name, svc.path, svc.handler)
 	}
 
-	// Initialize event hub and SSE handler
-	eventHub := events.NewHub(logger)
+	// Initialize SSE handler for real-time events
 	sseHandler := events.NewSSEHandler(eventHub, logger)
 
 	// Register SSE endpoint for real-time events

@@ -8,6 +8,8 @@ import (
 	"log/slog"
 
 	"github.com/google/uuid"
+	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/internal/mind/events"
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
 	"github.com/nkapatos/mindweaver/internal/mind/links"
 	"github.com/nkapatos/mindweaver/internal/mind/meta"
@@ -27,6 +29,7 @@ type NotesService struct {
 	db        *sql.DB
 	logger    *slog.Logger
 	scheduler *scheduler.ChangeAccumulator // Optional: notifies Brain of note changes
+	eventHub  events.Hub                   // Optional: publishes events for SSE clients
 	parser    *markdown.Parser
 }
 
@@ -47,6 +50,12 @@ func NewNotesService(db *sql.DB, store store.Querier, logger *slog.Logger, servi
 func (s *NotesService) SetScheduler(scheduler *scheduler.ChangeAccumulator) {
 	s.scheduler = scheduler
 	s.logger.Info("scheduler enabled for note service")
+}
+
+// SetEventHub sets the event hub for SSE notifications.
+func (s *NotesService) SetEventHub(hub events.Hub) {
+	s.eventHub = hub
+	s.logger.Info("event hub enabled for note service")
 }
 
 // GetMarkdownParser returns the markdown parser instance.
@@ -146,6 +155,10 @@ func (s *NotesService) CreateNote(ctx context.Context, params store.CreateNotePa
 
 	if s.scheduler != nil {
 		s.scheduler.TrackChange("note_created", id)
+	}
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(mindv3.EventDomain_EVENT_DOMAIN_NOTE, mindv3.EventType_EVENT_TYPE_CREATED, id)
 	}
 
 	return id, nil
@@ -261,6 +274,10 @@ func (s *NotesService) UpdateNote(ctx context.Context, params store.UpdateNoteBy
 		s.scheduler.TrackChange("note_updated", params.ID)
 	}
 
+	if s.eventHub != nil {
+		s.eventHub.Publish(mindv3.EventDomain_EVENT_DOMAIN_NOTE, mindv3.EventType_EVENT_TYPE_UPDATED, params.ID)
+	}
+
 	return nil
 }
 
@@ -276,6 +293,10 @@ func (s *NotesService) DeleteNote(ctx context.Context, id int64) error {
 
 	if s.scheduler != nil {
 		s.scheduler.TrackChange("note_deleted", id)
+	}
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(mindv3.EventDomain_EVENT_DOMAIN_NOTE, mindv3.EventType_EVENT_TYPE_DELETED, id)
 	}
 
 	return nil
