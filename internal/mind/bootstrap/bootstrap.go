@@ -17,6 +17,7 @@ import (
 
 	"github.com/nkapatos/mindweaver/gen/proto/mind/v3/mindv3connect"
 	"github.com/nkapatos/mindweaver/internal/mind/collections"
+	"github.com/nkapatos/mindweaver/internal/mind/events"
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
 	"github.com/nkapatos/mindweaver/internal/mind/links"
 	"github.com/nkapatos/mindweaver/internal/mind/meta"
@@ -38,36 +39,37 @@ import (
 //   - dbPath: Path to the SQLite database file
 //   - logger: Structured logger
 //
-// Returns the database connection, notes service, and error if initialization fails.
-// The caller is responsible for closing the returned database connection.
+// Returns the database connection, notes service, event hub, and error if initialization fails.
+// The caller is responsible for closing the returned database connection and event hub.
 // The notes service is returned for scheduler integration in combined mode.
-func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.Logger) (*sql.DB, *notes.NotesService, error) {
+// The event hub is returned for graceful shutdown and can be used by other services to publish events.
+func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.Logger) (*sql.DB, *notes.NotesService, events.Hub, error) {
 	logger.Info("🧠 Initializing Mind service (Notes/PKM)")
 
 	// Open database connection
 	db, err := sql.Open("sqlite", fmt.Sprintf("file:%s?cache=shared&mode=rwc", dbPath))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to open notes database: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to open notes database: %w", err)
 	}
 
 	// Configure WAL mode for better concurrency
 	if _, err := db.Exec("PRAGMA journal_mode=WAL;"); err != nil {
 		db.Close()
-		return nil, nil, fmt.Errorf("failed to enable WAL mode for notes: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to enable WAL mode for notes: %w", err)
 	}
 	if _, err := db.Exec("PRAGMA synchronous=NORMAL;"); err != nil {
 		db.Close()
-		return nil, nil, fmt.Errorf("failed to enable WAL synchronous mode for notes: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to enable WAL synchronous mode for notes: %w", err)
 	}
 	if _, err := db.Exec("PRAGMA wal_autocheckpoint=100;"); err != nil {
 		db.Close()
-		return nil, nil, fmt.Errorf("failed to enable WAL checkpoint for notes: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to enable WAL checkpoint for notes: %w", err)
 	}
 
 	// Run migrations
 	if err := mindmigrations.RunMigrations(db, logger); err != nil {
 		db.Close()
-		return nil, nil, fmt.Errorf("failed to run notes DB migrations: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to run notes DB migrations: %w", err)
 	}
 
 	logger.Info("Mind database initialized", "path", dbPath)
@@ -79,11 +81,11 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 	// Ensure default data exists (idempotent)
 	if err := notetypes.EnsureDefaultNoteTypes(ctx, querier, logger); err != nil {
 		db.Close()
-		return nil, nil, fmt.Errorf("failed to ensure default note types: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to ensure default note types: %w", err)
 	}
 	if err := collections.EnsureDefaultCollections(ctx, querier, logger); err != nil {
 		db.Close()
-		return nil, nil, fmt.Errorf("failed to ensure default collections: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to ensure default collections: %w", err)
 	}
 
 	// Note: titleindex initialization removed - See issue #37 and #43
@@ -138,11 +140,19 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 		registerConnectService(e, logger, svc.name, svc.path, svc.handler)
 	}
 
+	// Initialize event hub and SSE handler
+	eventHub := events.NewHub(logger)
+	sseHandler := events.NewSSEHandler(eventHub, logger)
+
+	// Register SSE endpoint for real-time events
+	e.GET("/events/stream", sseHandler.HandleStream)
+	logger.Info("Registered SSE endpoint", "path", "/events/stream")
+
 	// Note: Import service registration removed - See issue #37 for decision on restoration
 
 	logger.Info("✅ Mind service ready")
 
-	return db, notesService, nil
+	return db, notesService, eventHub, nil
 }
 
 // registerConnectService registers a Connect-RPC service handler with Echo.

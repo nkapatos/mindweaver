@@ -1,0 +1,57 @@
+// Copyright 2025 Mindweaver
+// SPDX-License-Identifier: Apache-2.0
+
+// Events V3 API - Server-Sent Events for real-time domain updates
+// Used by clients to receive push notifications of changes
+
+syntax = "proto3";
+
+package mind.v3;
+
+option go_package = "github.com/nkapatos/mindweaver/internal/mind/gen/v3;mindv3";
+
+import "google/protobuf/timestamp.proto";
+
+// Domain identifies the resource type that changed
+enum EventDomain {
+  EVENT_DOMAIN_UNSPECIFIED = 0;
+  EVENT_DOMAIN_NOTE = 1;
+  EVENT_DOMAIN_COLLECTION = 2;
+  EVENT_DOMAIN_TAG = 3;
+  EVENT_DOMAIN_LINK = 4;
+  EVENT_DOMAIN_NOTE_TYPE = 5;
+  EVENT_DOMAIN_TEMPLATE = 6;
+  EVENT_DOMAIN_NOTE_META = 7;
+  EVENT_DOMAIN_SYSTEM = 8;  // For system events (connected, shutdown, heartbeat)
+}
+
+// EventType identifies what happened to the resource
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_CREATED = 1;
+  EVENT_TYPE_UPDATED = 2;
+  EVENT_TYPE_DELETED = 3;
+  // System event types
+  EVENT_TYPE_CONNECTED = 10;   // Client successfully connected to stream
+  EVENT_TYPE_SHUTDOWN = 11;    // Server is shutting down gracefully
+  EVENT_TYPE_HEARTBEAT = 12;   // Keep-alive ping
+}
+
+// Event represents a domain change notification
+// Sent over SSE as JSON in the data field
+message Event {
+  // Monotonic event ID for ordering and potential resumption
+  int64 id = 1;
+
+  // Domain of the changed resource
+  EventDomain domain = 2;
+
+  // Type of change
+  EventType type = 3;
+
+  // ID of the affected entity (0 for system events)
+  int64 entity_id = 4;
+
+  // When the event occurred
+  google.protobuf.Timestamp timestamp = 5;
+}
