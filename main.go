@@ -16,6 +16,7 @@ import (
 	// brainadapters "github.com/nkapatos/mindweaver/internal/brain/adapters"
 	// brainbootstrap "github.com/nkapatos/mindweaver/internal/brain/bootstrap"
 	"github.com/nkapatos/mindweaver/internal/mind/bootstrap"
+	"github.com/nkapatos/mindweaver/internal/mind/events"
 	"github.com/nkapatos/mindweaver/internal/mind/notes"
 	"github.com/nkapatos/mindweaver/internal/mind/scheduler"
 	"github.com/nkapatos/mindweaver/shared/config"
@@ -112,14 +113,16 @@ func main() {
 
 	// Initialize Mind service if needed
 	var mindNotesService *notes.NotesService
+	var eventHub events.Hub
 	if enableMind {
-		db, notesSvc, err := bootstrap.Initialize(e, api, cfg.Mind.DBPath, logger)
+		db, notesSvc, hub, err := bootstrap.Initialize(e, api, cfg.Mind.DBPath, logger)
 		if err != nil {
 			logger.Error("Failed to initialize mind service", "error", err)
 			os.Exit(1)
 		}
 		notesDB = db
 		mindNotesService = notesSvc
+		eventHub = hub
 		defer func() {
 			if err := notesDB.Close(); err != nil {
 				logger.Error("Failed to close notes database", "error", err)
@@ -176,6 +179,12 @@ func main() {
 	go func() {
 		<-sigChan
 		logger.Info("Shutdown signal received, stopping services...")
+
+		// Close event hub (sends shutdown event to connected SSE clients)
+		if eventHub != nil {
+			logger.Info("Closing event hub...")
+			eventHub.Close()
+		}
 
 		// Checkpoint databases
 		logger.Info("Checkpointing databases...")
