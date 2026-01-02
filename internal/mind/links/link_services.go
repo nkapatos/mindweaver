@@ -6,6 +6,8 @@ import (
 	"errors"
 	"log/slog"
 
+	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/internal/mind/events"
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
 	"github.com/nkapatos/mindweaver/shared/middleware"
 	"github.com/nkapatos/mindweaver/shared/utils"
@@ -16,8 +18,9 @@ import (
 // Note-specific link operations (creating/updating links when notes change)
 // should be handled by the notes service.
 type LinksService struct {
-	store  store.Querier
-	logger *slog.Logger
+	store    store.Querier
+	logger   *slog.Logger
+	eventHub events.Hub
 }
 
 // NewLinksService creates a new LinksService.
@@ -26,6 +29,12 @@ func NewLinksService(store store.Querier, logger *slog.Logger, serviceName strin
 		store:  store,
 		logger: logger.With("service", serviceName),
 	}
+}
+
+// SetEventHub sets the event hub for SSE notifications.
+func (s *LinksService) SetEventHub(hub events.Hub) {
+	s.eventHub = hub
+	s.logger.Info("event hub enabled for links service")
 }
 
 // ============================================================================
@@ -40,6 +49,11 @@ func (s *LinksService) CreateLink(ctx context.Context, params store.CreateLinkPa
 		return 0, err
 	}
 	s.logger.Info("link created", "id", id, "src_id", params.SrcID, "dest_id", params.DestID, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_LINK, mindv3.EventType_EVENT_TYPE_CREATED, id)
+	}
+
 	return id, nil
 }
 
@@ -51,6 +65,11 @@ func (s *LinksService) CreateUnresolvedLink(ctx context.Context, params store.Cr
 		return 0, err
 	}
 	s.logger.Info("unresolved link created", "id", id, "src_id", params.SrcID, "dest_title", params.DestTitle, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_LINK, mindv3.EventType_EVENT_TYPE_CREATED, id)
+	}
+
 	return id, nil
 }
 
@@ -86,6 +105,12 @@ func (s *LinksService) DeleteLinksBySrcID(ctx context.Context, srcID int64) erro
 		return err
 	}
 	s.logger.Info("links deleted by src_id", "src_id", srcID, "request_id", middleware.GetRequestID(ctx))
+
+	// Note: We publish with srcID as entity_id since we're deleting all links from a source
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_LINK, mindv3.EventType_EVENT_TYPE_DELETED, srcID)
+	}
+
 	return nil
 }
 
@@ -165,6 +190,11 @@ func (s *LinksService) ResolveLink(ctx context.Context, params store.ResolveLink
 		return err
 	}
 	s.logger.Info("link resolved", "link_id", params.ID, "dest_id", params.DestID, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_LINK, mindv3.EventType_EVENT_TYPE_UPDATED, params.ID)
+	}
+
 	return nil
 }
 
@@ -176,6 +206,11 @@ func (s *LinksService) MarkLinkBroken(ctx context.Context, id int64) error {
 		return err
 	}
 	s.logger.Info("link marked as broken", "link_id", id, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_LINK, mindv3.EventType_EVENT_TYPE_UPDATED, id)
+	}
+
 	return nil
 }
 

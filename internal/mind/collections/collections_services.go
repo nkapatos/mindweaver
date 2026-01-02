@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/internal/mind/events"
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
 	sharederrors "github.com/nkapatos/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/shared/middleware"
@@ -18,6 +20,7 @@ type CollectionsService struct {
 	store      store.Querier
 	cteQuerier *sqlcext.CTEQuerier
 	logger     *slog.Logger
+	eventHub   events.Hub
 }
 
 func NewCollectionsService(db sqlcext.DB, store store.Querier, logger *slog.Logger, serviceName string) *CollectionsService {
@@ -26,6 +29,12 @@ func NewCollectionsService(db sqlcext.DB, store store.Querier, logger *slog.Logg
 		cteQuerier: sqlcext.NewCTEQuerier(db),
 		logger:     logger.With("service", serviceName),
 	}
+}
+
+// SetEventHub sets the event hub for SSE notifications.
+func (s *CollectionsService) SetEventHub(hub events.Hub) {
+	s.eventHub = hub
+	s.logger.Info("event hub enabled for collections service")
 }
 
 // ListCollections returns all collections.
@@ -104,6 +113,11 @@ func (s *CollectionsService) CreateCollection(ctx context.Context, params store.
 	}
 
 	s.logger.Info("collection created", "id", id, "path", params.Path, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_COLLECTION, mindv3.EventType_EVENT_TYPE_CREATED, id)
+	}
+
 	return collection, nil
 }
 
@@ -121,6 +135,11 @@ func (s *CollectionsService) UpdateCollection(ctx context.Context, params store.
 		return err
 	}
 	s.logger.Info("collection updated", "id", params.ID, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_COLLECTION, mindv3.EventType_EVENT_TYPE_UPDATED, params.ID)
+	}
+
 	return nil
 }
 
@@ -153,6 +172,11 @@ func (s *CollectionsService) DeleteCollection(ctx context.Context, id int64) err
 		return err
 	}
 	s.logger.Info("collection deleted", "id", id, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_COLLECTION, mindv3.EventType_EVENT_TYPE_DELETED, id)
+	}
+
 	return nil
 }
 

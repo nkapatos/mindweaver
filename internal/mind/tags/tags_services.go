@@ -6,6 +6,8 @@ import (
 	"errors"
 	"log/slog"
 
+	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/internal/mind/events"
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
 	sharedErrors "github.com/nkapatos/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/shared/middleware"
@@ -13,8 +15,9 @@ import (
 
 // TagsService provides business logic for tags (CRUD + search only).
 type TagsService struct {
-	store  store.Querier
-	logger *slog.Logger
+	store    store.Querier
+	logger   *slog.Logger
+	eventHub events.Hub
 }
 
 // NewTagsService creates a new TagsService.
@@ -23,6 +26,12 @@ func NewTagsService(store store.Querier, logger *slog.Logger, serviceName string
 		store:  store,
 		logger: logger.With("service", serviceName),
 	}
+}
+
+// SetEventHub sets the event hub for SSE notifications.
+func (s *TagsService) SetEventHub(hub events.Hub) {
+	s.eventHub = hub
+	s.logger.Info("event hub enabled for tags service")
 }
 
 // ListTags returns all tags.
@@ -79,6 +88,11 @@ func (s *TagsService) CreateTag(ctx context.Context, name string) (int64, error)
 		return 0, err
 	}
 	s.logger.Info("tag created", "id", id, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_TAG, mindv3.EventType_EVENT_TYPE_CREATED, id)
+	}
+
 	return id, nil
 }
 
@@ -97,6 +111,11 @@ func (s *TagsService) UpdateTag(ctx context.Context, id int64, name string) erro
 		return err
 	}
 	s.logger.Info("tag updated", "id", id, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_TAG, mindv3.EventType_EVENT_TYPE_UPDATED, id)
+	}
+
 	return nil
 }
 
@@ -111,6 +130,11 @@ func (s *TagsService) DeleteTag(ctx context.Context, id int64) error {
 		return err
 	}
 	s.logger.Info("tag deleted", "id", id, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_TAG, mindv3.EventType_EVENT_TYPE_DELETED, id)
+	}
+
 	return nil
 }
 

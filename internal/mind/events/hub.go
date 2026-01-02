@@ -4,19 +4,22 @@
 package events
 
 import (
+	"context"
 	"log/slog"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/shared/middleware"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // Hub is the interface for publishing and subscribing to domain events.
 type Hub interface {
 	// Publish sends an event to all subscribers. Non-blocking, fire-and-forget.
-	Publish(domain mindv3.EventDomain, eventType mindv3.EventType, entityID int64)
+	// The context is used to extract the origin session ID from the request.
+	Publish(ctx context.Context, domain mindv3.EventDomain, eventType mindv3.EventType, entityID int64)
 
 	// Subscribe returns a channel that receives events. The channel is closed
 	// when Unsubscribe is called or the hub is closed.
@@ -48,13 +51,15 @@ func NewHub(logger *slog.Logger) Hub {
 
 // Publish sends an event to all subscribers.
 // Non-blocking: if a subscriber's channel is full, the event is dropped for that subscriber.
-func (h *hub) Publish(domain mindv3.EventDomain, eventType mindv3.EventType, entityID int64) {
+// Extracts session ID from context to include as origin_session_id in the event.
+func (h *hub) Publish(ctx context.Context, domain mindv3.EventDomain, eventType mindv3.EventType, entityID int64) {
 	event := &mindv3.Event{
-		Id:        h.eventID.Add(1),
-		Domain:    domain,
-		Type:      eventType,
-		EntityId:  entityID,
-		Timestamp: timestamppb.New(time.Now()),
+		Id:              h.eventID.Add(1),
+		Domain:          domain,
+		Type:            eventType,
+		EntityId:        entityID,
+		Timestamp:       timestamppb.New(time.Now()),
+		OriginSessionId: middleware.GetSessionID(ctx),
 	}
 
 	h.mu.RLock()

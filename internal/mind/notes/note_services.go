@@ -158,7 +158,7 @@ func (s *NotesService) CreateNote(ctx context.Context, params store.CreateNotePa
 	}
 
 	if s.eventHub != nil {
-		s.eventHub.Publish(mindv3.EventDomain_EVENT_DOMAIN_NOTE, mindv3.EventType_EVENT_TYPE_CREATED, id)
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_NOTE, mindv3.EventType_EVENT_TYPE_CREATED, id)
 	}
 
 	return id, nil
@@ -275,7 +275,7 @@ func (s *NotesService) UpdateNote(ctx context.Context, params store.UpdateNoteBy
 	}
 
 	if s.eventHub != nil {
-		s.eventHub.Publish(mindv3.EventDomain_EVENT_DOMAIN_NOTE, mindv3.EventType_EVENT_TYPE_UPDATED, params.ID)
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_NOTE, mindv3.EventType_EVENT_TYPE_UPDATED, params.ID)
 	}
 
 	return nil
@@ -296,7 +296,7 @@ func (s *NotesService) DeleteNote(ctx context.Context, id int64) error {
 	}
 
 	if s.eventHub != nil {
-		s.eventHub.Publish(mindv3.EventDomain_EVENT_DOMAIN_NOTE, mindv3.EventType_EVENT_TYPE_DELETED, id)
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_NOTE, mindv3.EventType_EVENT_TYPE_DELETED, id)
 	}
 
 	return nil

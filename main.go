@@ -89,6 +89,7 @@ func main() {
 	e.Use(echomiddleware.Recover())
 	e.Use(mwmiddleware.ErrorHandlerMiddleware)
 	e.Use(mwmiddleware.RequestIDMiddleware)
+	e.Use(mwmiddleware.SessionIDMiddleware)
 
 	// Health check endpoint
 	e.GET("/health", func(c echo.Context) error {

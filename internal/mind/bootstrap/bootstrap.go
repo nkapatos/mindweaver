@@ -104,6 +104,14 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 	collectionsService := collections.NewCollectionsService(db, querier, logger, "Collections Service")
 	searchService := search.NewSearchService(db, querier, logger)
 
+	// Wire event hub for SSE notifications on all services
+	noteMetaService.SetEventHub(eventHub)
+	tagService.SetEventHub(eventHub)
+	templateService.SetEventHub(eventHub)
+	linksService.SetEventHub(eventHub)
+	noteTypesService.SetEventHub(eventHub)
+	collectionsService.SetEventHub(eventHub)
+
 	// Initialize handlers
 	tagsHandler := tags.NewTagsHandler(tagService)
 	templatesHandler := templates.NewTemplatesHandler(templateService)
