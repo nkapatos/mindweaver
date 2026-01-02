@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.1.7](https://github.com/nkapatos/mindweaver/compare/v0.1.6...v0.1.7) (2026-01-02)
+
+
+### Features
+
+* **events:** add session tracking and wire all services to EventHub ([842cfb7](https://github.com/nkapatos/mindweaver/commit/842cfb7822b2f6471833f7d9c2fe91893cf572de))
+* **events:** add SSE endpoint with EventHub for real-time updates ([9307ca7](https://github.com/nkapatos/mindweaver/commit/9307ca7a98565cf159f06011f06d9c946c1126ad))
+* **events:** wire EventHub into NotesService for SSE notifications ([5367c50](https://github.com/nkapatos/mindweaver/commit/5367c507247256a1430c05d4492cc8bdfa573d4d))
+* **notes:** add UpdateNote RPC for partial updates (PATCH) ([9b95fce](https://github.com/nkapatos/mindweaver/commit/9b95fce2be9f52285d7562c431ec988e63892dad))
+
+
+### Bug Fixes
+
+* update goreleaser config to remove deprecation warnings ([bfe88f7](https://github.com/nkapatos/mindweaver/commit/bfe88f71da2bfe7f6a2b4caa98e2523609163e35))
+
+
+### Maintenance
+
+* consolidate github config files under .github directory ([b3cbabb](https://github.com/nkapatos/mindweaver/commit/b3cbabb2fed04c3630314737c3d0d123bbdb53e3))
+* remove unused REST search implementation ([e3ab281](https://github.com/nkapatos/mindweaver/commit/e3ab281b80a50d4ad6eb786992e20c1090e33a31))
+
+
+### CI/CD
+
+* add path filters to skip CI for non-code changes ([8c4d2ed](https://github.com/nkapatos/mindweaver/commit/8c4d2ed7776dda9d561e3bcaada1b6762ee6642c))
+
 ## [0.1.6](https://github.com/nkapatos/mindweaver/compare/v0.1.5...v0.1.6) (2025-12-27)
 
 
