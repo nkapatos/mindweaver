@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"strings"
 
+	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/internal/mind/events"
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
 	sharedErrors "github.com/nkapatos/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/shared/middleware"
@@ -15,8 +17,9 @@ import (
 
 // NoteTypesService provides business logic for note_types (CRUD only).
 type NoteTypesService struct {
-	store  store.Querier
-	logger *slog.Logger
+	store    store.Querier
+	logger   *slog.Logger
+	eventHub events.Hub
 }
 
 // NewNoteTypesService creates a new NoteTypesService.
@@ -25,6 +28,12 @@ func NewNoteTypesService(store store.Querier, logger *slog.Logger, serviceName s
 		store:  store,
 		logger: logger.With("service", serviceName),
 	}
+}
+
+// SetEventHub sets the event hub for SSE notifications.
+func (s *NoteTypesService) SetEventHub(hub events.Hub) {
+	s.eventHub = hub
+	s.logger.Info("event hub enabled for note types service")
 }
 
 // ListNoteTypes returns all note_types.
@@ -100,6 +109,11 @@ func (s *NoteTypesService) CreateNoteType(ctx context.Context, params store.Crea
 		return 0, err
 	}
 	s.logger.Info("note_type created", "id", id, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_NOTE_TYPE, mindv3.EventType_EVENT_TYPE_CREATED, id)
+	}
+
 	return id, nil
 }
 
@@ -135,6 +149,11 @@ func (s *NoteTypesService) UpdateNoteType(ctx context.Context, params store.Upda
 		return err
 	}
 	s.logger.Info("note_type updated", "id", params.ID, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_NOTE_TYPE, mindv3.EventType_EVENT_TYPE_UPDATED, params.ID)
+	}
+
 	return nil
 }
 
@@ -163,6 +182,11 @@ func (s *NoteTypesService) DeleteNoteType(ctx context.Context, id int64) error {
 		return err
 	}
 	s.logger.Info("note_type deleted", "id", id, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_NOTE_TYPE, mindv3.EventType_EVENT_TYPE_DELETED, id)
+	}
+
 	return nil
 }
 

@@ -5,15 +5,18 @@ import (
 	"database/sql"
 	"log/slog"
 
+	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/internal/mind/events"
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
 	"github.com/nkapatos/mindweaver/shared/middleware"
 )
 
 // NoteMetaService provides business logic for note metadata operations.
 type NoteMetaService struct {
-	store  store.Querier
-	db     *sql.DB
-	logger *slog.Logger
+	store    store.Querier
+	db       *sql.DB
+	logger   *slog.Logger
+	eventHub events.Hub
 }
 
 // NewNoteMetaService creates a new NoteMetaService.
@@ -23,6 +26,12 @@ func NewNoteMetaService(store store.Querier, db *sql.DB, logger *slog.Logger, se
 		db:     db,
 		logger: logger.With("service", serviceName),
 	}
+}
+
+// SetEventHub sets the event hub for publishing domain events.
+func (s *NoteMetaService) SetEventHub(hub events.Hub) {
+	s.eventHub = hub
+	s.logger.Info("event hub enabled for note meta service")
 }
 
 // GetNoteMetaByNoteID retrieves all metadata for a given note.
@@ -42,6 +51,11 @@ func (s *NoteMetaService) CreateNoteMeta(ctx context.Context, params store.Creat
 		s.logger.Error("failed to create note metadata", "note_id", params.NoteID, "key", params.Key, "err", err, "request_id", middleware.GetRequestID(ctx))
 		return 0, err
 	}
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_NOTE_META, mindv3.EventType_EVENT_TYPE_CREATED, id)
+	}
+
 	return id, nil
 }
 
@@ -50,6 +64,12 @@ func (s *NoteMetaService) DeleteNoteMetaByNoteID(ctx context.Context, noteID int
 	err := s.store.DeleteNoteMetaByNoteID(ctx, noteID)
 	if err != nil {
 		s.logger.Error("failed to delete note metadata", "note_id", noteID, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return err
 	}
-	return err
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_NOTE_META, mindv3.EventType_EVENT_TYPE_DELETED, noteID)
+	}
+
+	return nil
 }

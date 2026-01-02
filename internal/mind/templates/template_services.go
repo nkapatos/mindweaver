@@ -6,6 +6,8 @@ import (
 	"errors"
 	"log/slog"
 
+	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+	"github.com/nkapatos/mindweaver/internal/mind/events"
 	"github.com/nkapatos/mindweaver/internal/mind/gen/store"
 	sharedErrors "github.com/nkapatos/mindweaver/shared/errors"
 	"github.com/nkapatos/mindweaver/shared/middleware"
@@ -13,8 +15,9 @@ import (
 
 // TemplatesService provides business logic for templates (CRUD + search only).
 type TemplatesService struct {
-	store  store.Querier
-	logger *slog.Logger
+	store    store.Querier
+	logger   *slog.Logger
+	eventHub events.Hub
 }
 
 // NewTemplatesService creates a new TemplatesService.
@@ -23,6 +26,12 @@ func NewTemplatesService(store store.Querier, logger *slog.Logger, serviceName s
 		store:  store,
 		logger: logger.With("service", serviceName),
 	}
+}
+
+// SetEventHub sets the event hub for SSE notifications.
+func (s *TemplatesService) SetEventHub(hub events.Hub) {
+	s.eventHub = hub
+	s.logger.Info("event hub enabled for templates service")
 }
 
 // ListTemplates returns all templates.
@@ -79,6 +88,11 @@ func (s *TemplatesService) CreateTemplate(ctx context.Context, params store.Crea
 		return 0, err
 	}
 	s.logger.Info("template created", "id", id, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_TEMPLATE, mindv3.EventType_EVENT_TYPE_CREATED, id)
+	}
+
 	return id, nil
 }
 
@@ -96,6 +110,11 @@ func (s *TemplatesService) UpdateTemplate(ctx context.Context, params store.Upda
 		return err
 	}
 	s.logger.Info("template updated", "id", params.ID, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_TEMPLATE, mindv3.EventType_EVENT_TYPE_UPDATED, params.ID)
+	}
+
 	return nil
 }
 
@@ -110,6 +129,11 @@ func (s *TemplatesService) DeleteTemplate(ctx context.Context, id int64) error {
 		return err
 	}
 	s.logger.Info("template deleted", "id", id, "request_id", middleware.GetRequestID(ctx))
+
+	if s.eventHub != nil {
+		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_TEMPLATE, mindv3.EventType_EVENT_TYPE_DELETED, id)
+	}
+
 	return nil
 }
 

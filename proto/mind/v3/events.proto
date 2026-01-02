@@ -54,4 +54,13 @@ message Event {
 
   // When the event occurred
   google.protobuf.Timestamp timestamp = 5;
+
+  // Session ID of the client that triggered this event.
+  // Empty if the event was not triggered by a client request (e.g., system events).
+  // Clients can use this to filter out events they triggered themselves.
+  string origin_session_id = 6;
+
+  // Session ID assigned to a client on SSE connect (only set in connected events).
+  // Clients should store this and include it as X-Session-Id header in subsequent requests.
+  string session_id = 7;
 }

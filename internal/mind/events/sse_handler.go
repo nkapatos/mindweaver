@@ -5,10 +5,19 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
 	mindv3 "github.com/nkapatos/mindweaver/gen/proto/mind/v3"
+)
+
+const (
+	// heartbeatInterval is the interval at which the server sends SSE comments
+	// to detect dead client connections. If the write fails, the connection is
+	// considered dead and will be cleaned up.
+	heartbeatInterval = 60 * time.Second
 )
 
 // SSEHandler handles Server-Sent Events connections for real-time updates.
@@ -28,10 +37,11 @@ func NewSSEHandler(hub Hub, logger *slog.Logger) *SSEHandler {
 // sseEvent is the JSON payload sent in SSE data field.
 // We use a simpler struct than the proto to avoid proto JSON quirks.
 type sseEvent struct {
-	Type     string `json:"type"`
-	EntityID int64  `json:"entity_id,omitempty"`
-	// Timestamp as Unix milliseconds for easy client parsing
-	Timestamp int64 `json:"ts"`
+	Type            string `json:"type"`
+	EntityID        int64  `json:"entity_id,omitempty"`
+	Timestamp       int64  `json:"ts"`
+	OriginSessionID string `json:"origin_session_id,omitempty"` // Session that triggered this event
+	SessionID       string `json:"session_id,omitempty"`        // Assigned session ID (only in connected event)
 }
 
 // domainToEventName maps proto domain enum to SSE event name.
@@ -79,25 +89,29 @@ func eventTypeToString(t mindv3.EventType) string {
 }
 
 // HandleStream handles GET /events/stream - the SSE endpoint.
+// Generates a unique session ID for this connection that clients should
+// include in subsequent requests via X-Session-Id header.
 func (h *SSEHandler) HandleStream(c echo.Context) error {
-	h.logger.Info("new SSE connection", "remote_addr", c.RealIP())
+	// Generate session ID for this connection
+	sessionID := fmt.Sprintf("sess_%s", uuid.NewString())
+	h.logger.Info("new SSE connection", "remote_addr", c.RealIP(), "session_id", sessionID)
 
 	// Set SSE headers
 	w := c.Response()
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("X-Accel-Buffering", "no") // Disable nginx buffering
 
 	// Subscribe to events
 	eventCh := h.hub.Subscribe()
 	defer h.hub.Unsubscribe(eventCh)
 
-	// Send connected event
+	// Send connected event with assigned session ID
 	if err := h.writeEvent(w, &mindv3.Event{
-		Id:     0,
-		Domain: mindv3.EventDomain_EVENT_DOMAIN_SYSTEM,
-		Type:   mindv3.EventType_EVENT_TYPE_CONNECTED,
+		Id:        0,
+		Domain:    mindv3.EventDomain_EVENT_DOMAIN_SYSTEM,
+		Type:      mindv3.EventType_EVENT_TYPE_CONNECTED,
+		SessionId: sessionID,
 	}); err != nil {
 		return err
 	}
@@ -106,21 +120,34 @@ func (h *SSEHandler) HandleStream(c echo.Context) error {
 	// Get request context for cancellation
 	ctx := c.Request().Context()
 
+	// Start heartbeat ticker to detect dead connections
+	heartbeat := time.NewTicker(heartbeatInterval)
+	defer heartbeat.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
-			h.logger.Info("SSE connection closed by client", "remote_addr", c.RealIP())
+			h.logger.Info("SSE connection closed by client", "remote_addr", c.RealIP(), "session_id", sessionID)
 			return nil
+
+		case <-heartbeat.C:
+			// Send SSE comment to detect dead connections
+			// If write fails, the connection is dead and we should clean up
+			if _, err := fmt.Fprint(w, ": heartbeat\n\n"); err != nil {
+				h.logger.Debug("heartbeat failed, client disconnected", "remote_addr", c.RealIP(), "session_id", sessionID)
+				return nil // defer Unsubscribe() will clean up
+			}
+			w.Flush()
 
 		case event, ok := <-eventCh:
 			if !ok {
 				// Hub closed the channel (shutdown)
-				h.logger.Info("SSE connection closed by hub", "remote_addr", c.RealIP())
+				h.logger.Info("SSE connection closed by hub", "remote_addr", c.RealIP(), "session_id", sessionID)
 				return nil
 			}
 
 			if err := h.writeEvent(w, event); err != nil {
-				h.logger.Error("failed to write SSE event", "error", err)
+				h.logger.Error("failed to write SSE event", "error", err, "session_id", sessionID)
 				return err
 			}
 			w.Flush()
@@ -133,8 +160,10 @@ func (h *SSEHandler) writeEvent(w http.ResponseWriter, event *mindv3.Event) erro
 	eventName := domainToEventName(event.Domain)
 
 	data := sseEvent{
-		Type:     eventTypeToString(event.Type),
-		EntityID: event.EntityId,
+		Type:            eventTypeToString(event.Type),
+		EntityID:        event.EntityId,
+		OriginSessionID: event.OriginSessionId,
+		SessionID:       event.SessionId,
 	}
 	if event.Timestamp != nil {
 		data.Timestamp = event.Timestamp.AsTime().UnixMilli()
