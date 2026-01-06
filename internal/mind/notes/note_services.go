@@ -203,6 +203,7 @@ func (s *NotesService) NewNoteCreation(ctx context.Context, collectionID, templa
 
 // UpdateNote updates an existing note and re-extracts all derived data.
 // Replaces all links, tags, and metadata from the new note body.
+// Returns ErrStaleNote if the version doesn't match (optimistic locking failure).
 func (s *NotesService) UpdateNote(ctx context.Context, params store.UpdateNoteByIDParams) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -229,13 +230,24 @@ func (s *NotesService) UpdateNote(ctx context.Context, params store.UpdateNoteBy
 		return delErr
 	}
 
-	err = txStore.UpdateNoteByID(ctx, params)
+	result, err := txStore.UpdateNoteByID(ctx, params)
 	if err != nil {
 		if sharederrors.IsUniqueConstraintError(err) {
 			return ErrNoteAlreadyExists
 		}
 		s.logger.Error("failed to update note", "params", params, "err", err, "request_id", middleware.GetRequestID(ctx))
 		return err
+	}
+
+	// Check for version mismatch (optimistic locking failure)
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		s.logger.Error("failed to get rows affected", "note_id", params.ID, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return err
+	}
+	if rowsAffected == 0 {
+		s.logger.Warn("stale note detected", "note_id", params.ID, "version", params.Version, "request_id", middleware.GetRequestID(ctx))
+		return ErrStaleNote
 	}
 
 	// Re-extract derived data from updated body
@@ -276,6 +288,41 @@ func (s *NotesService) UpdateNote(ctx context.Context, params store.UpdateNoteBy
 
 	if s.eventHub != nil {
 		s.eventHub.Publish(ctx, mindv3.EventDomain_EVENT_DOMAIN_NOTE, mindv3.EventType_EVENT_TYPE_UPDATED, params.ID)
+	}
+
+	return nil
+}
+
+// UpdateNoteMetadata updates metadata fields only (title, description, collection_id, etc.)
+// Does NOT update body, version, or re-extract derived data (links, tags, metadata).
+// Publishes a relocated event if title or collection_id changed.
+func (s *NotesService) UpdateNoteMetadata(ctx context.Context, params store.UpdateNoteMetadataByIDParams, current store.Note) error {
+	err := s.store.UpdateNoteMetadataByID(ctx, params)
+	if err != nil {
+		if sharederrors.IsUniqueConstraintError(err) {
+			return ErrNoteAlreadyExists
+		}
+		s.logger.Error("failed to update note metadata", "params", params, "err", err, "request_id", middleware.GetRequestID(ctx))
+		return err
+	}
+
+	s.logger.Info("note metadata updated", "id", params.ID, "request_id", middleware.GetRequestID(ctx))
+
+	// Detect relocation (title or collection_id changed)
+	titleChanged := params.Title != current.Title
+	collectionChanged := params.CollectionID != current.CollectionID
+
+	if s.eventHub != nil && (titleChanged || collectionChanged) {
+		payload := &mindv3.RelocatedPayload{}
+		if titleChanged {
+			payload.OldTitle = &current.Title
+			payload.NewTitle = &params.Title
+		}
+		if collectionChanged {
+			payload.OldCollectionId = &current.CollectionID
+			payload.NewCollectionId = &params.CollectionID
+		}
+		s.eventHub.PublishRelocated(ctx, params.ID, payload)
 	}
 
 	return nil

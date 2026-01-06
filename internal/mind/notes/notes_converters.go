@@ -136,6 +136,43 @@ func ProtoUpdateNoteToStore(req *mindv3.UpdateNoteRequest, current store.Note) s
 	return params
 }
 
+// ProtoUpdateNoteMetadataToStore merges UpdateNoteRequest metadata fields with current note.
+// Only metadata fields (title, description, note_type_id, collection_id, is_template) are updated.
+// Body is not included - this is for metadata-only updates that skip version checks.
+func ProtoUpdateNoteMetadataToStore(req *mindv3.UpdateNoteRequest, current store.Note) store.UpdateNoteMetadataByIDParams {
+	params := store.UpdateNoteMetadataByIDParams{
+		ID:           req.Id,
+		Title:        current.Title,
+		Description:  current.Description,
+		NoteTypeID:   current.NoteTypeID,
+		IsTemplate:   current.IsTemplate,
+		CollectionID: current.CollectionID,
+	}
+
+	// Merge each field: use request value if set, otherwise keep current
+	if req.Title != nil {
+		params.Title = *req.Title
+	}
+
+	if req.Description != nil {
+		params.Description = utils.NullStringFrom(*req.Description, true)
+	}
+
+	if req.NoteTypeId != nil {
+		params.NoteTypeID = utils.NullInt64(*req.NoteTypeId)
+	}
+
+	if req.CollectionId != nil {
+		params.CollectionID = *req.CollectionId
+	}
+
+	if req.IsTemplate != nil {
+		params.IsTemplate = utils.NullBool(*req.IsTemplate)
+	}
+
+	return params
+}
+
 // ProtoNewNoteToParams extracts collection_id and template_id from NewNoteRequest.
 // Returns defaulted values: collection_id defaults to 1, template_id defaults to 1.
 func ProtoNewNoteToParams(req *mindv3.NewNoteRequest) (collectionID, templateID int64) {

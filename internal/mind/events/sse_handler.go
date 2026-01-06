@@ -42,6 +42,11 @@ type sseEvent struct {
 	Timestamp       int64  `json:"ts"`
 	OriginSessionID string `json:"origin_session_id,omitempty"` // Session that triggered this event
 	SessionID       string `json:"session_id,omitempty"`        // Assigned session ID (only in connected event)
+	// Relocated event payload fields (only set for relocated events)
+	OldTitle        *string `json:"old_title,omitempty"`
+	NewTitle        *string `json:"new_title,omitempty"`
+	OldCollectionID *int64  `json:"old_collection_id,omitempty"`
+	NewCollectionID *int64  `json:"new_collection_id,omitempty"`
 }
 
 // domainToEventName maps proto domain enum to SSE event name.
@@ -77,6 +82,8 @@ func eventTypeToString(t mindv3.EventType) string {
 		return "updated"
 	case mindv3.EventType_EVENT_TYPE_DELETED:
 		return "deleted"
+	case mindv3.EventType_EVENT_TYPE_RELOCATED:
+		return "relocated"
 	case mindv3.EventType_EVENT_TYPE_CONNECTED:
 		return "connected"
 	case mindv3.EventType_EVENT_TYPE_SHUTDOWN:
@@ -167,6 +174,14 @@ func (h *SSEHandler) writeEvent(w http.ResponseWriter, event *mindv3.Event) erro
 	}
 	if event.Timestamp != nil {
 		data.Timestamp = event.Timestamp.AsTime().UnixMilli()
+	}
+
+	// Populate relocated payload if present
+	if relocated := event.GetRelocated(); relocated != nil {
+		data.OldTitle = relocated.OldTitle
+		data.NewTitle = relocated.NewTitle
+		data.OldCollectionID = relocated.OldCollectionId
+		data.NewCollectionID = relocated.NewCollectionId
 	}
 
 	jsonData, err := json.Marshal(data)

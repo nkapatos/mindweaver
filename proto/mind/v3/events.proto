@@ -31,6 +31,7 @@ enum EventType {
   EVENT_TYPE_CREATED = 1;
   EVENT_TYPE_UPDATED = 2;
   EVENT_TYPE_DELETED = 3;
+  EVENT_TYPE_RELOCATED = 4;   // Note title or collection changed (affects path)
   // System event types
   EVENT_TYPE_CONNECTED = 10;   // Client successfully connected to stream
   EVENT_TYPE_SHUTDOWN = 11;    // Server is shutting down gracefully
@@ -63,4 +64,21 @@ message Event {
   // Session ID assigned to a client on SSE connect (only set in connected events).
   // Clients should store this and include it as X-Session-Id header in subsequent requests.
   string session_id = 7;
+
+  // Relocated event payload (only set for EVENT_TYPE_RELOCATED)
+  optional RelocatedPayload relocated = 8;
+}
+
+// RelocatedPayload contains details about a note relocation event.
+// Sent when a note's title or collection_id changes, affecting its path.
+// Only changed fields are populated.
+message RelocatedPayload {
+  // Previous title (only set if title changed)
+  optional string old_title = 1;
+  // New title (only set if title changed)
+  optional string new_title = 2;
+  // Previous collection ID (only set if collection changed)
+  optional int64 old_collection_id = 3;
+  // New collection ID (only set if collection changed)
+  optional int64 new_collection_id = 4;
 }

@@ -137,37 +137,59 @@ func (h *NotesHandler) UpdateNote(
 		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to get note", err)
 	}
 
-	// Require If-Match header for optimistic locking
-	ifMatch := req.Header().Get("If-Match")
-	if ifMatch == "" {
-		return nil, apierrors.NewFailedPreconditionError(apierrors.MindDomain, "ETAG_REQUIRED", map[string]string{
-			"header": "If-Match",
-			"reason": "If-Match header with ETag is required for PATCH operations",
-		})
-	}
-
-	currentETag := utils.ComputeHashedETag(current.Version)
-	if ifMatch != currentETag {
-		metadata := map[string]string{
-			"provided_etag": ifMatch,
-			"current_etag":  currentETag,
-			"header":        "If-Match",
+	// Route based on whether body is being updated
+	if req.Msg.Body != nil {
+		// Body update path: require ETag, use UpdateNote (increments version)
+		ifMatch := req.Header().Get("If-Match")
+		if ifMatch == "" {
+			return nil, apierrors.NewFailedPreconditionError(apierrors.MindDomain, "ETAG_REQUIRED", map[string]string{
+				"header": "If-Match",
+				"reason": "If-Match header with ETag is required when updating note body",
+			})
 		}
-		return nil, apierrors.NewFailedPreconditionError(apierrors.MindDomain, "ETAG_MISMATCH", metadata)
-	}
 
-	// Merge request fields with current note (PATCH semantics)
-	params := ProtoUpdateNoteToStore(req.Msg, current)
+		currentETag := utils.ComputeHashedETag(current.Version)
+		if ifMatch != currentETag {
+			metadata := map[string]string{
+				"provided_etag": ifMatch,
+				"current_etag":  currentETag,
+				"header":        "If-Match",
+			}
+			return nil, apierrors.NewFailedPreconditionError(apierrors.MindDomain, "ETAG_MISMATCH", metadata)
+		}
 
-	err = h.service.UpdateNote(ctx, params)
-	if err != nil {
-		if errors.Is(err, ErrNoteAlreadyExists) {
-			return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "notes", "title", *req.Msg.Title)
+		// Merge request fields with current note (PATCH semantics)
+		params := ProtoUpdateNoteToStore(req.Msg, current)
+
+		err = h.service.UpdateNote(ctx, params)
+		if err != nil {
+			if errors.Is(err, ErrNoteAlreadyExists) {
+				return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "notes", "title", *req.Msg.Title)
+			}
+			if errors.Is(err, ErrStaleNote) {
+				return nil, apierrors.NewFailedPreconditionError(apierrors.MindDomain, "STALE_NOTE", map[string]string{
+					"reason": "note was modified by another request",
+				})
+			}
+			if apierrors.IsForeignKeyConstraintError(err) {
+				return nil, apierrors.NewInvalidArgumentError("collection_id or note_type_id", "referenced resource does not exist")
+			}
+			return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to update note", err)
 		}
-		if apierrors.IsForeignKeyConstraintError(err) {
-			return nil, apierrors.NewInvalidArgumentError("collection_id or note_type_id", "referenced resource does not exist")
+	} else {
+		// Metadata-only update path: no ETag required, use UpdateNoteMetadata (no version change)
+		params := ProtoUpdateNoteMetadataToStore(req.Msg, current)
+
+		err = h.service.UpdateNoteMetadata(ctx, params, current)
+		if err != nil {
+			if errors.Is(err, ErrNoteAlreadyExists) {
+				return nil, apierrors.NewAlreadyExistsError(apierrors.MindDomain, "notes", "title", *req.Msg.Title)
+			}
+			if apierrors.IsForeignKeyConstraintError(err) {
+				return nil, apierrors.NewInvalidArgumentError("collection_id or note_type_id", "referenced resource does not exist")
+			}
+			return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to update note metadata", err)
 		}
-		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to update note", err)
 	}
 
 	updated, err := h.service.GetNoteByID(ctx, req.Msg.Id)
