@@ -1,5 +1,5 @@
 -- Notes: CRUD and composite queries (SQLite/sqlc)
--- NOTE: uuid uses uuidv7; ordering by uuid
+-- NOTE: uuid uses UUID v4 for unique identification
 -- name: CreateNote :execlastid
 INSERT INTO notes (uuid, title, body, description, frontmatter, note_type_id, is_template, collection_id)
 VALUES (:uuid, :title, :body, :description, :frontmatter, :note_type_id, :is_template, :collection_id);
@@ -20,7 +20,9 @@ SELECT * FROM notes WHERE title = :title LIMIT 1;
 -- name: ListNotes :many
 SELECT * FROM notes ORDER BY uuid;
 
--- name: UpdateNoteByID :exec
+-- name: UpdateNoteByID :execresult
+-- Updates note including body content. Increments version for optimistic locking.
+-- Returns result to check rows affected (0 = version mismatch / stale note).
 UPDATE notes
 SET uuid = :uuid,
     title = :title,
@@ -32,7 +34,19 @@ SET uuid = :uuid,
     is_template = :is_template,
     collection_id = :collection_id,
     version = version + 1
-WHERE id = :id and version = :version;
+WHERE id = :id AND version = :version;
+
+-- name: UpdateNoteMetadataByID :exec
+-- Updates metadata fields only (title, description, collection_id, etc.)
+-- Does NOT increment version or check version - for non-body updates.
+UPDATE notes
+SET title = :title,
+    description = :description,
+    note_type_id = :note_type_id,
+    is_template = :is_template,
+    collection_id = :collection_id,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = :id;
 
 -- name: DeleteNoteByID :exec
 DELETE FROM notes WHERE id = :id;

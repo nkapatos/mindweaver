@@ -21,6 +21,10 @@ type Hub interface {
 	// The context is used to extract the origin session ID from the request.
 	Publish(ctx context.Context, domain mindv3.EventDomain, eventType mindv3.EventType, entityID int64)
 
+	// PublishRelocated sends a relocated event with payload. Non-blocking, fire-and-forget.
+	// Used when a note's title or collection_id changes, affecting its path.
+	PublishRelocated(ctx context.Context, entityID int64, payload *mindv3.RelocatedPayload)
+
 	// Subscribe returns a channel that receives events. The channel is closed
 	// when Unsubscribe is called or the hub is closed.
 	Subscribe() <-chan *mindv3.Event
@@ -62,6 +66,29 @@ func (h *hub) Publish(ctx context.Context, domain mindv3.EventDomain, eventType 
 		OriginSessionId: middleware.GetSessionID(ctx),
 	}
 
+	h.broadcast(event)
+}
+
+// PublishRelocated sends a relocated event with payload to all subscribers.
+// Non-blocking: if a subscriber's channel is full, the event is dropped for that subscriber.
+// Used when a note's title or collection_id changes, affecting its path.
+func (h *hub) PublishRelocated(ctx context.Context, entityID int64, payload *mindv3.RelocatedPayload) {
+	event := &mindv3.Event{
+		Id:              h.eventID.Add(1),
+		Domain:          mindv3.EventDomain_EVENT_DOMAIN_NOTE,
+		Type:            mindv3.EventType_EVENT_TYPE_RELOCATED,
+		EntityId:        entityID,
+		Timestamp:       timestamppb.New(time.Now()),
+		OriginSessionId: middleware.GetSessionID(ctx),
+		Relocated:       payload,
+	}
+
+	h.broadcast(event)
+}
+
+// broadcast sends an event to all subscribers.
+// Non-blocking: slow subscribers are dropped.
+func (h *hub) broadcast(event *mindv3.Event) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -77,8 +104,8 @@ func (h *hub) Publish(ctx context.Context, domain mindv3.EventDomain, eventType 
 			// subscriber too slow, drop event
 			h.logger.Warn("dropped event for slow subscriber",
 				"event_id", event.Id,
-				"domain", domain.String(),
-				"type", eventType.String(),
+				"domain", event.Domain.String(),
+				"type", event.Type.String(),
 			)
 		}
 	}

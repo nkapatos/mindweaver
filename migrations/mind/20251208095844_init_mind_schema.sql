@@ -50,7 +50,7 @@ UNIQUE (parent_id, name)
 -- ========================================
 CREATE TABLE notes (
 id INTEGER PRIMARY KEY AUTOINCREMENT,
-uuid TEXT NOT NULL UNIQUE,  -- UUIDv7 for sync and time-ordering
+uuid TEXT NOT NULL UNIQUE,  -- UUID v4 for unique identification
 title TEXT NOT NULL,
 -- Nullable: allows title-only notes (quick capture)
 body TEXT,
