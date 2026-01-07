@@ -42,6 +42,7 @@ type Config struct {
 
 // MindConfig configures the Mind service (PKM/Notes)
 type MindConfig struct {
+	Host   string // Host to bind to (localhost or 0.0.0.0)
 	Port   int
 	DBPath string
 }
@@ -75,6 +76,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("data_dir", "./data")
 
 	// Mind service defaults
+	v.SetDefault("mind.host", "0.0.0.0") // Bind to all interfaces (Docker-friendly)
 	v.SetDefault("mind.port", 9421)
 	v.SetDefault("mind.db_path", "") // Derived from data_dir if empty
 
@@ -180,6 +182,7 @@ func buildConfig(v *viper.Viper, mode DeploymentMode) (*Config, error) {
 		Mode:    mode,
 		DataDir: dataDir,
 		Mind: MindConfig{
+			Host:   v.GetString("mind.host"),
 			Port:   v.GetInt("mind.port"),
 			DBPath: mindDBPath,
 		},

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindweaver Setup</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #e4e4e7;
+        }
+        .container {
+            background: #1e1e2e;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid #2d2d3d;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .logo p {
+            color: #71717a;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .badge {
+            display: inline-block;
+            background: #312e81;
+            color: #a5b4fc;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+        .error {
+            background: #450a0a;
+            border: 1px solid #7f1d1d;
+            color: #fca5a5;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .success-container {
+            text-align: center;
+        }
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: #14532d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .success-icon svg {
+            width: 32px;
+            height: 32px;
+            stroke: #4ade80;
+        }
+        .success-container h2 {
+            font-size: 22px;
+            margin-bottom: 12px;
+            color: #f4f4f5;
+        }
+        .success-container p {
+            color: #a1a1aa;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .config-path {
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-family: ui-monospace, monospace;
+            font-size: 13px;
+            color: #a5b4fc;
+            word-break: break-all;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #e4e4e7;
+        }
+        .hint {
+            font-size: 12px;
+            color: #71717a;
+            margin-top: 6px;
+        }
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #3f3f46;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #27272a;
+            color: #f4f4f5;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #818cf8;
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+        }
+        input[type="text"]:disabled {
+            background: #1f1f23;
+            color: #71717a;
+            cursor: not-allowed;
+        }
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .toggle {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #3f3f46;
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #f4f4f5;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        .toggle input:checked + .toggle-slider {
+            background-color: #818cf8;
+        }
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+        .toggle-label {
+            font-size: 14px;
+            color: #e4e4e7;
+        }
+        .toggle-hint {
+            font-size: 12px;
+            color: #71717a;
+            margin-top: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .info-box {
+            background: #1e3a5f;
+            border: 1px solid #1e40af;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #93c5fd;
+        }
+        .info-box strong {
+            color: #bfdbfe;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>Mindweaver</h1>
+            <p>First-time setup</p>
+            {{if .IsDocker}}
+            <span class="badge">Running in Docker</span>
+            {{end}}
+        </div>
+
+        {{if .Success}}
+        <div class="success-container">
+            <div class="success-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+            </div>
+            <h2>Setup Complete!</h2>
+            <p>Your configuration has been saved to:</p>
+            <div class="config-path">{{.ConfigPath}}</div>
+            <p style="margin-bottom: 24px;">Restart Mindweaver to apply the new configuration.</p>
+            <a href="/" style="text-decoration: none;">
+                <button type="button">Go to Mindweaver</button>
+            </a>
+        </div>
+        {{else}}
+        
+        {{if .Error}}
+        <div class="error">{{.Error}}</div>
+        {{end}}
+
+        <div class="info-box">
+            <strong>Data directory:</strong> {{.DataDir}}<br>
+            All databases and configuration will be stored here.
+        </div>
+
+        <form method="POST" action="/admin/setup">
+            <input type="hidden" name="etag_salt" value="{{.GeneratedSalt}}">
+            
+            <div class="form-group">
+                <div class="toggle-group">
+                    <label class="toggle">
+                        <input type="checkbox" name="allow_external" {{if .AllowExternal}}checked{{end}}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <div>
+                        <div class="toggle-label">Allow connections from other devices</div>
+                        <div class="toggle-hint">Required for Docker or network access. Disable for local-only use.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="port">Port</label>
+                <input type="number" id="port" name="port" value="{{.Port}}" min="1" max="65535">
+                <p class="hint">The port Mindweaver will listen on. Default is 9421.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="log_level">Log Level</label>
+                <select id="log_level" name="log_level">
+                    <option value="DEBUG" {{if eq .LogLevel "DEBUG"}}selected{{end}}>DEBUG - Verbose (development)</option>
+                    <option value="INFO" {{if eq .LogLevel "INFO"}}selected{{end}}>INFO - Standard</option>
+                    <option value="WARN" {{if eq .LogLevel "WARN"}}selected{{end}}>WARN - Warnings only (recommended)</option>
+                    <option value="ERROR" {{if eq .LogLevel "ERROR"}}selected{{end}}>ERROR - Errors only (minimal)</option>
+                </select>
+                <p class="hint">WARN is recommended for production use.</p>
+            </div>
+
+            <button type="submit">Complete Setup</button>
+        </form>
+        {{end}}
+    </div>
+</body>
+</html>

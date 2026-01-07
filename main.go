@@ -15,6 +15,7 @@ import (
 
 	// brainadapters "github.com/nkapatos/mindweaver/internal/brain/adapters"
 	// brainbootstrap "github.com/nkapatos/mindweaver/internal/brain/bootstrap"
+	"github.com/nkapatos/mindweaver/internal/admin/setup"
 	"github.com/nkapatos/mindweaver/internal/mind/bootstrap"
 	"github.com/nkapatos/mindweaver/internal/mind/events"
 	"github.com/nkapatos/mindweaver/internal/mind/notes"
@@ -96,11 +97,16 @@ func main() {
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
 	}))
 	e.Use(echomiddleware.Recover())
+
+	// Setup wizard middleware - redirects to /admin/setup if no config.yaml exists
+	// Must be registered before other routes but after recovery
+	e.Use(setup.SetupRequiredMiddleware(cfg.DataDir))
+
 	e.Use(mwmiddleware.ErrorHandlerMiddleware)
 	e.Use(mwmiddleware.RequestIDMiddleware)
 	e.Use(mwmiddleware.SessionIDMiddleware)
 
-	// Health check endpoint
+	// Health check endpoint (always accessible, even without config)
 	e.GET("/health", func(c echo.Context) error {
 		var services string
 		switch {
@@ -117,6 +123,14 @@ func main() {
 			"services": services,
 		})
 	})
+
+	// Setup wizard routes (accessible without config)
+	setupHandler, err := setup.NewHandler(cfg.DataDir, logger)
+	if err != nil {
+		logger.Error("Failed to initialize setup handler", "error", err)
+		os.Exit(1)
+	}
+	setupHandler.RegisterRoutes(e)
 
 	// Create /api group for all services
 	api := e.Group("/api")
@@ -241,16 +255,20 @@ func main() {
 	}
 
 	// Start the server
+	var host string
 	var port int
 	switch *mode {
 	case "combined":
+		host = cfg.Mind.Host
 		port = cfg.GetCombinedPort()
 	case "mind":
+		host = cfg.Mind.Host
 		port = cfg.Mind.Port
 	case "brain":
+		host = "0.0.0.0" // Brain standalone doesn't have host config yet
 		port = cfg.Brain.Port
 	}
-	addr := fmt.Sprintf(":%d", port)
+	addr := fmt.Sprintf("%s:%d", host, port)
 
 	logger.Info("🔥 Mindweaver is LIVE!",
 		"address", addr,
