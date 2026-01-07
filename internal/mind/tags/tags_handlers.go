@@ -11,8 +11,6 @@ import (
 	"github.com/nkapatos/mindweaver/shared/pagination"
 )
 
-// Note: Missing V3 endpoints - See issue #39
-
 type TagsHandler struct {
 	mindv3connect.UnimplementedTagsServiceHandler
 	service *TagsService
@@ -61,6 +59,80 @@ func (h *TagsHandler) ListTags(
 	tags = pagination.TrimResults(tags, pageReq.PageSize)
 
 	resp := &mindv3.ListTagsResponse{
+		Tags:          StoreTagsToProto(tags),
+		NextPageToken: pageResp.NextPageToken,
+	}
+
+	// Only include total_size on first page
+	if pageReq.IsFirstPage() {
+		totalSize := int32(pageResp.TotalCount)
+		resp.TotalSize = &totalSize
+	}
+
+	return connect.NewResponse(resp), nil
+}
+
+func (h *TagsHandler) ListNotesForTag(
+	ctx context.Context,
+	req *connect.Request[mindv3.ListNotesForTagRequest],
+) (*connect.Response[mindv3.ListNotesForTagResponse], error) {
+	// Parse pagination request
+	pageReq := pagination.ParseRequest(req.Msg.GetPageSize(), req.Msg.GetPageToken())
+	params := pageReq.ToParams()
+
+	notes, err := h.service.ListNotesForTagPaginated(ctx, req.Msg.TagId, params.Limit, params.Offset)
+	if err != nil {
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to list notes for tag", err)
+	}
+
+	// Get total count (only on first page)
+	var totalCount int64
+	if pageReq.IsFirstPage() {
+		totalCount, _ = h.service.CountNotesForTag(ctx, req.Msg.TagId)
+	}
+
+	// Build pagination response
+	pageResp := pageReq.BuildResponse(len(notes), totalCount)
+	notes = pagination.TrimResults(notes, pageReq.PageSize)
+
+	resp := &mindv3.ListNotesForTagResponse{
+		Notes:         StoreNotesToProto(notes),
+		NextPageToken: pageResp.NextPageToken,
+	}
+
+	// Only include total_size on first page
+	if pageReq.IsFirstPage() {
+		totalSize := int32(pageResp.TotalCount)
+		resp.TotalSize = &totalSize
+	}
+
+	return connect.NewResponse(resp), nil
+}
+
+func (h *TagsHandler) FindTags(
+	ctx context.Context,
+	req *connect.Request[mindv3.FindTagsRequest],
+) (*connect.Response[mindv3.FindTagsResponse], error) {
+	// Parse pagination request
+	pageReq := pagination.ParseRequest(req.Msg.GetPageSize(), req.Msg.GetPageToken())
+	params := pageReq.ToParams()
+
+	tags, err := h.service.FindTagsPaginated(ctx, req.Msg.Name, params.Limit, params.Offset)
+	if err != nil {
+		return nil, apierrors.NewInternalError(apierrors.MindDomain, "failed to find tags", err)
+	}
+
+	// Get total count (only on first page)
+	var totalCount int64
+	if pageReq.IsFirstPage() {
+		totalCount, _ = h.service.CountFindTags(ctx, req.Msg.Name)
+	}
+
+	// Build pagination response
+	pageResp := pageReq.BuildResponse(len(tags), totalCount)
+	tags = pagination.TrimResults(tags, pageReq.PageSize)
+
+	resp := &mindv3.FindTagsResponse{
 		Tags:          StoreTagsToProto(tags),
 		NextPageToken: pageResp.NextPageToken,
 	}
