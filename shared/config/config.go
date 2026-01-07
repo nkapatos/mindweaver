@@ -11,6 +11,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -128,7 +129,8 @@ func LoadConfig(mode DeploymentMode) (*Config, error) {
 	// 3. Try to read config file (ignore if not found)
 	if err := v.ReadInConfig(); err != nil {
 		// Config file not found is OK - we have defaults
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+		var configFileNotFoundError viper.ConfigFileNotFoundError
+		if !errors.As(err, &configFileNotFoundError) {
 			// Config file was found but has errors
 			return nil, fmt.Errorf("error reading config file: %w", err)
 		}
@@ -218,21 +220,21 @@ func (c *Config) GetCombinedPort() int {
 // It ensures data directories exist and are writable.
 func (c *Config) Validate() error {
 	// Ensure data directory exists or can be created
-	if err := os.MkdirAll(c.DataDir, 0755); err != nil {
+	if err := os.MkdirAll(c.DataDir, 0o755); err != nil {
 		return fmt.Errorf("cannot create data directory %s: %w", c.DataDir, err)
 	}
 
 	// Ensure parent directories for DB files exist
-	if err := os.MkdirAll(filepath.Dir(c.Mind.DBPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(c.Mind.DBPath), 0o755); err != nil {
 		return fmt.Errorf("cannot create directory for mind database: %w", err)
 	}
 
-	if err := os.MkdirAll(filepath.Dir(c.Brain.DBPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(c.Brain.DBPath), 0o755); err != nil {
 		return fmt.Errorf("cannot create directory for brain database: %w", err)
 	}
 
 	// Ensure badger directory exists
-	if err := os.MkdirAll(c.Brain.BadgerDBPath, 0755); err != nil {
+	if err := os.MkdirAll(c.Brain.BadgerDBPath, 0o755); err != nil {
 		return fmt.Errorf("cannot create badger database directory: %w", err)
 	}
 
@@ -242,8 +244,14 @@ func (c *Config) Validate() error {
 	if err != nil {
 		return fmt.Errorf("data directory %s is not writable: %w", c.DataDir, err)
 	}
-	f.Close()
-	os.Remove(testFile)
+	closeErr := f.Close()
+	removeErr := os.Remove(testFile)
+	if closeErr != nil {
+		return fmt.Errorf("failed to close test file: %w", closeErr)
+	}
+	if removeErr != nil {
+		return fmt.Errorf("failed to remove test file: %w", removeErr)
+	}
 
 	return nil
 }
