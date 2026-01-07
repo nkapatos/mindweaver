@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.8](https://github.com/nkapatos/mindweaver/compare/v0.1.7...v0.1.8) (2026-01-07)
+
+
+### Features
+
+* **admin:** add first-run setup wizard ([39d7a4f](https://github.com/nkapatos/mindweaver/commit/39d7a4f27c609e873b47e3a05b4e504fc89f6247)), closes [#87](https://github.com/nkapatos/mindweaver/issues/87)
+* **config:** consolidate database paths with Viper and DATA_DIR ([841fc3c](https://github.com/nkapatos/mindweaver/commit/841fc3c07581315adb5ff0a8cf9c8f75f6800e2b))
+* **notes:** version body changes only, add relocated event ([aab96c4](https://github.com/nkapatos/mindweaver/commit/aab96c4836ddbcc6175230dbd8b3be24cbbc5707))
+* **tags:** add ListNotesForTag and FindTags V3 endpoints ([c49e6e3](https://github.com/nkapatos/mindweaver/commit/c49e6e35fc056d0d88983890199b62e544f635cc)), closes [#39](https://github.com/nkapatos/mindweaver/issues/39)
+
+
+### Bug Fixes
+
+* resolve linter errors in config package ([d5e838b](https://github.com/nkapatos/mindweaver/commit/d5e838bf99d60ad6f59a52885a24b78ce610cfdd))
+* resolve shadow variable lint error in main.go ([16fd6ab](https://github.com/nkapatos/mindweaver/commit/16fd6ab68aa146f93bb5fd9e88e9b5d7c2698080))
+* **tags:** handle count errors per errcheck linter ([8103b6a](https://github.com/nkapatos/mindweaver/commit/8103b6a3f111e4b329cad3ba13a78db44d7d6f3b))
+
 ## [0.1.7](https://github.com/nkapatos/mindweaver/compare/v0.1.6...v0.1.7) (2026-01-02)
 
 
