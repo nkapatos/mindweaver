@@ -9,7 +9,7 @@ version: '3'
 vars:
   BIN_NAME: mindweaver
   BIN_DIR: ./bin
-  DB_DIR: ./db
+  DB_DIR: ./data
   PROTO_DIR: ./proto
   # DevTool configuration - pulled from dotenv (.env.example + .env.local)
   MIND_STORE_DIR:
@@ -27,9 +27,9 @@ vars:
   GOOSE_DRIVER:
     sh: echo "${GOOSE_DRIVER:-sqlite3}"
   MIND_DB_PATH:
-    sh: echo "${MIND_DB_PATH:-./db/mind.db}"
+    sh: echo "${MIND_DB_PATH:-./data/mind.db}"
   BRAIN_DB_PATH:
-    sh: echo "${BRAIN_DB_PATH:-./db/brain.db}"
+    sh: echo "${BRAIN_DB_PATH:-./data/brain.db}"
   AIR_CONFIG:
     sh: echo "${AIR_CONFIG:-./.air.toml}"
 

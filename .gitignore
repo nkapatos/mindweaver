@@ -23,6 +23,9 @@ coverage.txt
 *.db-wal
 *.db-journal
 
+# Data directory (default location for databases)
+data/
+
 # Air (live reload) temporary files
 tmp/
 .air.toml.bak

@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -10,7 +11,10 @@ func TestStandaloneMode(t *testing.T) {
 	// Clear environment to use defaults
 	clearEnv()
 
-	cfg := LoadConfig(ModeStandalone)
+	cfg, err := LoadConfig(ModeStandalone)
+	if err != nil {
+		t.Fatalf("LoadConfig failed: %v", err)
+	}
 
 	// Verify mode
 	if cfg.Mode != ModeStandalone {
@@ -21,16 +25,19 @@ func TestStandaloneMode(t *testing.T) {
 	if cfg.Mind.Port != 9421 {
 		t.Errorf("Expected mind port 9421, got %d", cfg.Mind.Port)
 	}
-	if cfg.Mind.DBPath != "db/mind.db" {
-		t.Errorf("Expected mind DB path db/mind.db, got %s", cfg.Mind.DBPath)
+	// DB path should be derived from data_dir
+	expectedMindDB := filepath.Join("./data", "mind.db")
+	if cfg.Mind.DBPath != expectedMindDB {
+		t.Errorf("Expected mind DB path %s, got %s", expectedMindDB, cfg.Mind.DBPath)
 	}
 
 	// Verify brain config
 	if cfg.Brain.Port != 9422 {
 		t.Errorf("Expected brain port 9422, got %d", cfg.Brain.Port)
 	}
-	if cfg.Brain.DBPath != "db/brain.db" {
-		t.Errorf("Expected brain DB path db/brain.db, got %s", cfg.Brain.DBPath)
+	expectedBrainDB := filepath.Join("./data", "brain.db")
+	if cfg.Brain.DBPath != expectedBrainDB {
+		t.Errorf("Expected brain DB path %s, got %s", expectedBrainDB, cfg.Brain.DBPath)
 	}
 	if cfg.Brain.MindServiceURL != "http://localhost:9421" {
 		t.Errorf("Expected brain mind service URL http://localhost:9421, got %s", cfg.Brain.MindServiceURL)
@@ -43,6 +50,11 @@ func TestStandaloneMode(t *testing.T) {
 	if cfg.Logging.Format != "text" {
 		t.Errorf("Expected log format text, got %s", cfg.Logging.Format)
 	}
+
+	// Verify data dir
+	if cfg.DataDir != "./data" {
+		t.Errorf("Expected data dir ./data, got %s", cfg.DataDir)
+	}
 }
 
 // TestCombinedMode verifies configuration in combined mode
@@ -50,7 +62,10 @@ func TestCombinedMode(t *testing.T) {
 	// Clear environment to use defaults
 	clearEnv()
 
-	cfg := LoadConfig(ModeCombined)
+	cfg, err := LoadConfig(ModeCombined)
+	if err != nil {
+		t.Fatalf("LoadConfig failed: %v", err)
+	}
 
 	// Verify mode
 	if cfg.Mode != ModeCombined {
@@ -65,17 +80,23 @@ func TestCombinedMode(t *testing.T) {
 
 // TestEnvironmentVariables verifies that env vars override defaults
 func TestEnvironmentVariables(t *testing.T) {
-	// Set custom environment variables
-	os.Setenv("MIND_PORT", "9000")
-	os.Setenv("BRAIN_PORT", "9001")
-	os.Setenv("MIND_DB_PATH", "/custom/mind.db")
-	os.Setenv("BRAIN_DB_PATH", "/custom/brain.db")
-	os.Setenv("MIND_SERVICE_URL", "http://custom:9000")
-	os.Setenv("LOG_LEVEL", "DEBUG")
-	os.Setenv("LOG_FORMAT", "json")
+	// Clear environment first
+	clearEnv()
+
+	// Set custom environment variables with MW_ prefix
+	os.Setenv("MW_MIND_PORT", "9000")
+	os.Setenv("MW_BRAIN_PORT", "9001")
+	os.Setenv("MW_MIND_DB_PATH", "/custom/mind.db")
+	os.Setenv("MW_BRAIN_DB_PATH", "/custom/brain.db")
+	os.Setenv("MW_BRAIN_MIND_SERVICE_URL", "http://custom:9000")
+	os.Setenv("MW_LOG_LEVEL", "DEBUG")
+	os.Setenv("MW_LOG_FORMAT", "json")
 	defer clearEnv()
 
-	cfg := LoadConfig(ModeStandalone)
+	cfg, err := LoadConfig(ModeStandalone)
+	if err != nil {
+		t.Fatalf("LoadConfig failed: %v", err)
+	}
 
 	// Verify overrides
 	if cfg.Mind.Port != 9000 {
@@ -101,91 +122,152 @@ func TestEnvironmentVariables(t *testing.T) {
 	}
 }
 
-// TestCombinedPortOverride verifies PORT env var overrides in combined mode
+// TestCombinedPortOverride verifies MW_PORT env var overrides in combined mode
 func TestCombinedPortOverride(t *testing.T) {
-	os.Setenv("PORT", "3000")
+	clearEnv()
+	os.Setenv("MW_PORT", "3000")
 	defer clearEnv()
 
-	cfg := LoadConfig(ModeCombined)
+	cfg, err := LoadConfig(ModeCombined)
+	if err != nil {
+		t.Fatalf("LoadConfig failed: %v", err)
+	}
 
 	if cfg.GetCombinedPort() != 3000 {
 		t.Errorf("Expected combined port 3000, got %d", cfg.GetCombinedPort())
 	}
 }
 
-// Example: Using config in standalone mind mode
-func ExampleLoadConfig_standaloneMind() {
-	cfg := LoadConfig(ModeStandalone)
+// TestDataDirDerivation verifies that DB paths are derived from data_dir
+func TestDataDirDerivation(t *testing.T) {
+	clearEnv()
+	os.Setenv("MW_DATA_DIR", "/mydata")
+	defer clearEnv()
 
-	// Use mind configuration
-	_ = cfg.Mind.Port   // 9421
-	_ = cfg.Mind.DBPath // "db/mind.db"
+	cfg, err := LoadConfig(ModeStandalone)
+	if err != nil {
+		t.Fatalf("LoadConfig failed: %v", err)
+	}
 
-	// Output:
+	// Paths should be derived from data_dir
+	if cfg.DataDir != "/mydata" {
+		t.Errorf("Expected data dir /mydata, got %s", cfg.DataDir)
+	}
+	if cfg.Mind.DBPath != "/mydata/mind.db" {
+		t.Errorf("Expected mind DB path /mydata/mind.db, got %s", cfg.Mind.DBPath)
+	}
+	if cfg.Brain.DBPath != "/mydata/brain.db" {
+		t.Errorf("Expected brain DB path /mydata/brain.db, got %s", cfg.Brain.DBPath)
+	}
+	if cfg.Brain.BadgerDBPath != "/mydata/badger" {
+		t.Errorf("Expected badger DB path /mydata/badger, got %s", cfg.Brain.BadgerDBPath)
+	}
 }
 
-// Example: Using config in standalone brain mode
-func ExampleLoadConfig_standaloneBrain() {
-	cfg := LoadConfig(ModeStandalone)
+// TestExplicitPathsOverrideDataDir verifies that explicit DB paths override data_dir derivation
+func TestExplicitPathsOverrideDataDir(t *testing.T) {
+	clearEnv()
+	os.Setenv("MW_DATA_DIR", "/mydata")
+	os.Setenv("MW_MIND_DB_PATH", "/explicit/mind.db")
+	defer clearEnv()
 
-	// Use brain configuration
-	_ = cfg.Brain.Port           // 9422
-	_ = cfg.Brain.DBPath         // "db/brain.db"
-	_ = cfg.Brain.MindServiceURL // "http://localhost:9421"
+	cfg, err := LoadConfig(ModeStandalone)
+	if err != nil {
+		t.Fatalf("LoadConfig failed: %v", err)
+	}
 
-	// Output:
+	// Explicit path should override derived path
+	if cfg.Mind.DBPath != "/explicit/mind.db" {
+		t.Errorf("Expected mind DB path /explicit/mind.db, got %s", cfg.Mind.DBPath)
+	}
+	// Brain path should still be derived
+	if cfg.Brain.DBPath != "/mydata/brain.db" {
+		t.Errorf("Expected brain DB path /mydata/brain.db, got %s", cfg.Brain.DBPath)
+	}
 }
 
-// Example: Using config in combined mode
-func ExampleLoadConfig_combined() {
-	cfg := LoadConfig(ModeCombined)
+// TestModeOverride verifies MW_MODE env var can override the mode parameter
+func TestModeOverride(t *testing.T) {
+	clearEnv()
+	os.Setenv("MW_MODE", "combined")
+	defer clearEnv()
 
-	// Both services enabled on same port
-	port := cfg.GetCombinedPort() // 9421 (single port for both)
+	// Call with standalone, but env var says combined
+	cfg, err := LoadConfig(ModeStandalone)
+	if err != nil {
+		t.Fatalf("LoadConfig failed: %v", err)
+	}
 
-	_ = port
-	// Mind routes: /api/notes, /api/tags, /api/templates
-	// Brain routes: /api/assistants, /api/chat, /api/conversations
-
-	// Both use same Echo instance on same port
-	// with naturally separated routes (no prefix conflicts)
-
-	// Output:
+	if cfg.Mode != ModeCombined {
+		t.Errorf("Expected mode to be overridden to combined, got %s", cfg.Mode)
+	}
 }
 
-// Example: Using config with environment overrides
-func ExampleLoadConfig_withEnvOverrides() {
-	// Set custom configuration via environment
-	os.Setenv("MIND_PORT", "9090")
-	os.Setenv("LOG_LEVEL", "DEBUG")
-	os.Setenv("LOG_FORMAT", "json")
-	defer func() {
-		os.Unsetenv("MIND_PORT")
-		os.Unsetenv("LOG_LEVEL")
-		os.Unsetenv("LOG_FORMAT")
-	}()
+// TestValidate verifies the Validate function creates directories
+func TestValidate(t *testing.T) {
+	clearEnv()
 
-	cfg := LoadConfig(ModeStandalone)
+	// Use temp directory
+	tmpDir := t.TempDir()
+	os.Setenv("MW_DATA_DIR", tmpDir)
+	defer clearEnv()
 
-	_ = cfg.Mind.Port      // 9090 (overridden)
-	_ = cfg.Logging.Level  // "DEBUG" (overridden)
-	_ = cfg.Logging.Format // "json" (overridden)
+	cfg, err := LoadConfig(ModeStandalone)
+	if err != nil {
+		t.Fatalf("LoadConfig failed: %v", err)
+	}
 
-	// Output:
+	// Validate should create directories
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("Validate failed: %v", err)
+	}
+
+	// Check that badger directory was created
+	badgerDir := filepath.Join(tmpDir, "badger")
+	if _, err := os.Stat(badgerDir); os.IsNotExist(err) {
+		t.Errorf("Expected badger directory %s to be created", badgerDir)
+	}
+}
+
+// TestLLMConfig verifies LLM configuration defaults
+func TestLLMConfig(t *testing.T) {
+	clearEnv()
+
+	cfg, err := LoadConfig(ModeStandalone)
+	if err != nil {
+		t.Fatalf("LoadConfig failed: %v", err)
+	}
+
+	if cfg.Brain.LLMEndpoint != "http://localhost:11434" {
+		t.Errorf("Expected LLM endpoint http://localhost:11434, got %s", cfg.Brain.LLMEndpoint)
+	}
+	if cfg.Brain.SmallModel != "phi3-mini" {
+		t.Errorf("Expected small model phi3-mini, got %s", cfg.Brain.SmallModel)
+	}
+	if cfg.Brain.BigModel != "phi4" {
+		t.Errorf("Expected big model phi4, got %s", cfg.Brain.BigModel)
+	}
 }
 
 // Helper function to clear environment variables
 func clearEnv() {
 	envVars := []string{
-		"MIND_PORT",
-		"BRAIN_PORT",
-		"MIND_DB_PATH",
-		"BRAIN_DB_PATH",
-		"MIND_SERVICE_URL",
-		"LOG_LEVEL",
-		"LOG_FORMAT",
-		"PORT",
-		"MODE",
+		// New MW_ prefix vars
+		"MW_DATA_DIR",
+		"MW_MIND_PORT",
+		"MW_BRAIN_PORT",
+		"MW_MIND_DB_PATH",
+		"MW_BRAIN_DB_PATH",
+		"MW_BRAIN_BADGER_DB_PATH",
+		"MW_BRAIN_MIND_SERVICE_URL",
+		"MW_BRAIN_LLM_ENDPOINT",
+		"MW_BRAIN_SMALL_MODEL",
+		"MW_BRAIN_BIG_MODEL",
+		"MW_LOG_LEVEL",
+		"MW_LOG_FORMAT",
+		"MW_PORT",
+		"MW_MODE",
+		"MW_SECURITY_ETAG_SALT",
 	}
 	for _, v := range envVars {
 		os.Unsetenv(v)
