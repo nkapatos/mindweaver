@@ -61,8 +61,8 @@ func main() {
 	}
 
 	// Validate configuration (ensure directories exist and are writable)
-	if err := cfg.Validate(); err != nil {
-		log.Fatalf("Configuration validation failed: %v", err)
+	if validateErr := cfg.Validate(); validateErr != nil {
+		log.Fatalf("Configuration validation failed: %v", validateErr)
 	}
 
 	// Setup structured logging with module context
