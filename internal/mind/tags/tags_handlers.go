@@ -87,9 +87,12 @@ func (h *TagsHandler) ListNotesForTag(
 
 	// Get total count (only on first page)
 	var totalCount int64
+	var countErr error
 	if pageReq.IsFirstPage() {
-		totalCount, _ = h.service.CountNotesForTag(ctx, req.Msg.TagId)
+		totalCount, countErr = h.service.CountNotesForTag(ctx, req.Msg.TagId)
 	}
+	// Count errors are logged in service but don't fail the request
+	_ = countErr
 
 	// Build pagination response
 	pageResp := pageReq.BuildResponse(len(notes), totalCount)
@@ -124,9 +127,12 @@ func (h *TagsHandler) FindTags(
 
 	// Get total count (only on first page)
 	var totalCount int64
+	var countErr error
 	if pageReq.IsFirstPage() {
-		totalCount, _ = h.service.CountFindTags(ctx, req.Msg.Name)
+		totalCount, countErr = h.service.CountFindTags(ctx, req.Msg.Name)
 	}
+	// Count errors are logged in service but don't fail the request
+	_ = countErr
 
 	// Build pagination response
 	pageResp := pageReq.BuildResponse(len(tags), totalCount)
