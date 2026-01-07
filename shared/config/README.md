@@ -45,7 +45,7 @@ All environment variables use the `MW_` prefix. Nested config uses underscores.
 |----------|---------|-------------|
 | `MW_DATA_DIR` | `./data` | Root directory for all data |
 | `MW_MODE` | - | Override deployment mode (combined/standalone) |
-| `MW_PORT` | 9421 | Port override for combined mode |
+| `MW_PORT` | Falls back to `MW_MIND_PORT` (9421) | Port override for combined mode |
 | `MW_MIND_PORT` | 9421 | Mind service port |
 | `MW_MIND_DB_PATH` | `$DATA_DIR/mind.db` | Mind SQLite database |
 | `MW_BRAIN_PORT` | 9422 | Brain service port |
