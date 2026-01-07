@@ -9,6 +9,7 @@ import "google/api/annotations.proto";
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
 import "buf/validate/validate.proto";
+import "v3/notes.proto";
 
 option go_package = "github.com/nkapatos/mindweaver/internal/mind/gen/v3;mindv3";
 
@@ -19,6 +20,21 @@ service TagsService {
   rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {
     option (google.api.http) = {
       get: "/api/mind/v3/tags"
+    };
+  }
+
+  // Lists notes for a specific tag (AIP-132 sub-resource)
+  rpc ListNotesForTag(ListNotesForTagRequest) returns (ListNotesForTagResponse) {
+    option (google.api.http) = {
+      get: "/api/mind/v3/tags/{tag_id}/notes"
+    };
+  }
+
+  // Find tags by name pattern (AIP-136 custom method)
+  rpc FindTags(FindTagsRequest) returns (FindTagsResponse) {
+    option (google.api.http) = {
+      post: "/api/mind/v3/tags:find"
+      body: "*"
     };
   }
 }
@@ -72,4 +88,60 @@ message ListTagsResponse {
   optional int32 total_size = 3;
 }
 
+// Request to list notes for a specific tag (AIP-132 sub-resource)
+message ListNotesForTagRequest {
+  // Tag ID (required)
+  int64 tag_id = 1 [(buf.validate.field).int64.gt = 0];
 
+  // Maximum number of notes to return (default: 50, max: 100)
+  int32 page_size = 2 [(buf.validate.field).int32 = {
+    gte: 0,
+    lte: 100
+  }];
+
+  // Page token from previous response
+  string page_token = 3;
+}
+
+// Response for listing notes for a tag (AIP-132)
+message ListNotesForTagResponse {
+  // List of notes with this tag
+  repeated Note notes = 1;
+
+  // Token for next page (empty if no more pages)
+  string next_page_token = 2;
+
+  // Total number of notes with this tag
+  optional int32 total_size = 3;
+}
+
+// Request to find tags by name pattern (AIP-136 custom method)
+message FindTagsRequest {
+  // Name pattern to search for (LIKE query, required)
+  // Use % for wildcards (e.g., "project%" matches "project", "projects", etc.)
+  string name = 1 [(buf.validate.field).string = {
+    min_len: 1,
+    max_len: 255
+  }];
+
+  // Maximum number of tags to return (default: 50, max: 100)
+  int32 page_size = 2 [(buf.validate.field).int32 = {
+    gte: 0,
+    lte: 100
+  }];
+
+  // Page token from previous response
+  string page_token = 3;
+}
+
+// Response for finding tags (AIP-136)
+message FindTagsResponse {
+  // Matching tags
+  repeated Tag tags = 1;
+
+  // Token for next page (empty if no more pages)
+  string next_page_token = 2;
+
+  // Total number of matching tags
+  optional int32 total_size = 3;
+}

@@ -81,3 +81,25 @@ SELECT COUNT(*) FROM tags
 JOIN note_tags ON tags.id = note_tags.tag_id
 WHERE note_tags.note_id = :note_id;
 
+-- name: ListNotesForTagPaginated :many
+SELECT notes.* FROM notes
+JOIN note_tags ON notes.id = note_tags.note_id
+WHERE note_tags.tag_id = :tag_id
+ORDER BY notes.id
+LIMIT :limit OFFSET :offset;
+
+-- name: CountNotesForTag :one
+SELECT COUNT(*) FROM notes
+JOIN note_tags ON notes.id = note_tags.note_id
+WHERE note_tags.tag_id = :tag_id;
+
+-- name: FindTagsPaginated :many
+SELECT * FROM tags
+WHERE name LIKE :pattern
+ORDER BY id
+LIMIT :limit OFFSET :offset;
+
+-- name: CountFindTags :one
+SELECT COUNT(*) FROM tags
+WHERE name LIKE :pattern;
+

@@ -186,3 +186,47 @@ func (s *TagsService) ListNotesForTag(ctx context.Context, tagID int64) ([]store
 	}
 	return notes, err
 }
+
+// ListNotesForTagPaginated returns notes for a tag with pagination.
+func (s *TagsService) ListNotesForTagPaginated(ctx context.Context, tagID int64, limit, offset int32) ([]store.Note, error) {
+	notes, err := s.store.ListNotesForTagPaginated(ctx, store.ListNotesForTagPaginatedParams{
+		TagID:  tagID,
+		Limit:  int64(limit),
+		Offset: int64(offset),
+	})
+	if err != nil {
+		s.logger.Error("failed to list notes for tag paginated", "tag_id", tagID, "err", err, "request_id", middleware.GetRequestID(ctx))
+	}
+	return notes, err
+}
+
+// CountNotesForTag returns the total number of notes for a tag.
+func (s *TagsService) CountNotesForTag(ctx context.Context, tagID int64) (int64, error) {
+	count, err := s.store.CountNotesForTag(ctx, tagID)
+	if err != nil {
+		s.logger.Error("failed to count notes for tag", "tag_id", tagID, "err", err, "request_id", middleware.GetRequestID(ctx))
+	}
+	return count, err
+}
+
+// FindTagsPaginated returns tags matching a name pattern with pagination.
+func (s *TagsService) FindTagsPaginated(ctx context.Context, pattern string, limit, offset int32) ([]store.Tag, error) {
+	tags, err := s.store.FindTagsPaginated(ctx, store.FindTagsPaginatedParams{
+		Pattern: pattern,
+		Limit:   int64(limit),
+		Offset:  int64(offset),
+	})
+	if err != nil {
+		s.logger.Error("failed to find tags paginated", "pattern", pattern, "err", err, "request_id", middleware.GetRequestID(ctx))
+	}
+	return tags, err
+}
+
+// CountFindTags returns the total number of tags matching a name pattern.
+func (s *TagsService) CountFindTags(ctx context.Context, pattern string) (int64, error) {
+	count, err := s.store.CountFindTags(ctx, pattern)
+	if err != nil {
+		s.logger.Error("failed to count find tags", "pattern", pattern, "err", err, "request_id", middleware.GetRequestID(ctx))
+	}
+	return count, err
+}
