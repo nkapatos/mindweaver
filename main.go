@@ -38,21 +38,30 @@ func main() {
 	var cfg *config.Config
 	var enableMind, enableBrain bool
 
+	var err error
 	switch *mode {
 	case "combined":
-		cfg = config.LoadConfig(config.ModeCombined)
+		cfg, err = config.LoadConfig(config.ModeCombined)
 		enableMind = true
 		enableBrain = true
 	case "mind":
-		cfg = config.LoadConfig(config.ModeStandalone)
+		cfg, err = config.LoadConfig(config.ModeStandalone)
 		enableMind = true
 		enableBrain = false
 	case "brain":
-		cfg = config.LoadConfig(config.ModeStandalone)
+		cfg, err = config.LoadConfig(config.ModeStandalone)
 		enableMind = false
 		enableBrain = true
 	default:
 		log.Fatalf("Invalid mode: %s (must be: combined, mind, or brain)", *mode)
+	}
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
+
+	// Validate configuration (ensure directories exist and are writable)
+	if err := cfg.Validate(); err != nil {
+		log.Fatalf("Configuration validation failed: %v", err)
 	}
 
 	// Setup structured logging with module context

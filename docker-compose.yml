@@ -1,0 +1,52 @@
+# Mindweaver Docker Compose
+#
+# Quick start:
+#   docker compose up -d
+#
+# With Ollama for AI features:
+#   docker compose --profile ai up -d
+
+services:
+  mindweaver:
+    image: codefupandas/mindweaver:latest
+    container_name: mindweaver
+    restart: unless-stopped
+    ports:
+      - "9421:9421"
+    environment:
+      - MW_DATA_DIR=/data
+      - MW_LOG_LEVEL=INFO
+      # Uncomment to connect to Ollama container
+      # - MW_BRAIN_LLM_ENDPOINT=http://ollama:11434
+    volumes:
+      - mindweaver-data:/data
+    # Uncomment if using Ollama
+    # depends_on:
+    #   - ollama
+
+  # Optional: Ollama for local LLM inference
+  # Enable with: docker compose --profile ai up -d
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    profiles:
+      - ai
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    # Uncomment for GPU support (NVIDIA)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  mindweaver-data:
+    driver: local
+  ollama-data:
+    driver: local
