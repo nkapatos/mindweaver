@@ -11,8 +11,6 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/labstack/echo/v4"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 	_ "modernc.org/sqlite"
 
 	"github.com/nkapatos/mindweaver/gen/proto/mind/v3/mindv3connect"
@@ -170,12 +168,10 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 // registerConnectService registers a Connect-RPC service handler with Echo.
 // Connect-RPC supports gRPC (binary protobuf over HTTP/2), gRPC-Web (for browsers),
 // and Connect protocol (JSON or binary over HTTP/1.1 or HTTP/2).
+// Note: h2c handling is done at the server level in main.go, not per-route.
 func registerConnectService(e *echo.Echo, logger *slog.Logger, serviceName, path string, handler http.Handler) {
-	// Wrap in h2c handler for HTTP/2 without TLS (needed for gRPC)
-	h2cHandler := h2c.NewHandler(handler, &http2.Server{})
-
 	// Register with Echo - Match all methods and let Connect handle routing
-	e.Match([]string{"GET", "POST", "PUT", "DELETE", "PATCH"}, path+"*", echo.WrapHandler(h2cHandler))
+	e.Match([]string{"GET", "POST", "PUT", "DELETE", "PATCH"}, path+"*", echo.WrapHandler(handler))
 
 	logger.Info("Registered V3 routes", "service", serviceName, "path", path)
 }

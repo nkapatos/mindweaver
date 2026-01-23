@@ -13,6 +13,9 @@ import (
 	"syscall"
 	"time"
 
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
+
 	// brainadapters "github.com/nkapatos/mindweaver/internal/brain/adapters"
 	// brainbootstrap "github.com/nkapatos/mindweaver/internal/brain/bootstrap"
 	"github.com/nkapatos/mindweaver/internal/admin/setup"
@@ -274,7 +277,20 @@ func main() {
 		"address", addr,
 		"mode", *mode)
 
-	if err := e.Start(addr); !errors.Is(err, http.ErrServerClosed) {
+	// HTTP/2 Cleartext (h2c) server for gRPC/Connect-RPC support
+	// See: https://echo.labstack.com/docs/start-server#http2-cleartext-server-http2-over-http
+	h2s := &http2.Server{
+		MaxConcurrentStreams: 250,
+		MaxReadFrameSize:     1048576,
+		IdleTimeout:          10 * time.Second,
+	}
+
+	server := &http.Server{
+		Addr:    addr,
+		Handler: h2c.NewHandler(e, h2s),
+	}
+
+	if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		logger.Error("server error", "error", err)
 	}
 }
