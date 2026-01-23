@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/nkapatos/mindweaver/compare/v0.1.8...v0.1.9) (2026-01-23)
+
+
+### Bug Fixes
+
+* move h2c handler to server level for proper HTTP/2 support ([821f641](https://github.com/nkapatos/mindweaver/commit/821f6411a92149465f00905effd38f2b391bdaf1))
+
 ## [0.1.8](https://github.com/nkapatos/mindweaver/compare/v0.1.7...v0.1.8) (2026-01-07)
 
 
