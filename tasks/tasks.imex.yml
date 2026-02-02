@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build imex binary (local platform)
+    cmds:
+      - go build -o ./bin/imex ./cmd/imex
+
+  build:cross:
+    desc: Build imex binary for CI (linux/mac, amd64/arm64)
+    cmds:
+      - |
+        platforms=("linux/amd64" "linux/arm64" "darwin/amd64" "darwin/arm64")
+        for plat in "${platforms[@]}"; do
+          GOOS=${plat%%/*} GOARCH=${plat##*/} go build -o ./bin/imex-${plat//\//-} ./cmd/imex
+        done
+
+
+  test:
+    desc: Run all imex tests
+    cmds:
+      - go test ./internal/imex/...
