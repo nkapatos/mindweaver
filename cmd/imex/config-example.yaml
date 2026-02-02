@@ -1,0 +1,4 @@
+log_level: info
+server_addr: "http://localhost:9421"
+export_format: "json"
+import_format: "json"
