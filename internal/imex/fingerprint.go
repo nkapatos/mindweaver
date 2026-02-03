@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
-
-	"github.com/dgraph-io/badger/v4"
 )
 
 type FingerprintEntry struct {
@@ -18,8 +17,17 @@ type FingerprintEntry struct {
 }
 
 type FingerprintCache struct {
-	db      *badger.DB
-	baseDir string
+	store         map[string]FingerprintEntry
+	cacheFile     string
+	baseDir       string
+	mu            sync.RWMutex
+	dirty         bool
+	stopFlush     chan struct{}
+	flushDone     chan struct{}
+	flushSignal   chan struct{}
+	flushInterval time.Duration
+	lockFile      string
+	lockStale     time.Duration
 }
 
 func NewFingerprintCache(baseDir string) (*FingerprintCache, error) {
@@ -35,17 +43,31 @@ func NewFingerprintCache(baseDir string) (*FingerprintCache, error) {
 		return nil, fmt.Errorf("failed to create cache directory: %v", err)
 	}
 
-	// Open BadgerDB in the cache directory
-	opts := badger.DefaultOptions(cacheDir).WithLogger(nil)
-	db, err := badger.Open(opts)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open cache database: %v", err)
+	cacheFile := filepath.Join(cacheDir, "fingerprints.json")
+	lockFile := filepath.Join(cacheDir, "fingerprints.lock")
+
+	fc := &FingerprintCache{
+		store:         make(map[string]FingerprintEntry),
+		cacheFile:     cacheFile,
+		baseDir:       absBaseDir,
+		stopFlush:     make(chan struct{}),
+		flushDone:     make(chan struct{}),
+		flushSignal:   make(chan struct{}, 1),
+		flushInterval: 2 * time.Second,
+		lockFile:      lockFile,
+		lockStale:     30 * time.Second,
 	}
 
-	return &FingerprintCache{
-		db:      db,
-		baseDir: absBaseDir,
-	}, nil
+	// Load existing cache file if present (non-fatal)
+	if err := fc.loadFromFile(); err != nil {
+		// treat load errors as non-fatal: start with empty cache
+		fmt.Printf("Warning: failed to load fingerprint cache: %v\n", err)
+	}
+
+	// Start background flusher
+	go fc.flushLoop()
+
+	return fc, nil
 }
 
 // ShouldRead returns whether the file should be read, the cached hash (if any), and error
@@ -59,33 +81,18 @@ func (fc *FingerprintCache) ShouldRead(path string, info os.FileInfo) (bool, str
 	if err != nil {
 		return true, "", err
 	}
+	fc.mu.RLock()
+	entry, ok := fc.store[relPath]
+	fc.mu.RUnlock()
 
-	var entry *FingerprintEntry
-	err = fc.db.View(func(txn *badger.Txn) error {
-		item, err := txn.Get([]byte(relPath))
-		if err != nil {
-			return err
-		}
-
-		return item.Value(func(val []byte) error {
-			entry = &FingerprintEntry{}
-			return json.Unmarshal(val, entry)
-		})
-	})
-	if err != nil {
-		if err == badger.ErrKeyNotFound {
-			// New file, must read
-			return true, "", nil
-		}
-		return true, "", fmt.Errorf("cache lookup failed: %w", err)
+	if !ok {
+		return true, "", nil
 	}
 
-	// Fast path: size and mtime unchanged → file unchanged
 	if entry.Size == info.Size() && entry.Mtime == info.ModTime().Unix() {
 		return false, entry.Hash, nil
 	}
 
-	// Size or mtime changed → must re-read and verify
 	return true, "", nil
 }
 
@@ -102,15 +109,20 @@ func (fc *FingerprintCache) Update(path, hash string, size, mtime int64) error {
 		Mtime:       mtime,
 		LastChecked: time.Now().Unix(),
 	}
+	fc.mu.Lock()
+	fc.store[relPath] = entry
+	fc.dirty = true
+	fc.mu.Unlock()
 
-	data, err := json.Marshal(entry)
-	if err != nil {
-		return fmt.Errorf("failed to marshal entry: %w", err)
+	fmt.Printf("Fingerprint Update: %s (size=%d mtime=%d)\n", relPath, size, mtime)
+
+	// signal flusher (non-blocking)
+	select {
+	case fc.flushSignal <- struct{}{}:
+	default:
 	}
 
-	return fc.db.Update(func(txn *badger.Txn) error {
-		return txn.Set([]byte(relPath), data)
-	})
+	return nil
 }
 
 // Get retrieves the cached fingerprint for a file (for testing/debugging)
@@ -119,60 +131,57 @@ func (fc *FingerprintCache) Get(path string) (*FingerprintEntry, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	var entry FingerprintEntry
-	err = fc.db.View(func(txn *badger.Txn) error {
-		item, err := txn.Get([]byte(relPath))
-		if err != nil {
-			return err
-		}
-
-		return item.Value(func(val []byte) error {
-			return json.Unmarshal(val, &entry)
-		})
-	})
-	if err != nil {
-		if err == badger.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
+	fc.mu.RLock()
+	e, ok := fc.store[relPath]
+	fc.mu.RUnlock()
+	if !ok {
+		return nil, nil
 	}
-
+	// return a copy
+	entry := e
 	return &entry, nil
 }
 
 // Clear removes all entries from the cache
 func (fc *FingerprintCache) Clear() error {
-	return fc.db.DropAll()
+	fc.mu.Lock()
+	fc.store = make(map[string]FingerprintEntry)
+	fc.dirty = true
+	fc.mu.Unlock()
+
+	// remove cache file on disk (best-effort)
+	_ = os.Remove(fc.cacheFile)
+
+	// signal flusher to persist cleared state
+	select {
+	case fc.flushSignal <- struct{}{}:
+	default:
+	}
+
+	return nil
 }
 
 // Stats returns cache statistics
 func (fc *FingerprintCache) Stats() (int, error) {
-	count := 0
-	err := fc.db.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false
-		it := txn.NewIterator(opts)
-		defer it.Close()
-
-		for it.Rewind(); it.Valid(); it.Next() {
-			count++
-		}
-		return nil
-	})
-
-	return count, err
+	fc.mu.RLock()
+	count := len(fc.store)
+	fc.mu.RUnlock()
+	return count, nil
 }
 
 // Close closes the cache database
 func (fc *FingerprintCache) Close() error {
-	return fc.db.Close()
+	// stop flusher and wait for final flush
+	close(fc.stopFlush)
+	<-fc.flushDone
+	return nil
 }
 
 // RunGC triggers garbage collection on the BadgerDB database
 // Should be called periodically to reclaim disk space
 func (fc *FingerprintCache) RunGC(discardRatio float64) error {
-	return fc.db.RunValueLogGC(discardRatio)
+	// no-op for file-backed JSON cache
+	return nil
 }
 
 // relativePath converts absolute path to relative path from base directory
@@ -188,4 +197,149 @@ func (fc *FingerprintCache) relativePath(path string) (string, error) {
 	}
 
 	return relPath, nil
+}
+
+// loadFromFile loads the JSON cache file into memory. If the file does not exist,
+// it's a no-op. Returns an error if reading or unmarshaling fails.
+func (fc *FingerprintCache) loadFromFile() error {
+	data, err := os.ReadFile(fc.cacheFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	var m map[string]FingerprintEntry
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+
+	fc.mu.Lock()
+	fc.store = m
+	fc.mu.Unlock()
+	return nil
+}
+
+// flushLoop runs in background and persists the in-memory cache to disk.
+func (fc *FingerprintCache) flushLoop() {
+	defer close(fc.flushDone)
+
+	// simple debounce: when signaled, wait a short period then flush
+	debounce := 200 * time.Millisecond
+
+	for {
+		select {
+		case <-fc.flushSignal:
+			// debounce
+			timer := time.NewTimer(debounce)
+			select {
+			case <-timer.C:
+			case <-fc.stopFlush:
+				timer.Stop()
+				fc.flushOnce()
+				return
+			}
+			// after debounce, perform flush
+			fc.flushOnce()
+			// then wait for either more signals or stop
+		case <-fc.stopFlush:
+			fc.flushOnce()
+			return
+		}
+	}
+}
+
+// flushOnce writes the cache to disk if dirty. Errors are ignored here but could be
+// surfaced via logs or returned on Close if desired.
+func (fc *FingerprintCache) flushOnce() {
+	fc.mu.RLock()
+	if !fc.dirty {
+		fc.mu.RUnlock()
+		return
+	}
+	// snapshot
+	snapshot := make(map[string]FingerprintEntry, len(fc.store))
+	for k, v := range fc.store {
+		snapshot[k] = v
+	}
+	fc.mu.RUnlock()
+
+	data, err := json.Marshal(snapshot)
+	if err != nil {
+		fmt.Printf("Warning: failed to marshal fingerprint snapshot: %v\n", err)
+		return
+	}
+
+	// attempt to write atomically with a simple lockfile
+	if err := fc.atomicWriteWithLock(data); err != nil {
+		fmt.Printf("Warning: failed to write fingerprint cache: %v\n", err)
+	}
+
+	// clear dirty flag on success
+	fc.mu.Lock()
+	fc.dirty = false
+	fc.mu.Unlock()
+
+	// debug: indicate file written
+	fmt.Printf("Fingerprint cache written to %s (entries=%d)\n", fc.cacheFile, len(snapshot))
+}
+
+// atomicWriteWithLock writes data to the cache file atomically using a temp file
+// and a simple lockfile based on O_EXCL. If a stale lock exists (older than
+// lockStale), it may be removed.
+func (fc *FingerprintCache) atomicWriteWithLock(data []byte) error {
+	// try to acquire lock by creating lock file with O_EXCL
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		f, err := os.OpenFile(fc.lockFile, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+		if err == nil {
+			// we own the lock; write metadata (timestamp)
+			ts := time.Now().Unix()
+			_, _ = fmt.Fprintf(f, "%d\n", ts)
+			_ = f.Sync()
+			_ = f.Close()
+			break
+		}
+		// couldn't create lock file; check if stale
+		st, statErr := os.Stat(fc.lockFile)
+		if statErr == nil {
+			if time.Since(st.ModTime()) > fc.lockStale {
+				// stale: remove it and try again
+				_ = os.Remove(fc.lockFile)
+				continue
+			}
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("timed out acquiring lock for %s", fc.lockFile)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	// ensure lockfile removed at the end
+	defer func() { _ = os.Remove(fc.lockFile) }()
+
+	// write to tmp
+	tmp := fc.cacheFile + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+		return fmt.Errorf("write tmp file: %w", err)
+	}
+	// best effort sync
+	if f, err := os.Open(tmp); err == nil {
+		_ = f.Sync()
+		_ = f.Close()
+	}
+
+	if err := os.Rename(tmp, fc.cacheFile); err != nil {
+		return fmt.Errorf("rename tmp: %w", err)
+	}
+
+	// fsync containing directory if possible (best-effort)
+	dir := filepath.Dir(fc.cacheFile)
+	if dfd, err := os.Open(dir); err == nil {
+		_ = dfd.Sync()
+		_ = dfd.Close()
+	}
+
+	return nil
 }

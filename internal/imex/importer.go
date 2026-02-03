@@ -62,14 +62,15 @@ func NewImporter(opts ImportOptions) *Importer {
 	// Initialize fingerprint cache if incremental import is enabled
 	var cache *FingerprintCache
 	if opts.Incremental {
-		cache, err := NewFingerprintCache(opts.Dir)
+		var err error
+		cache, err = NewFingerprintCache(opts.Dir)
 		if err != nil {
 			// Handle cache initialization error (log and continue without cache)
 			fmt.Println("Warning: failed to initialize fingerprint cache:", err)
 			cache = nil
 		}
 		// Clear cache if requested
-		if opts.ClearCache {
+		if opts.ClearCache && cache != nil {
 			if err := cache.Clear(); err != nil {
 				fmt.Println("Warning: failed to clear fingerprint cache:", err)
 			}
