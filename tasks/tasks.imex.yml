@@ -20,3 +20,10 @@ tasks:
     desc: Run all imex tests
     cmds:
       - go test ./internal/imex/...
+
+  lint:
+    desc: Run linters for imex (golangci-lint, go vet, gofmt)
+    cmds:
+      - golangci-lint run ./internal/imex/...
+      - go vet ./internal/imex/...
+      - gofmt -l ./internal/imex
