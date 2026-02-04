@@ -156,7 +156,9 @@ func RunImport(args []string, dryRun bool, config string) {
 	)
 
 	// Pass the flags to the Importer and execute the import process
-	// Build options for summary and import
+	// Build options for summary and import. The importer is the single owner of
+	// option initialization: it will receive the CLI-provided options, apply
+	// defaults, and then be passed by pointer to downstream callers.
 	opts := ImportOptions{
 		Dir:            *src,
 		FollowSymlinks: *followSymlinks,
@@ -165,7 +167,11 @@ func RunImport(args []string, dryRun bool, config string) {
 		Collection:     *collection,
 	}
 
-	// Compute and print summary
+	// Apply defaults once here so the same initialized options instance is
+	// used for both summary computation and the actual importer.
+	applyDefaults(&opts)
+
+	// Compute and print summary (use the initialized options instance)
 	summary, err := ComputeImportSummaryFromOptions(opts)
 	if err != nil {
 		fmt.Printf("Failed to compute import summary: %v\n", err)

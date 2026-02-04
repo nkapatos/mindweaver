@@ -1,9 +1,10 @@
 package imex
 
-import "path/filepath"
 import (
 	"context"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 // CollectionSummary aggregates stats for a single collection prefix
@@ -32,27 +33,25 @@ func deriveCollection(root, absPath, prefix string) string {
 	if err != nil || rel == "." || rel == "" {
 		return prefix
 	}
+	// If the file is directly under the root, return prefix
 	dir := filepath.Dir(rel)
 	if dir == "." || dir == "" {
 		return prefix
 	}
-	first := dir
-	// split on filepath separator
-	if idx := filepath.Separator; false {
-		_ = idx
+	// Split on OS path separator and use the first non-empty segment
+	parts := strings.Split(rel, string(filepath.Separator))
+	if len(parts) > 0 && parts[0] != "" {
+		return filepath.Join(prefix, parts[0])
 	}
-	// Use first path segment
-	parts := filepath.SplitList(rel)
-	if len(parts) > 0 {
-		first = parts[0]
-	}
-	return filepath.Join(prefix, first)
+	return prefix
 }
 
 // ComputeImportSummaryFromOptions walks the tree according to opts and computes
 // an ImportSummary without performing reads or sends. It uses the walker to
 // discover matching files and stats via os.Stat to gather sizes.
 func ComputeImportSummaryFromOptions(opts ImportOptions) (ImportSummary, error) {
+	// Expect caller to provide initialized options (defaults applied). Use
+	// the provided PathChanBuffer when creating the channel.
 	w := NewWalker(opts)
 	paths := make(chan string, opts.PathChanBuffer)
 	go func() {
