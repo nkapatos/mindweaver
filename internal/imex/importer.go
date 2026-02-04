@@ -32,15 +32,18 @@ type ImportOptions struct {
 	Dir            string   // Root directory to scan
 	Extensions     []string // File extensions to include (e.g., [".md", ".txt"])
 	Workers        int      // Number of concurrent workers (0 = NumCPU)
-	MaxFileSize    int64    // Maximum file size in bytes (0 = no limit)
+	MaxFileSize    int64    // Maximum file size in bytes (0 = use default 2MB)
 	FollowSymlinks bool     // Whether to follow symbolic links
 	IncludeHidden  bool     // Whether to include hidden files (starting with .)
-	Incremental    bool     // Enable fingerprint caching for incremental imports
+	Incremental    *bool    // Enable fingerprint caching for incremental imports (nil = use default)
 	ClearCache     bool     // Clear fingerprint cache before import
 
 	// Optional: If set, imported files will be sent to the transport
 	Transport Transport // Transport to send files to (e.g., HTTP to Mind)
 	Batcher   Batcher   // Batcher for grouping files (if nil, creates default)
+	// Internal tuning knobs (optional)
+	PathChanBuffer   int           // Buffer size for path/file channels (defaulted)
+	ProgressInterval time.Duration // Progress reporting interval (defaulted)
 }
 
 // Importer handles concurrent file import operations
@@ -57,11 +60,14 @@ type Importer struct {
 }
 
 func NewImporter(opts ImportOptions) *Importer {
+	// Centralize and apply defaults
+	applyDefaults(&opts)
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Initialize fingerprint cache if incremental import is enabled
 	var cache *FingerprintCache
-	if opts.Incremental {
+	if opts.Incremental != nil && *opts.Incremental {
 		var err error
 		cache, err = NewFingerprintCache(opts.Dir)
 		if err != nil {
@@ -108,7 +114,7 @@ func RunImport(args []string, dryRun bool, config string) {
 	var (
 		src              = importFlags.String("src", "", "Source path or URI for import (required)")
 		collection       = importFlags.String("collection", "", "Collection name to import into")
-		cacheFingerprint = importFlags.Bool("cache-fingerprint", false, "Enable fingerprinting for caching")
+		cacheFingerprint = importFlags.Bool("cache-fingerprint", true, "Enable fingerprinting for caching")
 		followSymlinks   = importFlags.Bool("follow-symlinks", false, "Follow symlinks during import")
 	)
 	if err := importFlags.Parse(args); err != nil {
@@ -129,7 +135,7 @@ func RunImport(args []string, dryRun bool, config string) {
 	importer := NewImporter(ImportOptions{
 		Dir:            *src,
 		FollowSymlinks: *followSymlinks,
-		Incremental:    *cacheFingerprint,
+		Incremental:    cacheFingerprint,
 		Transport:      nil, // Configure transport as needed
 	})
 	defer importer.Stop()
@@ -149,11 +155,11 @@ func RunImport(args []string, dryRun bool, config string) {
 // Returns a channel of successfully read files and waits for completion
 // If transport is configured, files are batched and sent automatically
 func (imp *Importer) Import() <-chan FileData {
-	// Start progress reporting (update every 200ms)
-	imp.progress.StartReporting(200000000) // 200ms
+	// Start progress reporting with configured interval
+	imp.progress.StartReporting(imp.opts.ProgressInterval)
 
 	// Phase 1: Walk directory and discover files
-	paths := make(chan string, 100)
+	paths := make(chan string, imp.opts.PathChanBuffer)
 	walker := NewWalker(imp.opts)
 
 	go func() {
@@ -171,7 +177,7 @@ func (imp *Importer) Import() <-chan FileData {
 
 	// Phase 3: If transport configured, batch and send files
 	if imp.transport != nil {
-		output := make(chan FileData, 100)
+		output := make(chan FileData, imp.opts.PathChanBuffer)
 		go imp.sendToTransport(results, output)
 		return output
 	}

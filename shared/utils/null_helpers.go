@@ -189,6 +189,10 @@ func BoolOrDefault(b *bool, def bool) bool {
 	return *b
 }
 
+// BoolPtr returns a pointer to the provided bool.
+// Useful when constructing struct literals that accept *bool.
+func BoolPtr(v bool) *bool { return &v }
+
 // JSONOrDefault returns the JSON value or a default if nil or empty.
 func JSONOrDefault(j, def json.RawMessage) json.RawMessage {
 	if len(j) == 0 {
