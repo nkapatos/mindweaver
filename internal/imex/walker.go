@@ -2,6 +2,8 @@ package imex
 
 import (
 	"context"
+	"fmt"
+	"hash/fnv"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,10 +44,13 @@ func (w *Walker) Walk(ctx context.Context, paths chan<- string) (int64, error) {
 			return 0, false
 		}
 		// combine device and inode into single 64-bit key
-		// normalize to uint64 to compose a stable key
-		dev := uint64(s.Dev)
-		key := (dev << 32) ^ s.Ino
-		return key, true
+		// combine device and inode into a stable 64-bit key using FNV-1a
+		h := fnv.New64a()
+		if _, err := fmt.Fprintf(h, "%v-%v", s.Dev, s.Ino); err != nil {
+			// fmt.Fprintf on a hash writer should not fail; log just in case
+			fmt.Printf("Warning: failed to write inode key to hasher: %v\n", err)
+		}
+		return h.Sum64(), true
 	}
 
 	var walkDir func(dir string) error
