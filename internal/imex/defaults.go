@@ -11,6 +11,7 @@ var (
 	DefaultExtensions             = []string{".md"}
 	DefaultMaxFileSize      int64 = 2 * 1024 * 1024 // 2 MiB
 	DefaultProgressInterval       = 200 * time.Millisecond
+	DefaultCollectionName         = "imports"
 )
 
 // applyDefaults fills unset ImportOptions fields with sensible defaults.
@@ -30,5 +31,8 @@ func applyDefaults(opts *ImportOptions) {
 	}
 	if opts.ProgressInterval == 0 {
 		opts.ProgressInterval = DefaultProgressInterval
+	}
+	if opts.Collection == "" {
+		opts.Collection = DefaultCollectionName
 	}
 }
