@@ -34,13 +34,13 @@ func NewFingerprintCache(baseDir string) (*FingerprintCache, error) {
 	// Get absolute path to the base directory
 	absBaseDir, err := filepath.Abs(baseDir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get absolute path of base directory: %v", err)
+		return nil, fmt.Errorf("failed to get absolute path of base directory: %w", err)
 	}
 
 	// Create the cache directory if it doesn't exist
 	cacheDir := filepath.Join(absBaseDir, ".imex")
 	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
-		return nil, fmt.Errorf("failed to create cache directory: %v", err)
+		return nil, fmt.Errorf("failed to create cache directory: %w", err)
 	}
 
 	cacheFile := filepath.Join(cacheDir, "fingerprints.json")
@@ -150,7 +150,9 @@ func (fc *FingerprintCache) Clear() error {
 	fc.mu.Unlock()
 
 	// remove cache file on disk (best-effort)
-	_ = os.Remove(fc.cacheFile)
+	if err := os.Remove(fc.cacheFile); err != nil && !os.IsNotExist(err) {
+		fmt.Printf("Warning: failed to remove cache file %s: %v\n", fc.cacheFile, err)
+	}
 
 	// signal flusher to persist cleared state
 	select {
@@ -296,9 +298,16 @@ func (fc *FingerprintCache) atomicWriteWithLock(data []byte) error {
 		if err == nil {
 			// we own the lock; write metadata (timestamp)
 			ts := time.Now().Unix()
-			_, _ = fmt.Fprintf(f, "%d\n", ts)
-			_ = f.Sync()
-			_ = f.Close()
+			if _, werr := fmt.Fprintf(f, "%d\n", ts); werr != nil {
+				// best-effort: log and continue; we still hold the lock file
+				fmt.Printf("Warning: failed to write lockfile %s: %v\n", fc.lockFile, werr)
+			}
+			if serr := f.Sync(); serr != nil {
+				fmt.Printf("Warning: failed to sync lockfile %s: %v\n", fc.lockFile, serr)
+			}
+			if cerr := f.Close(); cerr != nil {
+				fmt.Printf("Warning: failed to close lockfile %s: %v\n", fc.lockFile, cerr)
+			}
 			break
 		}
 		// couldn't create lock file; check if stale
@@ -306,7 +315,9 @@ func (fc *FingerprintCache) atomicWriteWithLock(data []byte) error {
 		if statErr == nil {
 			if time.Since(st.ModTime()) > fc.lockStale {
 				// stale: remove it and try again
-				_ = os.Remove(fc.lockFile)
+				if rerr := os.Remove(fc.lockFile); rerr != nil && !os.IsNotExist(rerr) {
+					fmt.Printf("Warning: failed to remove stale lockfile %s: %v\n", fc.lockFile, rerr)
+				}
 				continue
 			}
 		}
@@ -317,7 +328,11 @@ func (fc *FingerprintCache) atomicWriteWithLock(data []byte) error {
 	}
 
 	// ensure lockfile removed at the end
-	defer func() { _ = os.Remove(fc.lockFile) }()
+	defer func() {
+		if rerr := os.Remove(fc.lockFile); rerr != nil && !os.IsNotExist(rerr) {
+			fmt.Printf("Warning: failed to remove lockfile %s: %v\n", fc.lockFile, rerr)
+		}
+	}()
 
 	// write to tmp
 	tmp := fc.cacheFile + ".tmp"
@@ -326,8 +341,12 @@ func (fc *FingerprintCache) atomicWriteWithLock(data []byte) error {
 	}
 	// best effort sync
 	if f, err := os.Open(tmp); err == nil {
-		_ = f.Sync()
-		_ = f.Close()
+		if serr := f.Sync(); serr != nil {
+			fmt.Printf("Warning: failed to sync tmp file %s: %v\n", tmp, serr)
+		}
+		if cerr := f.Close(); cerr != nil {
+			fmt.Printf("Warning: failed to close tmp file %s: %v\n", tmp, cerr)
+		}
 	}
 
 	if err := os.Rename(tmp, fc.cacheFile); err != nil {
@@ -337,8 +356,12 @@ func (fc *FingerprintCache) atomicWriteWithLock(data []byte) error {
 	// fsync containing directory if possible (best-effort)
 	dir := filepath.Dir(fc.cacheFile)
 	if dfd, err := os.Open(dir); err == nil {
-		_ = dfd.Sync()
-		_ = dfd.Close()
+		if serr := dfd.Sync(); serr != nil {
+			fmt.Printf("Warning: failed to sync dir %s: %v\n", dir, serr)
+		}
+		if cerr := dfd.Close(); cerr != nil {
+			fmt.Printf("Warning: failed to close dir fd %s: %v\n", dir, cerr)
+		}
 	}
 
 	return nil

@@ -42,7 +42,9 @@ func (w *Walker) Walk(ctx context.Context, paths chan<- string) (int64, error) {
 			return 0, false
 		}
 		// combine device and inode into single 64-bit key
-		key := (uint64(s.Dev) << 32) ^ uint64(s.Ino)
+		// normalize to uint64 to compose a stable key
+		dev := uint64(s.Dev)
+		key := (dev << 32) ^ s.Ino
 		return key, true
 	}
 
