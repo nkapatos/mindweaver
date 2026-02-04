@@ -2,9 +2,10 @@ package imex
 
 import (
 	"context"
-	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 // Walker handles directory traversal and file discovery
@@ -24,66 +25,159 @@ func (w *Walker) Walk(ctx context.Context, paths chan<- string) (int64, error) {
 
 	var count int64
 
-	err := filepath.WalkDir(w.opts.Dir, func(path string, d fs.DirEntry, err error) error {
-		// Check for cancellation
+	// visited tracks inode keys we've recursed into to avoid cycles
+	visited := make(map[uint64]struct{})
+
+	inodeKey := func(p string) (uint64, bool) {
+		st, err := os.Stat(p)
+		if err != nil {
+			return 0, false
+		}
+		sys := st.Sys()
+		if sys == nil {
+			return 0, false
+		}
+		s, ok := sys.(*syscall.Stat_t)
+		if !ok {
+			return 0, false
+		}
+		// combine device and inode into single 64-bit key
+		key := (uint64(s.Dev) << 32) ^ uint64(s.Ino)
+		return key, true
+	}
+
+	var walkDir func(dir string) error
+	walkDir = func(dir string) error {
+		// Respect cancellation
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
 		}
 
+		entries, err := os.ReadDir(dir)
 		if err != nil {
-			// Non-fatal: skip files we can't access
+			// Non-fatal: skip directories we can't read
 			return nil
 		}
 
-		// Skip directories
-		if d.IsDir() {
-			return nil
-		}
+		for _, e := range entries {
+			entryPath := filepath.Join(dir, e.Name())
 
-		// Skip symlinks unless explicitly allowed
-		if !w.opts.FollowSymlinks {
-			if info, err := d.Info(); err == nil {
-				if info.Mode()&fs.ModeSymlink != 0 {
-					return nil
+			// Respect cancellation between entries
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+			}
+
+			// Use Lstat to detect symlinks without following them
+			info, lerr := os.Lstat(entryPath)
+			if lerr != nil {
+				// skip entries we can't stat
+				continue
+			}
+
+			// Handle symlinks
+			if info.Mode()&os.ModeSymlink != 0 {
+				if !w.opts.FollowSymlinks {
+					continue
+				}
+
+				// Resolve the symlink target
+				resolved, err := filepath.EvalSymlinks(entryPath)
+				if err != nil {
+					continue
+				}
+
+				tinfo, err := os.Stat(resolved)
+				if err != nil {
+					continue
+				}
+
+				if tinfo.IsDir() {
+					// Recurse into resolved directory if not visited
+					if k, ok := inodeKey(resolved); ok {
+						if _, seen := visited[k]; seen {
+							continue
+						}
+						visited[k] = struct{}{}
+					}
+					if err := walkDir(resolved); err != nil {
+						return err
+					}
+					continue
+				}
+
+				// Treat resolved target as a regular file for filtering below
+				// Use entryPath as the reported path but tinfo for size checks
+				if !w.opts.IncludeHidden {
+					if strings.HasPrefix(filepath.Base(entryPath), ".") {
+						continue
+					}
+				}
+				if !w.matchesExtension(entryPath) {
+					continue
+				}
+				if w.opts.MaxFileSize > 0 && tinfo.Size() > w.opts.MaxFileSize {
+					continue
+				}
+
+				count++
+				select {
+				case paths <- entryPath:
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+				continue
+			}
+
+			// Non-symlink directory: recurse
+			if info.IsDir() {
+				if k, ok := inodeKey(entryPath); ok {
+					if _, seen := visited[k]; seen {
+						continue
+					}
+					visited[k] = struct{}{}
+				}
+				if err := walkDir(entryPath); err != nil {
+					return err
+				}
+				continue
+			}
+
+			// Regular file: apply filters
+			if !w.opts.IncludeHidden {
+				if strings.HasPrefix(filepath.Base(entryPath), ".") {
+					continue
 				}
 			}
-		}
+			if !w.matchesExtension(entryPath) {
+				continue
+			}
+			if w.opts.MaxFileSize > 0 && info.Size() > w.opts.MaxFileSize {
+				continue
+			}
 
-		// Skip hidden files unless explicitly allowed
-		if !w.opts.IncludeHidden {
-			if strings.HasPrefix(filepath.Base(path), ".") {
-				return nil
+			count++
+			select {
+			case paths <- entryPath:
+			case <-ctx.Done():
+				return ctx.Err()
 			}
 		}
-
-		// Filter by extension
-		if !w.matchesExtension(path) {
-			return nil
-		}
-
-		// Check file size if limit is set
-		if w.opts.MaxFileSize > 0 {
-			if info, err := d.Info(); err == nil {
-				if info.Size() > w.opts.MaxFileSize {
-					return nil
-				}
-			}
-		}
-
-		count++
-
-		select {
-		case paths <- path:
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-
 		return nil
-	})
+	}
 
-	return count, err
+	// Seed visited with the starting directory inode key
+	if k, ok := inodeKey(w.opts.Dir); ok {
+		visited[k] = struct{}{}
+	}
+
+	if err := walkDir(w.opts.Dir); err != nil {
+		return count, err
+	}
+	return count, nil
 }
 
 // matchesExtension checks if file matches any of the configured extensions
