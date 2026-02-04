@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -44,6 +45,10 @@ type ImportOptions struct {
 	// Internal tuning knobs (optional)
 	PathChanBuffer   int           // Buffer size for path/file channels (defaulted)
 	ProgressInterval time.Duration // Progress reporting interval (defaulted)
+	// Collection prefix on the server to place imported files under.
+	// If empty, a default "imports" prefix will be used and collections will be
+	// derived from the first path segment under the import root.
+	Collection string
 }
 
 // Importer handles concurrent file import operations
@@ -57,6 +62,23 @@ type Importer struct {
 	transport        Transport
 	batcher          Batcher
 	rootDir          string // Root directory for relative path calculation
+	// summary aggregation
+	summaryMu     sync.Mutex
+	perCollection map[string]CollectionSummary
+}
+
+// recordFileForSummary updates per-collection aggregates for a processed file
+func (imp *Importer) recordFileForSummary(f FileData) {
+	col := deriveCollection(imp.rootDir, f.Path, imp.opts.Collection)
+	imp.summaryMu.Lock()
+	defer imp.summaryMu.Unlock()
+	if imp.perCollection == nil {
+		imp.perCollection = make(map[string]CollectionSummary)
+	}
+	s := imp.perCollection[col]
+	s.Files++
+	s.Bytes += f.Size
+	imp.perCollection[col] = s
 }
 
 func NewImporter(opts ImportOptions) *Importer {
@@ -116,6 +138,8 @@ func RunImport(args []string, dryRun bool, config string) {
 		collection       = importFlags.String("collection", "", "Collection name to import into")
 		cacheFingerprint = importFlags.Bool("cache-fingerprint", true, "Enable fingerprinting for caching")
 		followSymlinks   = importFlags.Bool("follow-symlinks", false, "Follow symlinks during import")
+		yes              = importFlags.Bool("yes", false, "Assume yes for prompts (non-interactive)")
+		dryRunFlag       = importFlags.Bool("dry-run", false, "Print summary and exit without importing")
 	)
 	if err := importFlags.Parse(args); err != nil {
 		fmt.Println("Failed to parse import flags:", err)
@@ -127,17 +151,57 @@ func RunImport(args []string, dryRun bool, config string) {
 		importFlags.Usage()
 		return
 	}
-	fmt.Printf("[import] src=%s, collection=%s, cacheFingerprint=%v, followSymlinks=%v, dryRun=%v, config=%s\n",
-		*src, *collection, *cacheFingerprint, *followSymlinks, dryRun, config,
+	fmt.Printf("[import] src=%s, collection=%s, cacheFingerprint=%v, followSymlinks=%v, dryRun=%v, yes=%v, config=%s\n",
+		*src, *collection, *cacheFingerprint, *followSymlinks, *dryRunFlag || dryRun, *yes, config,
 	)
 
 	// Pass the flags to the Importer and execute the import process
-	importer := NewImporter(ImportOptions{
+	// Build options for summary and import
+	opts := ImportOptions{
 		Dir:            *src,
 		FollowSymlinks: *followSymlinks,
 		Incremental:    cacheFingerprint,
 		Transport:      nil, // Configure transport as needed
-	})
+		Collection:     *collection,
+	}
+
+	// Compute and print summary
+	summary, err := ComputeImportSummaryFromOptions(opts)
+	if err != nil {
+		fmt.Printf("Failed to compute import summary: %v\n", err)
+		return
+	}
+
+	fmt.Println("\nIMPORT SUMMARY")
+	fmt.Printf("  - Total files: %d\n", summary.TotalFiles)
+	fmt.Printf("  - Total size: %.2f MB\n", float64(summary.TotalBytes)/(1024*1024))
+	if len(summary.Collections) > 0 {
+		fmt.Println("Collections:")
+		for col, s := range summary.Collections {
+			fmt.Printf("  - %s: %d files, %.2f MB\n", col, s.Files, float64(s.Bytes)/(1024*1024))
+		}
+	}
+
+	// If dry-run flag, exit after printing summary
+	if *dryRunFlag || dryRun {
+		return
+	}
+
+	// Prompt user unless --yes provided or not a TTY
+	if !*yes {
+		fmt.Printf("Proceed with import? [Y/n]: ")
+		var resp string
+		if _, err := fmt.Scanln(&resp); err != nil {
+			fmt.Println("No input; aborting. Use --yes to skip prompt in scripts.")
+			return
+		}
+		if resp != "" && (resp[0] == 'n' || resp[0] == 'N') {
+			fmt.Println("Aborted by user.")
+			return
+		}
+	}
+
+	importer := NewImporter(opts)
 	defer importer.Stop()
 
 	fileChan := importer.Import()
@@ -175,6 +239,19 @@ func (imp *Importer) Import() <-chan FileData {
 	reader := NewReader(imp.opts, imp.progress, imp.errors, imp.fingerprintCache)
 	results := reader.Read(imp.ctx, paths)
 
+	// If transport is not configured, wrap results so we can record summaries
+	if imp.transport == nil {
+		out := make(chan FileData, imp.opts.PathChanBuffer)
+		go func() {
+			defer close(out)
+			for f := range results {
+				imp.recordFileForSummary(f)
+				out <- f
+			}
+		}()
+		results = out
+	}
+
 	// Phase 3: If transport configured, batch and send files
 	if imp.transport != nil {
 		output := make(chan FileData, imp.opts.PathChanBuffer)
@@ -190,6 +267,9 @@ func (imp *Importer) sendToTransport(input <-chan FileData, output chan<- FileDa
 	defer close(output)
 
 	for file := range input {
+		// Record per-collection summary
+		imp.recordFileForSummary(file)
+
 		// Convert to transport.FileData
 		transportFile := FileData{
 			Path:    imp.makeRelativePath(file.Path),
@@ -288,6 +368,33 @@ func (imp *Importer) GetResult() *ImportResult {
 	}
 }
 
+// ComputeImportSummary returns an ImportSummary combining progress snapshot and
+// per-collection aggregates recorded during processing.
+func (imp *Importer) ComputeImportSummary() ImportSummary {
+	stats := imp.progress.GetStats()
+	imp.summaryMu.Lock()
+	defer imp.summaryMu.Unlock()
+	// copy per-collection map
+	cols := make(map[string]CollectionSummary, len(imp.perCollection))
+	var totalBytes int64
+	var totalFiles int64
+	for k, v := range imp.perCollection {
+		cols[k] = v
+		totalBytes += v.Bytes
+		totalFiles += int64(v.Files)
+	}
+
+	return ImportSummary{
+		TotalFiles:  totalFiles,
+		TotalBytes:  totalBytes,
+		Processed:   stats.Processed,
+		Skipped:     stats.Skipped,
+		Failed:      stats.Failed,
+		BytesRead:   stats.BytesRead,
+		Collections: cols,
+	}
+}
+
 // Stop cancels the import operation and cleans up resources
 func (imp *Importer) Stop() {
 	imp.cancel()
@@ -321,6 +428,15 @@ func (imp *Importer) GetErrors() map[string]error {
 // PrintSummary outputs the final summary report
 func (imp *Importer) PrintSummary() {
 	imp.progress.PrintFinal()
+
+	// Print collection breakdown
+	summary := imp.ComputeImportSummary()
+	if len(summary.Collections) > 0 {
+		fmt.Println("\nCollections:")
+		for col, s := range summary.Collections {
+			fmt.Printf("  - %s: %d files, %.2f MB\n", col, s.Files, float64(s.Bytes)/(1024*1024))
+		}
+	}
 
 	// Print error details if any
 	if imp.errors.HasErrors() {
