@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.1.10](https://github.com/nkapatos/mindweaver/compare/v0.1.9...v0.1.10) (2026-02-04)
+
+
+### Features
+
+* **imex:** migrated v1 to v3 imex functionality with direct transport as a default ([2fa28be](https://github.com/nkapatos/mindweaver/commit/2fa28be82c0e3b06d30a8058d95c25fd797bb046))
+* **imex:** scaffold import/export CLI with subcommands and global flags ([29340b7](https://github.com/nkapatos/mindweaver/commit/29340b72c073750d4944040d09de3b450b04a3dd))
+* **imex:** symlink-aware recursive walker, centralized defaults, and tests ([0cf80c6](https://github.com/nkapatos/mindweaver/commit/0cf80c611283d1c56365b13874cdb0f5b316c195))
+
+
+### Bug Fixes
+
+* **imex:** initialize options in importer and fix collection derivation ([7ac959e](https://github.com/nkapatos/mindweaver/commit/7ac959ea13faff6f9626a86d80725b50b79c09d0))
+* **mind:** enable SQLite foreign key enforcement ([3b1fe1d](https://github.com/nkapatos/mindweaver/commit/3b1fe1d29f043cbaa44d61bf2ad62c93e580df4c))
+
+
+### Maintenance
+
+* **imex:** add lint task and fix walker hashing errcheck ([da436ed](https://github.com/nkapatos/mindweaver/commit/da436ed1757fbbe3bc89b75154caf95c5e48bbba))
+* **imex:** fix errcheck, lint issues in fingerprint/reader/walker ([5533a2f](https://github.com/nkapatos/mindweaver/commit/5533a2ffd273a45e24f376ea650ed8f5787b4586))
+* **imex:** tidy defaults file ([572e6b4](https://github.com/nkapatos/mindweaver/commit/572e6b4a40c15c409836c4d75cf794a18a9f9d77))
+
+
+### Refactoring
+
+* replace BadgerDB with in-memory JSON-backed fingerprint cache (atomic writes + lockfile) ([0c10dfa](https://github.com/nkapatos/mindweaver/commit/0c10dfaa18e25baa9e9f64ce8344e78fe6555f34))
+
 ## [0.1.9](https://github.com/nkapatos/mindweaver/compare/v0.1.8...v0.1.9) (2026-01-23)
 
 
