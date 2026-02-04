@@ -154,8 +154,8 @@ func TestWalkMaxFileSize(t *testing.T) {
 	}
 	// write DefaultMaxFileSize + 1 bytes
 	data := make([]byte, DefaultMaxFileSize+1)
-	if _, err := f.Write(data); err != nil {
-		t.Fatalf("write big file: %v", err)
+	if _, werr := f.Write(data); werr != nil {
+		t.Fatalf("write big file: %v", werr)
 	}
 	f.Close()
 

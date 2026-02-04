@@ -100,11 +100,12 @@ func (r *Reader) readFile(path string) (FileData, error) {
 	// Get file info
 	info, err := os.Stat(path)
 	if err != nil {
-		if os.IsNotExist(err) {
+		switch {
+		case os.IsNotExist(err):
 			r.errors.Add(path, ErrorTypeNotFound, err)
-		} else if os.IsPermission(err) {
+		case os.IsPermission(err):
 			r.errors.Add(path, ErrorTypePermission, err)
-		} else {
+		default:
 			r.errors.Add(path, ErrorTypeIO, err)
 		}
 		return FileData{}, err
@@ -112,7 +113,9 @@ func (r *Reader) readFile(path string) (FileData, error) {
 
 	// Check fingerprint cache if enabled
 	if r.fingerprintCache != nil {
-		shouldRead, cachedHash, err := r.fingerprintCache.ShouldRead(path, info)
+		var cachedHash string
+		var shouldRead bool
+		shouldRead, cachedHash, err = r.fingerprintCache.ShouldRead(path, info)
 		if err == nil && !shouldRead {
 			// Cache hit - file unchanged
 			return FileData{
@@ -128,7 +131,7 @@ func (r *Reader) readFile(path string) (FileData, error) {
 
 	// Check file size limit
 	if r.opts.MaxFileSize > 0 && info.Size() > r.opts.MaxFileSize {
-		err := fmt.Errorf("file size %d exceeds limit %d", info.Size(), r.opts.MaxFileSize)
+		err = fmt.Errorf("file size %d exceeds limit %d", info.Size(), r.opts.MaxFileSize)
 		r.errors.Add(path, ErrorTypeSize, err)
 		return FileData{}, err
 	}
@@ -143,7 +146,11 @@ func (r *Reader) readFile(path string) (FileData, error) {
 		}
 		return FileData{}, err
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); cerr != nil {
+			fmt.Printf("Warning: failed to close file %s: %v\n", path, cerr)
+		}
+	}()
 
 	// Stream read content + compute hash simultaneously
 	hasher := xxhash.New()

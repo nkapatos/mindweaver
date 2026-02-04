@@ -2,6 +2,7 @@ package imex
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -56,7 +57,10 @@ func ComputeImportSummaryFromOptions(opts ImportOptions) (ImportSummary, error) 
 	paths := make(chan string, opts.PathChanBuffer)
 	go func() {
 		// ignore walker count and errors here; Walk sends paths and returns when done
-		_, _ = w.Walk(context.Background(), paths)
+		if _, err := w.Walk(context.Background(), paths); err != nil {
+			// log and let the consumer continue; Walk itself closes paths on return
+			fmt.Printf("Warning: walker error during summary: %v\n", err)
+		}
 	}()
 
 	cols := make(map[string]CollectionSummary)
