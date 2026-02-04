@@ -1,0 +1,36 @@
+meta {
+  name: Create Note - Wrong Collection
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/mind.v3.NotesService/CreateNote
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Bad Collection Note {{$timestamp}}",
+    "body": "---\nauthor: Test Author\n---\n\nThis note targets a non-existent collection.",
+    "description": "Should fail due to wrong collection id",
+    "collection_id": 9999
+  }
+}
+
+script:post-response {
+  console.log("CreateNote status:", res.status);
+}
+
+tests {
+  test("Status is 4xx (client error)", function() {
+    // creation with a non-existent collection should return a client error
+    expect(res.status).to.be.at.least(400);
+    expect(res.status).to.be.below(500);
+  });
+}

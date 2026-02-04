@@ -50,6 +50,14 @@ func Initialize(e *echo.Echo, apiGroup *echo.Group, dbPath string, logger *slog.
 		return nil, nil, nil, fmt.Errorf("failed to open notes database: %w", err)
 	}
 
+	// Enable foreign key enforcement (required for SQLite to enforce declared
+	// FOREIGN KEY constraints) and configure WAL mode for better concurrency.
+	// Note: PRAGMA foreign_keys must be enabled per-connection.
+	if _, err := db.Exec("PRAGMA foreign_keys = ON;"); err != nil {
+		db.Close()
+		return nil, nil, nil, fmt.Errorf("failed to enable foreign key enforcement for notes: %w", err)
+	}
+
 	// Configure WAL mode for better concurrency
 	if _, err := db.Exec("PRAGMA journal_mode=WAL;"); err != nil {
 		db.Close()
